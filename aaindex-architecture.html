@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AAIndex Frontend — Systems Design & Architecture</title>
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      font-size: 11pt;
+      line-height: 1.65;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 48px 64px;
+    }
+
+    /* ── Typography ── */
+    h1 { font-size: 28pt; font-weight: 700; letter-spacing: -0.5px; color: #1e1b4b; margin-bottom: 6px; }
+    h2 { font-size: 16pt; font-weight: 700; color: #1e1b4b; margin-top: 40px; margin-bottom: 12px; border-bottom: 2px solid #6366f1; padding-bottom: 4px; }
+    h3 { font-size: 12pt; font-weight: 700; color: #312e81; margin-top: 24px; margin-bottom: 8px; }
+    h4 { font-size: 10.5pt; font-weight: 700; color: #4338ca; margin-top: 16px; margin-bottom: 4px; }
+    p  { margin-bottom: 10px; }
+
+    ul, ol { margin-left: 20px; margin-bottom: 10px; }
+    li { margin-bottom: 4px; }
+
+    code {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 9.5pt;
+      background: #f0f0f8;
+      border: 1px solid #d1d5db;
+      border-radius: 3px;
+      padding: 1px 5px;
+      color: #3730a3;
+    }
+
+    pre {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 9pt;
+      background: #f8f8fc;
+      border: 1px solid #d1d5db;
+      border-left: 4px solid #6366f1;
+      border-radius: 4px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      overflow-x: auto;
+      line-height: 1.5;
+      color: #1e1b4b;
+    }
+
+    /* ── Cover / title block ── */
+    .cover {
+      text-align: center;
+      padding: 60px 0 50px;
+      border-bottom: 3px solid #6366f1;
+      margin-bottom: 40px;
+    }
+    .cover .subtitle { font-size: 14pt; color: #6366f1; margin: 10px 0 6px; font-style: italic; }
+    .cover .meta { font-size: 10pt; color: #6b7280; margin-top: 18px; }
+
+    /* ── Callout boxes ── */
+    .callout {
+      background: #eef2ff;
+      border: 1px solid #c7d2fe;
+      border-left: 4px solid #6366f1;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin: 14px 0;
+      font-size: 10.5pt;
+    }
+    .callout.note { background: #fefce8; border-color: #fde047; border-left-color: #ca8a04; }
+    .callout.warn { background: #fef2f2; border-color: #fca5a5; border-left-color: #dc2626; }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      font-size: 10pt;
+    }
+    th {
+      background: #eef2ff;
+      color: #312e81;
+      text-align: left;
+      padding: 8px 12px;
+      border: 1px solid #c7d2fe;
+      font-weight: 700;
+    }
+    td {
+      padding: 7px 12px;
+      border: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td { background: #f9fafb; }
+
+    /* ── Diagram-style boxes ── */
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin: 20px auto;
+      max-width: 600px;
+    }
+    .arch-layer {
+      width: 100%;
+      border: 2px solid #6366f1;
+      border-radius: 8px;
+      padding: 10px 18px;
+      text-align: center;
+      background: #eef2ff;
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #1e1b4b;
+    }
+    .arch-layer.green { background: #dcfce7; border-color: #16a34a; color: #14532d; }
+    .arch-layer.amber { background: #fefce8; border-color: #ca8a04; color: #713f12; }
+    .arch-layer.gray  { background: #f3f4f6; border-color: #6b7280; color: #1f2937; }
+    .arch-arrow {
+      font-size: 20px;
+      color: #6366f1;
+      line-height: 1;
+      margin: 2px 0;
+    }
+
+    /* ── Data flow ── */
+    .flow-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 14px 0;
+    }
+    .flow-box {
+      border: 2px solid #6366f1;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 10pt;
+      font-weight: 600;
+      background: #eef2ff;
+      color: #1e1b4b;
+      white-space: nowrap;
+    }
+    .flow-box.ext { background: #dcfce7; border-color: #16a34a; color: #14532d; }
+    .flow-box.util { background: #fefce8; border-color: #ca8a04; color: #713f12; }
+    .flow-arrow { color: #6366f1; font-size: 14pt; font-weight: bold; }
+
+    /* ── Page grid ── */
+    .page-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin: 14px 0;
+    }
+    .page-card {
+      border: 1px solid #c7d2fe;
+      border-radius: 6px;
+      padding: 10px 14px;
+      background: #f8f9ff;
+    }
+    .page-card .route { font-family: monospace; font-size: 10pt; font-weight: 700; color: #4338ca; }
+    .page-card .name  { font-size: 10pt; font-weight: 600; color: #1e1b4b; margin: 2px 0; }
+    .page-card .desc  { font-size: 9.5pt; color: #4b5563; }
+
+    /* ── Section divider ── */
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 32px 0;
+    }
+
+    /* ── TOC ── */
+    .toc { margin: 20px 0 30px; padding-left: 0; list-style: none; }
+    .toc li { margin-bottom: 5px; }
+    .toc a { color: #4338ca; text-decoration: none; font-size: 11pt; }
+    .toc a:hover { text-decoration: underline; }
+    .toc .section-num { color: #6366f1; font-weight: 700; margin-right: 6px; }
+
+    /* ── Print media ── */
+    @media print {
+      body { padding: 20mm 22mm; font-size: 10.5pt; }
+      h2   { page-break-after: avoid; }
+      h3   { page-break-after: avoid; }
+      pre, table, .callout { page-break-inside: avoid; }
+      .cover { page-break-after: always; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════
+     COVER
+════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div style="font-size:11pt; letter-spacing:2px; text-transform:uppercase; color:#6366f1; margin-bottom:16px;">TECHNICAL DOCUMENTATION</div>
+  <h1>AAIndex Frontend</h1>
+  <div class="subtitle">Systems Design &amp; Architecture Reference</div>
+  <p style="font-size:11pt; color:#4b5563; max-width:500px; margin:16px auto 0;">
+    A comprehensive overview of the architecture, tooling, and technical decisions
+    behind the AAIndex Browser — a client-side bioinformatics web application
+    for exploring amino acid physicochemical property indices.
+  </p>
+  <div class="meta">
+    Version 0.1.0 &nbsp;·&nbsp; June 2026 &nbsp;·&nbsp; Static SPA on Vercel
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════
+     TABLE OF CONTENTS
+════════════════════════════════════════════════════ -->
+<h2 style="margin-top:0; border-bottom-color:#e5e7eb; color:#374151; font-size:13pt;">Table of Contents</h2>
+<ol class="toc">
+  <li><a href="#s1"><span class="section-num">1.</span> Application Overview</a></li>
+  <li><a href="#s2"><span class="section-num">2.</span> Technology Stack</a></li>
+  <li><a href="#s3"><span class="section-num">3.</span> Architecture</a></li>
+  <li><a href="#s4"><span class="section-num">4.</span> Data Layer</a></li>
+  <li><a href="#s5"><span class="section-num">5.</span> Routing &amp; Page Inventory</a></li>
+  <li><a href="#s6"><span class="section-num">6.</span> State Management</a></li>
+  <li><a href="#s7"><span class="section-num">7.</span> Core Utilities &amp; Algorithms</a></li>
+  <li><a href="#s8"><span class="section-num">8.</span> Data Visualisation</a></li>
+  <li><a href="#s9"><span class="section-num">9.</span> Search</a></li>
+  <li><a href="#s10"><span class="section-num">10.</span> External API Integration</a></li>
+  <li><a href="#s11"><span class="section-num">11.</span> Build Pipeline &amp; Deployment</a></li>
+  <li><a href="#s12"><span class="section-num">12.</span> Key Technical Decisions</a></li>
+  <li><a href="#s13"><span class="section-num">13.</span> Data Types &amp; Interfaces</a></li>
+  <li><a href="#s14"><span class="section-num">14.</span> Limitations &amp; Future Considerations</a></li>
+</ol>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     1. APPLICATION OVERVIEW
+════════════════════════════════════════════════════ -->
+<h2 id="s1">1. Application Overview</h2>
+
+<p>
+  The <strong>AAIndex Frontend</strong> is a browser-based bioinformatics tool for exploring, analysing,
+  and visualising the <strong>AAIndex database</strong> — a curated collection of amino acid physicochemical
+  property indices published by Kawashima &amp; Kanehisa (Nucleic Acids Research). The database encodes
+  quantitative properties (hydrophobicity, charge, volume, flexibility, etc.) for each of the 20
+  standard amino acids, and has been widely used in structural biology, protein engineering, and
+  machine-learning feature pipelines.
+</p>
+
+<p>
+  The application spans all three AAIndex sub-databases:
+</p>
+
+<ul>
+  <li><strong>AAIndex1</strong> — 566 scalar-value indices (one number per amino acid)</li>
+  <li><strong>AAIndex2</strong> — Substitution/mutation matrices (20×20 values)</li>
+  <li><strong>AAIndex3</strong> — Contact-potential matrices (20×20 values)</li>
+</ul>
+
+<p>
+  Combined this gives <strong>707+ records</strong> browsable, searchable, and analytically explorable
+  entirely in the browser with no backend server required.
+</p>
+
+<div class="callout">
+  <strong>Design principle:</strong> The application deliberately has no backend. All data is bundled
+  at build time as JSON. All computation runs client-side. This eliminates operational complexity,
+  reduces cost to zero, and makes the app instantaneously available anywhere — including offline
+  (after initial load).
+</div>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     2. TECHNOLOGY STACK
+════════════════════════════════════════════════════ -->
+<h2 id="s2">2. Technology Stack</h2>
+
+<h3>Frontend Runtime</h3>
+<table>
+  <thead><tr><th>Dependency</th><th>Version</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td><code>react</code></td><td>^18.3</td><td>UI component library — JSX rendering, hooks, reconciliation</td></tr>
+    <tr><td><code>react-dom</code></td><td>^18.3</td><td>DOM rendering target for React</td></tr>
+    <tr><td><code>react-router-dom</code></td><td>^6.28</td><td>Client-side routing (SPA navigation)</td></tr>
+    <tr><td><code>zustand</code></td><td>^5.0</td><td>Lightweight global state management</td></tr>
+    <tr><td><code>recharts</code></td><td>^2.13</td><td>Declarative SVG charting library (bar, line, scatter, radar)</td></tr>
+    <tr><td><code>fuse.js</code></td><td>^7.0</td><td>In-memory fuzzy-search index</td></tr>
+    <tr><td><code>file-saver</code></td><td>^2.0</td><td>Client-side file download trigger (CSV / JSON export)</td></tr>
+  </tbody>
+</table>
+
+<h3>Build Tooling</h3>
+<table>
+  <thead><tr><th>Tool</th><th>Version</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td><code>vite</code></td><td>^6.0</td><td>Dev server, HMR, and production bundler (Rollup under the hood)</td></tr>
+    <tr><td><code>@vitejs/plugin-react</code></td><td>^4.3</td><td>React fast-refresh and JSX transform for Vite</td></tr>
+    <tr><td><code>typescript</code></td><td>~5.6</td><td>Static typing, type-checked compilation</td></tr>
+    <tr><td><code>tailwindcss</code></td><td>^3.4</td><td>Utility-first CSS framework (no runtime overhead)</td></tr>
+    <tr><td><code>postcss</code> + <code>autoprefixer</code></td><td>^8 / ^10</td><td>CSS processing pipeline for Tailwind</td></tr>
+    <tr><td><code>eslint</code></td><td>^9.17</td><td>Static code linting</td></tr>
+    <tr><td><code>html2canvas</code></td><td>^1.4</td><td>Dev dependency; chart PNG export capability</td></tr>
+  </tbody>
+</table>
+
+<h3>Deployment Platform</h3>
+<table>
+  <thead><tr><th>Service</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td>Vercel</td><td>Static site hosting with global CDN, automatic preview deployments, SPA rewrite rules</td></tr>
+    <tr><td>NCBI E-utilities API</td><td>On-demand PubMed abstract fetch (external, no auth required)</td></tr>
+  </tbody>
+</table>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     3. ARCHITECTURE
+════════════════════════════════════════════════════ -->
+<h2 id="s3">3. Architecture</h2>
+
+<h3>High-Level Architecture Diagram</h3>
+
+<div class="arch-diagram">
+  <div class="arch-layer green">
+    Browser / User Agent
+    <div style="font-size:9pt; font-weight:400; margin-top:2px;">Chrome · Firefox · Safari · Edge</div>
+  </div>
+  <div class="arch-arrow">↑ ↓</div>
+  <div class="arch-layer">
+    Vercel CDN Edge Network
+    <div style="font-size:9pt; font-weight:400; margin-top:2px;">Serves pre-built static assets (HTML · JS chunks · CSS · JSON data)</div>
+  </div>
+  <div class="arch-arrow">↑ ↓</div>
+  <div class="arch-layer amber">
+    React SPA (client-side)
+    <div style="font-size:9pt; font-weight:400; margin-top:2px;">React Router · Zustand · Recharts · Fuse.js · Custom algorithms</div>
+  </div>
+  <div class="arch-arrow">↑ ↓  (PubMed only)</div>
+  <div class="arch-layer gray">
+    NCBI E-utilities API (external)
+    <div style="font-size:9pt; font-weight:400; margin-top:2px;">efetch — plain-text abstract on demand</div>
+  </div>
+</div>
+
+<div class="callout note">
+  There is no application server, no database server, and no custom API. The entire application
+  is a collection of static files. The only network call made at runtime is an optional PubMed
+  abstract fetch to NCBI's public API.
+</div>
+
+<h3>Module Structure</h3>
+
+<pre>src/
+├── main.tsx            — React root mount, global CSS import
+├── App.tsx             — BrowserRouter + Route tree
+├── index.css           — Tailwind directives + base styles
+│
+├── pages/              — Route-level page components (one per route)
+│   ├── Explorer.tsx
+│   ├── RecordDetail.tsx
+│   ├── SequenceAnalysis.tsx
+│   ├── CorrelationExplorer.tsx
+│   ├── Comparator.tsx
+│   ├── Visualiser.tsx
+│   └── About.tsx
+│
+├── components/         — Reusable UI components
+│   ├── layout/
+│   │   ├── Layout.tsx      — Shell: Navbar + &lt;Outlet /&gt;
+│   │   └── Navbar.tsx      — Top navigation bar
+│   ├── AminoAcidBarChart.tsx
+│   ├── MatrixHeatmap.tsx
+│   ├── RadarChart.tsx
+│   ├── CompareChart.tsx
+│   ├── CompareDrawer.tsx
+│   ├── SimilarRecords.tsx
+│   ├── PubMedAbstract.tsx
+│   ├── CitationHelper.tsx
+│   ├── FilterPanel.tsx
+│   ├── RecordCard.tsx
+│   ├── SearchBar.tsx
+│   ├── DBSwitcher.tsx
+│   └── ExportButton.tsx
+│
+├── lib/                — Pure utility functions (no React)
+│   ├── seqUtils.ts     — Encoding, sliding window, Pearson r, z-score, CSV export
+│   ├── statsUtils.ts   — Category-level aggregate statistics
+│   ├── search.ts       — Fuse.js index builder
+│   ├── exportUtils.ts  — CSV/JSON file export helpers
+│   └── aminoAcids.ts   — AA constants, ordering, full names
+│
+├── store/
+│   └── useAAIndexStore.ts  — Zustand store (global state)
+│
+├── data/               — Bundled database JSON files
+│   ├── aaindex1.json   — 566 scalar-value records (~1.5 MB)
+│   ├── aaindex2.json   — 94 mutation matrices
+│   └── aaindex3.json   — 47 contact-potential matrices
+│
+└── types/
+    └── index.ts        — TypeScript interfaces for all DB shapes</pre>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     4. DATA LAYER
+════════════════════════════════════════════════════ -->
+<h2 id="s4">4. Data Layer</h2>
+
+<h3>Data Strategy: Static JSON at Build Time</h3>
+
+<p>
+  Rather than fetching data from an API at runtime, all three AAIndex databases are converted to
+  JSON and placed in <code>src/data/</code>. Vite bundles these files as ES module imports, making
+  them available synchronously from the moment the JS chunk loads — zero network latency for
+  data access.
+</p>
+
+<p>
+  This is viable because the data is:
+</p>
+<ul>
+  <li><strong>Static</strong> — AAIndex is a curated, versioned database that rarely changes</li>
+  <li><strong>Bounded in size</strong> — ~1.5 MB for AAIndex1 (largest), compresses to ~300 KB gzip</li>
+  <li><strong>Read-only</strong> — users browse and analyse but never write back</li>
+</ul>
+
+<h3>AAIndex1 Record Shape</h3>
+<pre>{
+  "KYTJ820101": {
+    "description": "Hydrophobicity index (Kyte-Doolittle, 1982)",
+    "references": "Kyte J, Doolittle RF (1982) ...",
+    "notes": "",
+    "pmid": "7108955",
+    "category": "hydrophobic",
+    "correlation_coefficients": {
+      "EISD840101": 0.949,
+      "WOLR810101": 0.878
+    },
+    "values": {
+      "A": 1.8,  "R": -4.5, "N": -3.5,
+      "D": -3.5, "C": 2.5,  "Q": -3.5,
+      ...
+    }
+  }
+}</pre>
+
+<h3>AAIndex2 / AAIndex3 Record Shape</h3>
+<pre>{
+  "BENS940101": {
+    "description": "Log-odds substitution matrix (Benner, 1994)",
+    "references": "...",
+    "pmid": "7948675",
+    "is_symmetric": true,
+    "col_order": ["A","R","N","D","C","Q","E","G","H","I","L","K","M","F","P","S","T","W","Y","V"],
+    "correlation_coefficients": {},
+    "matrix": {
+      "A": { "A": 3,  "R": -3, "N": -2, ... },
+      "R": { "A": -3, "R": 6,  "N": -1, ... }
+    }
+  }
+}</pre>
+
+<h3>Category Taxonomy (AAIndex1)</h3>
+<table>
+  <thead><tr><th>Category</th><th>Description</th></tr></thead>
+  <tbody>
+    <tr><td>hydrophobic</td><td>Hydrophobicity / lipophilicity scales</td></tr>
+    <tr><td>polar</td><td>Polarity, solvent accessibility</td></tr>
+    <tr><td>charge</td><td>Electrostatic / isoelectric properties</td></tr>
+    <tr><td>volume</td><td>Side-chain volume, size, molecular weight</td></tr>
+    <tr><td>sec_struct</td><td>Alpha-helix / beta-sheet propensities</td></tr>
+    <tr><td>flexibility</td><td>Backbone flexibility, B-factors</td></tr>
+    <tr><td>geometry</td><td>Bond angles, steric parameters</td></tr>
+    <tr><td>composition</td><td>Amino acid composition in protein datasets</td></tr>
+    <tr><td>observable</td><td>Empirically measured spectra / NMR shifts</td></tr>
+    <tr><td>meta</td><td>Composite or derived indices</td></tr>
+  </tbody>
+</table>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     5. ROUTING & PAGE INVENTORY
+════════════════════════════════════════════════════ -->
+<h2 id="s5">5. Routing &amp; Page Inventory</h2>
+
+<p>
+  Routing is handled by <strong>React Router v6</strong> using <code>BrowserRouter</code> in SPA mode.
+  A <code>vercel.json</code> rewrite rule catches all paths and serves <code>index.html</code>,
+  allowing React Router to handle navigation client-side without 404s on direct URL access or refresh.
+</p>
+
+<pre>// vercel.json
+{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }</pre>
+
+<p>All routes are wrapped in a shared <code>Layout</code> component (Navbar + content outlet):</p>
+
+<div class="page-grid">
+  <div class="page-card">
+    <div class="route">/explorer</div>
+    <div class="name">Record Explorer</div>
+    <div class="desc">
+      Browse all 707 records across all three databases. Full-text fuzzy search via Fuse.js,
+      category filter dropdown, favourites filter toggle, and per-category statistics panel
+      (mean, min, max, std dev per amino acid).
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="route">/records/:accession</div>
+    <div class="name">Record Detail</div>
+    <div class="desc">
+      Deep-dive view. Bar chart of amino acid values, z-score normalisation toggle, correlation
+      coefficient table, similar records panel, live PubMed abstract fetch, citation helper,
+      embeddable iframe snippet, CSV / JSON export, and add-to-compare action.
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="route">/sequence</div>
+    <div class="name">Sequence Analysis</div>
+    <div class="desc">
+      Three-tab tool: (1) Sequence Encoder — maps protein sequence to property values as a line
+      chart; (2) Sliding Window — smoothed Kyte-Doolittle-style profile with adjustable window
+      size; (3) Multi-property Heatmap — simultaneous encoding by multiple indices side-by-side.
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="route">/correlations</div>
+    <div class="name">Correlation Explorer</div>
+    <div class="desc">
+      Three-tab tool: (1) Force-directed Network — SVG graph of indices linked by Pearson r
+      above a threshold; (2) Scatter Plot — any two indices plotted head-to-head per amino acid;
+      (3) Redundancy Filter — list all indices correlated above threshold with a chosen target.
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="route">/compare</div>
+    <div class="name">Comparator</div>
+    <div class="desc">
+      Side-by-side comparison of up to 4 records simultaneously. Grouped bar chart, z-score
+      normalise toggle for cross-scale comparison, and a collapsible drawer for managing the
+      comparison selection.
+    </div>
+  </div>
+  <div class="page-card">
+    <div class="route">/visualise</div>
+    <div class="name">Visualiser</div>
+    <div class="desc">
+      Flexible visualisation picker for AAIndex1 records: bar chart, radar chart,
+      or matrix heatmap. Useful for custom presentation or data exploration.
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     6. STATE MANAGEMENT
+════════════════════════════════════════════════════ -->
+<h2 id="s6">6. State Management</h2>
+
+<h3>Zustand Store</h3>
+
+<p>
+  Global state is managed by a single <strong>Zustand</strong> store defined in
+  <code>src/store/useAAIndexStore.ts</code>. Zustand was chosen over Redux/Context API because:
+</p>
+<ul>
+  <li>No boilerplate (no reducers, no action creators, no Provider wrapping)</li>
+  <li>State and actions co-located in one place</li>
+  <li>Minimal re-render overhead — components subscribe to only the slice they need</li>
+  <li>Tiny bundle footprint (~1 KB)</li>
+</ul>
+
+<h3>Store Slice Summary</h3>
+<table>
+  <thead><tr><th>State field</th><th>Type</th><th>Purpose</th></tr></thead>
+  <tbody>
+    <tr><td><code>activeDB</code></td><td><code>'aaindex1' | 'aaindex2' | 'aaindex3'</code></td><td>Which database sub-set the Explorer is showing</td></tr>
+    <tr><td><code>selectedAccessions</code></td><td><code>string[]</code> (max 4)</td><td>Accession codes queued for the Comparator</td></tr>
+    <tr><td><code>categoryFilter</code></td><td><code>string</code></td><td>Active category filter in Explorer</td></tr>
+    <tr><td><code>searchQuery</code></td><td><code>string</code></td><td>Current fuzzy-search text</td></tr>
+    <tr><td><code>favourites</code></td><td><code>string[]</code></td><td>Bookmarked accessions — persisted to <code>localStorage</code></td></tr>
+    <tr><td><code>showOnlyFavourites</code></td><td><code>boolean</code></td><td>Explorer filter toggle</td></tr>
+    <tr><td><code>normalise</code></td><td><code>boolean</code></td><td>Global z-score normalisation toggle (bar chart &amp; comparator)</td></tr>
+  </tbody>
+</table>
+
+<h3>localStorage Persistence</h3>
+
+<p>
+  Favourites are the only state persisted across sessions, written to <code>localStorage</code>
+  under the key <code>aaindex_favourites</code>. The load/save logic is minimal and contained
+  within the store file itself — no persistence middleware is needed.
+</p>
+
+<pre>const FAVS_KEY = 'aaindex_favourites'
+const loadFavs = (): string[] => {
+  try { return JSON.parse(localStorage.getItem(FAVS_KEY) ?? '[]') } catch { return [] }
+}
+const saveFavs = (favs: string[]) => localStorage.setItem(FAVS_KEY, JSON.stringify(favs))</pre>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     7. CORE UTILITIES & ALGORITHMS
+════════════════════════════════════════════════════ -->
+<h2 id="s7">7. Core Utilities &amp; Algorithms</h2>
+
+<p>All computation lives in <code>src/lib/</code> as pure, framework-free TypeScript functions.</p>
+
+<h3>seqUtils.ts — Sequence Encoding</h3>
+
+<h4>encodeSequence(seq, values)</h4>
+<p>
+  Maps a protein sequence (IUPAC single-letter codes) to an array of
+  <code>{ pos, aa, value | null }</code> tuples using a provided AAIndex1 value map.
+  Returns <code>null</code> for any position that is not a standard amino acid or
+  not covered by the chosen index — preserving missingness rather than imputing.
+</p>
+
+<h4>slidingWindowEncode(encoded, windowSize)</h4>
+<p>
+  Applies a symmetric sliding-window average over an encoded sequence — the
+  algorithm used in the classic Kyte-Doolittle hydrophobicity profile (1982).
+  Edge positions use truncated windows (averages the available residues rather
+  than padding with zeros). This faithfully replicates the original Kyte-Doolittle
+  behaviour.
+</p>
+
+<h4>pearsonR(xs, ys)</h4>
+<p>
+  Computes the Pearson product-moment correlation coefficient for two numeric arrays.
+  Used in the Correlation Explorer to quantify linear relationships between AAIndex1
+  properties. Handles the degenerate case (zero variance) by returning 0 rather than NaN.
+</p>
+
+<pre>r = Σ((xᵢ - x̄)(yᵢ - ȳ)) / ( √Σ(xᵢ - x̄)² × √Σ(yᵢ - ȳ)² )</pre>
+
+<h4>zScoreNormalise(values)</h4>
+<p>
+  Normalises a <code>Record&lt;string, number&gt;</code> of amino acid values to z-scores:
+  subtracts mean and divides by standard deviation. When comparing indices with
+  different numeric ranges (e.g. volume vs. flexibility), z-score normalisation puts
+  them on a common scale. Standard deviation is floored at 1 to avoid division by zero
+  for constant indices.
+</p>
+
+<h4>exportEncodingAsCSV(accession, seq, encoded)</h4>
+<p>
+  Serialises an encoded sequence to a three-column CSV (<code>position, amino_acid, value</code>)
+  and triggers a browser download using <code>file-saver</code>.
+</p>
+
+<h3>statsUtils.ts — Category Statistics</h3>
+
+<h4>categoryStats(db, category)</h4>
+<p>
+  For a given category (or all categories if empty), aggregates per-amino-acid statistics
+  (mean, min, max, standard deviation, count) across all matching AAIndex1 records.
+  Displayed in the Explorer as a summary bar chart when a category filter is active.
+</p>
+
+<h3>search.ts — Fuzzy Search Index</h3>
+<p>
+  Wraps <code>Fuse.js</code> with a standard configuration: searches across
+  <code>accession</code>, <code>description</code>, and <code>category</code> fields
+  with a threshold of 0.35 (roughly "starts-with or very close match"). The index is
+  built once per database and reused.
+</p>
+
+<h3>exportUtils.ts — Data Export</h3>
+<table>
+  <thead><tr><th>Function</th><th>Output</th></tr></thead>
+  <tbody>
+    <tr><td><code>exportValuesAsCSV(acc, values)</code></td><td>Two-column CSV: amino acid code + value</td></tr>
+    <tr><td><code>exportRecordAsJSON(acc, record)</code></td><td>Full record object as formatted JSON</td></tr>
+    <tr><td><code>exportMatrixAsCSV(acc, matrix)</code></td><td>20×20 substitution matrix as CSV with row/column headers</td></tr>
+  </tbody>
+</table>
+
+<h3>aminoAcids.ts — Constants</h3>
+<p>
+  Provides canonical amino acid ordering arrays (<code>AA_ORDER_ALPHA</code>),
+  full English names for tooltip display (<code>AA_FULL_NAMES</code>), and the set
+  of 20 standard residue codes (<code>VALID_AAS</code>).
+</p>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     8. DATA VISUALISATION
+════════════════════════════════════════════════════ -->
+<h2 id="s8">8. Data Visualisation</h2>
+
+<h3>Recharts (React-based charts)</h3>
+<p>
+  All chart components are built on <strong>Recharts</strong>, a React library that
+  renders charts as inline SVG. It was chosen over Chart.js (Canvas-based, harder
+  to theme with Tailwind) and D3 directly (lower-level, more code).
+</p>
+
+<table>
+  <thead><tr><th>Component</th><th>Chart type</th><th>Use case</th></tr></thead>
+  <tbody>
+    <tr><td><code>AminoAcidBarChart</code></td><td>BarChart</td><td>Per-AA values on Record Detail</td></tr>
+    <tr><td><code>CompareChart</code></td><td>BarChart (grouped)</td><td>Side-by-side comparison of up to 4 records</td></tr>
+    <tr><td><code>RadarChart</code></td><td>RadarChart</td><td>Radar/spider chart on Visualiser page</td></tr>
+    <tr><td>Sequence Encoder tab</td><td>LineChart</td><td>Encoded property profile per sequence position</td></tr>
+    <tr><td>Sliding Window tab</td><td>LineChart</td><td>Smoothed property profile (Kyte-Doolittle style)</td></tr>
+    <tr><td>Scatter Plot tab</td><td>ScatterChart</td><td>Head-to-head comparison of two AAIndex1 properties</td></tr>
+  </tbody>
+</table>
+
+<h3>Custom SVG: Force-Directed Network (Correlation Network tab)</h3>
+<p>
+  The correlation network is <strong>custom SVG rendered by React</strong>, not Recharts.
+  It implements a simplified force-directed layout algorithm from scratch:
+</p>
+<ul>
+  <li><strong>Repulsion</strong> — Coulomb-like inverse-square force pushing all node pairs apart</li>
+  <li><strong>Attraction</strong> — Spring force pulling connected nodes together (proportional to distance)</li>
+  <li><strong>Gravity</strong> — Weak centripetal force toward canvas centre to prevent drift</li>
+  <li><strong>Damping</strong> — Velocity multiplied by 0.82 each tick to dissipate energy and converge</li>
+  <li><strong>Bounding</strong> — Node positions clamped to canvas bounds (24px margin)</li>
+</ul>
+
+<p>
+  Simulation runs in <code>requestAnimationFrame</code> ticks for up to 300 iterations
+  or until max velocity drops below 0.3. The final stable positions are committed to
+  React state and the SVG re-renders once — preventing continuous repaints post-convergence.
+</p>
+
+<pre>// Repulsion (Coulomb-style)
+const f = rep / (dx² + dy²)
+node.vx += (dx / |d|) * f
+
+// Attraction (spring)
+const f = att * distance
+source.vx += (dx / d) * f; target.vx -= (dx / d) * f
+
+// Damping per tick
+node.vx *= 0.82</pre>
+
+<p>
+  Node size is proportional to degree (number of edges above threshold). Edge colour
+  encodes sign: <strong>indigo for positive r</strong>, <strong>red for negative r</strong>.
+  Edge opacity scales with correlation strength. Clicking a node navigates to that record's
+  detail page.
+</p>
+
+<h3>Custom Canvas: Matrix Heatmap</h3>
+<p>
+  The 20×20 substitution matrix is rendered as a CSS-grid colour table in
+  <code>MatrixHeatmap.tsx</code>, with cell background colour linearly interpolated
+  between blue (low) and red (high) through white at the midpoint.
+</p>
+
+<h3>Multi-property Heatmap (Sequence Analysis)</h3>
+<p>
+  Renders as a raw HTML div grid where each cell's <code>background-color</code>
+  is set inline via the same blue-white-red lerp function. Cell width is dynamically
+  computed to fit the sequence length within a 700 px container. Missing values (amino
+  acids not covered by an index) are rendered with a CSS diagonal-stripe pattern to
+  distinguish "no data" from a zero or near-zero value.
+</p>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     9. SEARCH
+════════════════════════════════════════════════════ -->
+<h2 id="s9">9. Search</h2>
+
+<p>
+  The Explorer uses <strong>Fuse.js</strong> to build an in-memory fuzzy-search index
+  over all records in the active database. The index covers three fields:
+</p>
+
+<table>
+  <thead><tr><th>Field</th><th>Example value</th></tr></thead>
+  <tbody>
+    <tr><td><code>accession</code></td><td>"KYTJ820101"</td></tr>
+    <tr><td><code>description</code></td><td>"Hydrophobicity index (Kyte-Doolittle, 1982)"</td></tr>
+    <tr><td><code>category</code></td><td>"hydrophobic"</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Configuration: <code>threshold: 0.35</code> (tight enough to avoid irrelevant results),
+  <code>includeScore: true</code> (results sorted by relevance). The index is rebuilt only
+  when the active database changes.
+</p>
+
+<p>
+  Search, category filter, and favourites filter are applied in combination. The result
+  pipeline is: <em>fuzzy search → category filter → favourites filter → rendered cards</em>.
+</p>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     10. EXTERNAL API INTEGRATION
+════════════════════════════════════════════════════ -->
+<h2 id="s10">10. External API Integration</h2>
+
+<h3>NCBI E-utilities: PubMed Abstract Fetch</h3>
+
+<p>
+  The only external API call in the application is an optional fetch to the
+  <strong>NCBI E-utilities API</strong> to retrieve a publication abstract for
+  records that have a PubMed ID (<code>pmid</code> field).
+</p>
+
+<div class="flow-row">
+  <div class="flow-box">User clicks "Load abstract"</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box ext">NCBI efetch API</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box util">Module-level cache Map</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-box">Rendered in &lt;pre&gt;</div>
+</div>
+
+<p>
+  The fetch is <strong>lazy</strong> (only fires when the user clicks "Load abstract") and
+  <strong>cached</strong> in a module-level <code>Map&lt;string, string&gt;</code> for the
+  lifetime of the page session. Repeated visits to the same record do not re-fetch.
+</p>
+
+<pre>const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi
+  ?db=pubmed&id=${pmid}&rettype=abstract&retmode=text`</pre>
+
+<div class="callout note">
+  <strong>CORS note:</strong> NCBI's E-utilities serve responses with permissive CORS headers,
+  so this fetch works directly from the browser without a proxy.
+</div>
+
+<h3>Error Handling</h3>
+<p>
+  The <code>PubMedAbstract</code> component renders three distinct states:
+  loading (animated pulse), error (red message with HTTP status), and success (scrollable
+  pre-formatted text). The fetch is not retried automatically.
+</p>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     11. BUILD PIPELINE & DEPLOYMENT
+════════════════════════════════════════════════════ -->
+<h2 id="s11">11. Build Pipeline &amp; Deployment</h2>
+
+<h3>Vite Build Configuration</h3>
+
+<pre>// vite.config.ts
+defineConfig({
+  plugins: [react()],
+  base: '/',
+  build: {
+    outDir: 'dist',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom'],
+          charts:  ['recharts'],
+          search:  ['fuse.js'],
+        },
+      },
+    },
+  },
+})</pre>
+
+<p>
+  Manual chunk splitting separates the output into logical bundles, allowing the browser
+  to cache library code independently of application code. When app logic changes (most
+  deployments), only the app chunk is re-fetched; vendor and charts chunks stay cached.
+</p>
+
+<h3>Build Output</h3>
+<table>
+  <thead><tr><th>Chunk</th><th>Contents</th><th>Cache strategy</th></tr></thead>
+  <tbody>
+    <tr><td>vendor.js</td><td>React, React-DOM, React Router</td><td>Long-lived — changes rarely</td></tr>
+    <tr><td>charts.js</td><td>Recharts + dependencies</td><td>Long-lived — changes rarely</td></tr>
+    <tr><td>search.js</td><td>Fuse.js</td><td>Long-lived — changes rarely</td></tr>
+    <tr><td>index.js</td><td>Application code (pages, components, libs)</td><td>Invalidated on each deploy</td></tr>
+    <tr><td>index.css</td><td>Tailwind purged CSS</td><td>Invalidated on each deploy</td></tr>
+    <tr><td>aaindex*.json</td><td>Database JSON (imported as ES module)</td><td>Bundled into app chunk</td></tr>
+  </tbody>
+</table>
+
+<h3>Deployment: Vercel</h3>
+<p>
+  The project is deployed to <strong>Vercel</strong> as a static site. The build command is
+  <code>tsc -b &amp;&amp; vite build</code> — TypeScript compilation (type check only, Vite
+  transpiles the actual code) followed by Vite's Rollup-based production build.
+</p>
+
+<p>Key Vercel configuration (<code>vercel.json</code>):</p>
+<pre>{ "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }] }</pre>
+
+<p>
+  This single rewrite rule makes all paths serve <code>index.html</code>, enabling
+  React Router's <code>BrowserRouter</code> to handle navigation. Without it, direct
+  navigation to <code>/records/KYTJ820101</code> would 404.
+</p>
+
+<h3>CI/CD</h3>
+<p>
+  Vercel's GitHub integration provides automatic preview deployments on every push/PR
+  and production deployment on merge to <code>main</code>. No custom CI pipeline is
+  configured — Vercel's build infrastructure handles it.
+</p>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     12. KEY TECHNICAL DECISIONS
+════════════════════════════════════════════════════ -->
+<h2 id="s12">12. Key Technical Decisions</h2>
+
+<h3>Decision 1: No Backend / Static Data</h3>
+<p>
+  <strong>Chosen:</strong> Bundle all data as JSON, served as static files.<br>
+  <strong>Alternative:</strong> REST API or GraphQL backend serving records from a database.<br>
+  <strong>Rationale:</strong> The data is small (~1.5 MB compressed), read-only, and changes
+  infrequently. A backend would add hosting cost, ops burden, and latency with zero benefit.
+  Static delivery is also faster — data arrives with the JS bundle rather than in a separate
+  network round-trip.
+</p>
+
+<h3>Decision 2: Zustand over Context API or Redux</h3>
+<p>
+  <strong>Chosen:</strong> Zustand.<br>
+  <strong>Rationale:</strong> Context API re-renders all consumers when any value changes —
+  harmful when global state (e.g. activeDB) triggers re-renders on pages that don't use it.
+  Redux is correct but verbose for this scale. Zustand provides fine-grained subscriptions
+  in 3 KB.
+</p>
+
+<h3>Decision 3: Recharts over D3 or Chart.js</h3>
+<p>
+  <strong>Chosen:</strong> Recharts (with custom SVG for the network graph).<br>
+  <strong>Rationale:</strong> Recharts integrates naturally with React's rendering model —
+  charts are declared as JSX and update reactively. D3 manipulates the DOM imperatively,
+  which conflicts with React's virtual DOM. Chart.js renders to Canvas, making it harder
+  to style consistently with Tailwind. For the force-directed network (which requires
+  custom simulation logic), plain SVG is the right tool.
+</p>
+
+<h3>Decision 4: Fuse.js for Search</h3>
+<p>
+  <strong>Chosen:</strong> Fuse.js in-memory fuzzy search.<br>
+  <strong>Rationale:</strong> The record set is bounded (~700 items) and entirely loaded
+  into memory. A server-side search endpoint is unnecessary. Fuse.js handles typos and
+  partial matches (e.g. "kyte" finding "Kyte-Doolittle") which a plain <code>includes()</code>
+  check would miss.
+</p>
+
+<h3>Decision 5: TypeScript Strict Mode</h3>
+<p>
+  <strong>Chosen:</strong> Full TypeScript coverage with typed interfaces for all DB shapes.<br>
+  <strong>Rationale:</strong> JSON data is cast to typed interfaces at import time. This ensures
+  any component accessing record fields is checked at compile time, preventing the most common
+  class of runtime errors (accessing undefined fields on malformed data).
+</p>
+
+<h3>Decision 6: Lazy PubMed Fetch (Click-to-Load)</h3>
+<p>
+  <strong>Chosen:</strong> Fetch only when the user clicks "Load abstract".<br>
+  <strong>Rationale:</strong> Auto-fetching on page load would fire 707 potential external
+  requests as users browse records. NCBI rate-limits the E-utilities API at 3 req/s without
+  an API key. The lazy pattern respects the API and only fetches when the user explicitly
+  wants the abstract.
+</p>
+
+<h3>Decision 7: Custom Force-Directed Layout (No D3-Force)</h3>
+<p>
+  <strong>Chosen:</strong> Bespoke Coulomb + spring simulation in <code>requestAnimationFrame</code>.<br>
+  <strong>Rationale:</strong> Adding <code>d3-force</code> (~8 KB gzip) for one visualisation
+  was disproportionate. The custom implementation covers the needed physics (repulsion, attraction,
+  damping, gravity, boundary clamping) in ~60 lines.
+</p>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     13. DATA TYPES & INTERFACES
+════════════════════════════════════════════════════ -->
+<h2 id="s13">13. Data Types &amp; Interfaces</h2>
+
+<pre>// src/types/index.ts
+
+export interface AAIndex1Record {
+  description: string
+  references: string
+  notes: string
+  pmid: string
+  category: string
+  correlation_coefficients: Record&lt;string, number&gt;  // accession → Pearson r
+  values: Record&lt;string, number&gt;                    // AA one-letter code → value
+}
+export type AAIndex1DB = Record&lt;string, AAIndex1Record&gt;  // accession → record
+
+export interface AAIndex2Record {
+  description: string
+  references: string
+  notes: string
+  pmid: string
+  is_symmetric: boolean
+  col_order: string[]                                        // canonical column ordering
+  correlation_coefficients: Record&lt;string, number&gt;
+  matrix: Record&lt;string, Record&lt;string, number&gt;&gt;            // row AA → col AA → value
+}
+export type AAIndex2DB = Record&lt;string, AAIndex2Record&gt;
+
+export type AAIndex3Record = AAIndex2Record
+export type AAIndex3DB = Record&lt;string, AAIndex3Record&gt;
+
+export type DBName = 'aaindex1' | 'aaindex2' | 'aaindex3'</pre>
+
+<pre>// src/lib/seqUtils.ts
+
+export interface EncodedResidue {
+  pos: number           // 1-indexed sequence position
+  aa: string            // IUPAC one-letter code
+  value: number | null  // null = AA not covered by this index
+}
+
+// src/lib/statsUtils.ts
+
+export interface AAStat {
+  aa: string
+  mean: number | null
+  min: number | null
+  max: number | null
+  std: number | null
+  n: number             // number of records contributing
+}</pre>
+
+<hr class="divider">
+
+
+<!-- ════════════════════════════════════════════════════
+     14. LIMITATIONS & FUTURE CONSIDERATIONS
+════════════════════════════════════════════════════ -->
+<h2 id="s14">14. Limitations &amp; Future Considerations</h2>
+
+<h3>Current Limitations</h3>
+
+<table>
+  <thead><tr><th>Limitation</th><th>Impact</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>No backend / no user accounts</td>
+      <td>
+        Favourites and comparison state are per-browser only. Cannot share a saved list
+        across devices or with collaborators.
+      </td>
+    </tr>
+    <tr>
+      <td>All data bundled at build time</td>
+      <td>
+        Adding new records or correcting data requires a full rebuild and redeploy. Not
+        suitable if data needs to be updated frequently.
+      </td>
+    </tr>
+    <tr>
+      <td>NCBI API rate limit (3 req/s)</td>
+      <td>
+        Rapid navigation between records with PubMed IDs could trigger rate limiting if
+        the user opens many abstracts quickly. No retry or back-off logic is implemented.
+      </td>
+    </tr>
+    <tr>
+      <td>Force-directed network scalability</td>
+      <td>
+        The O(n²) repulsion calculation and single-threaded <code>requestAnimationFrame</code>
+        loop struggles above ~150 nodes. Capped at 150 in the UI via a slider.
+      </td>
+    </tr>
+    <tr>
+      <td>No offline support</td>
+      <td>
+        No Service Worker / PWA cache. Requires initial network access to load the app.
+      </td>
+    </tr>
+    <tr>
+      <td>Mobile layout</td>
+      <td>
+        Responsive breakpoints are present but the two-column sidebar+chart layouts
+        on Sequence Analysis and Correlation Explorer are cramped on small screens.
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>Potential Future Extensions</h3>
+
+<ul>
+  <li>
+    <strong>REST / GraphQL API</strong> — if the data set grows or needs user-generated
+    content (custom indices, annotation layers), a backend would be necessary.
+  </li>
+  <li>
+    <strong>Web Worker for force simulation</strong> — offloading the physics loop to a
+    Worker thread would unblock the UI during network layout, enabling larger graphs.
+  </li>
+  <li>
+    <strong>Shareable URLs</strong> — encoding the current comparison selection or sequence
+    into the URL query string would enable link sharing.
+  </li>
+  <li>
+    <strong>Service Worker / PWA</strong> — since all data is bundled, a cache manifest
+    would make the app fully offline-capable after first load.
+  </li>
+  <li>
+    <strong>BLAST / alignment integration</strong> — accepting a FASTA file and running
+    sequence similarity search would add value for the bioinformatics use case.
+  </li>
+  <li>
+    <strong>Export charts as PNG/SVG</strong> — <code>html2canvas</code> is already a
+    dev dependency, suggesting this was considered.
+  </li>
+</ul>
+
+<hr class="divider">
+
+<div style="text-align:center; color:#9ca3af; font-size:9pt; margin-top:40px; padding-top:16px; border-top:1px solid #e5e7eb;">
+  AAIndex Frontend · Systems Design &amp; Architecture Reference · June 2026
+</div>
+
+</body>
+</html>

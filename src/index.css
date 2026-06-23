@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@media print {
+  .no-print { display: none !important; }
+  nav, .compare-drawer-root { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .guide-section { page-break-before: always; }
+  .guide-section:first-of-type { page-break-before: avoid; }
+  a { color: #4f46e5 !important; text-decoration: underline; }
+}
