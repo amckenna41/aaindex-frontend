@@ -17,7 +17,6 @@ export default function Navbar() {
     { to: '/encode',        label: 'Encode' },
     { to: '/compare',       label: 'Compare', badge: selectedCount > 0 ? selectedCount : null },
     { to: '/visualise',     label: 'Visualiser' },
-    { to: '/stats',         label: 'Stats' },
     { to: '/api-reference', label: 'API' },
     { to: '/guide',         label: 'Guide' },
     { to: '/about',         label: 'About' },

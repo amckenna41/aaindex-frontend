@@ -50,7 +50,7 @@ export default function RecordCard({ accession, record, dbName }: Props) {
 
   return (
     <div
-      className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 flex flex-col gap-2 hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors cursor-pointer"
+      className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 flex flex-col gap-2 h-full hover:border-indigo-300 dark:hover:border-indigo-700 transition-colors cursor-pointer"
       onClick={() => navigate(`/records/${accession}`)}
       role="button"
       tabIndex={0}
@@ -82,7 +82,7 @@ export default function RecordCard({ accession, record, dbName }: Props) {
         {record.description.length > 80 ? record.description.slice(0, 80) + '…' : record.description}
       </p>
 
-      <div className="flex items-center justify-between gap-2 mt-1">
+      <div className="flex items-center justify-between gap-2 mt-auto">
         {is1 && <Sparkline values={r1.values} />}
         {!is1 && <span className="text-xs text-gray-400">Matrix record</span>}
 

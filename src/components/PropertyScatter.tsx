@@ -49,8 +49,8 @@ export default function PropertyScatter({ xValues, yValues, xAccession, yAccessi
         />
         <Scatter
           data={data}
-          shape={(props: any) => {
-            const { cx, cy, payload } = props
+          shape={(props: { cx?: number; cy?: number; payload?: { aa: string } }) => {
+            const { cx = 0, cy = 0, payload } = props
             return (
               <g>
                 <circle cx={cx} cy={cy} r={14} fill="#6366f114" stroke="#6366f1" strokeWidth={1.5} />

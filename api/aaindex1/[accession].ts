@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, methodNotAllowed } from '../_helpers'
-import rawDb from '../../src/data/aaindex1.json'
+import { setCorsHeaders, methodNotAllowed } from '../_helpers.js'
+import rawDb from '../../src/data/aaindex1.json' with { type: 'json' }
 
 const db = rawDb as Record<string, unknown>
 

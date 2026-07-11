@@ -65,17 +65,17 @@ describe('POST /api/encode', () => {
     expect((res.body as Record<string, unknown>).length).toBe(4)
   })
 
-  it('encodes against all 566 aaindex1 records by default', () => {
+  it('encodes against the first 50 aaindex1 records by default (cap prevents huge responses)', () => {
     const res = makeRes()
     handler(makePostReq({ sequence: 'ACDE' }), res)
-    expect((res.body as Record<string, unknown>).accessions_encoded).toBe(566)
+    expect((res.body as Record<string, unknown>).accessions_encoded).toBe(50)
   })
 
-  it('encodings object has one key per accession', () => {
+  it('encodings object has one key per default accession (50)', () => {
     const res = makeRes()
     handler(makePostReq({ sequence: 'ACDE' }), res)
     const encodings = (res.body as { encodings: Record<string, unknown> }).encodings
-    expect(Object.keys(encodings)).toHaveLength(566)
+    expect(Object.keys(encodings)).toHaveLength(50)
   })
 
   it('each encoding entry has description, category, coverage, and values', () => {

@@ -23,7 +23,7 @@ The database is bundled from the [`aaindex`](https://github.com/amckenna41/aaind
 - Diverging colour heatmaps for AAIndex2/3 matrices
 - Side-by-side comparator for up to 4 records
 - Radar chart fingerprint visualisation
-- **Sequence Encoder** — encode a protein sequence using any AAIndex1 index to a numerical vector
+- **Sequence Encoder** — upload a FASTA or plain-text file and encode each sequence using any AAIndex1 index; invalid/non-AA sequences are flagged with specific rejection reasons
 - Sliding window analysis (Kyte-Doolittle-style smoothed property profiles)
 - Multi-property heatmap (sequence × N indices feature engineering view)
 - Correlation network graph — force-directed visualisation of correlated records
@@ -33,8 +33,10 @@ The database is bundled from the [`aaindex`](https://github.com/amckenna41/aaind
 - PubMed abstract fetch via NCBI
 - Citation helper — BibTeX, APA, and plain-text formats
 - Category statistics — mean/min/max/stddev per amino acid across any category
-- Favourites, shareable deep-linked URLs, CSV/JSON export, dark mode
+- Explorer search state (query, category, database, and page) reflected in the URL — fully bookmarkable and shareable filter views
+- Favourites, CSV/JSON export, dark mode
 - Embeddable iframe widget per record
+- App-level error boundary — runtime errors show a recovery screen instead of a blank page
 
 ## Tech stack
 

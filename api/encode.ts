@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders } from './_helpers'
-import rawDb from '../src/data/aaindex1.json'
+import { setCorsHeaders } from './_helpers.js'
+import rawDb from '../src/data/aaindex1.json' with { type: 'json' }
 
 interface DB1Record {
   description: string
@@ -53,7 +53,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'None of the provided `accessions` were found in aaindex1' })
     }
   } else {
-    accs = Object.keys(db)
+    // No explicit list supplied — cap at 50 to prevent multi-megabyte responses.
+    accs = Object.keys(db).slice(0, 50)
   }
 
   const encodings: Record<string, { description: string; category: string; coverage: number; values: Array<{ pos: number; aa: string; value: number | null }> }> = {}

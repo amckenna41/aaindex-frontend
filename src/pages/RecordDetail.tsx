@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAAIndexStore } from '../store/useAAIndexStore'
 import { exportValuesAsCSV, exportRecordAsJSON, exportMatrixAsCSV } from '../lib/exportUtils'
 import AminoAcidBarChart from '../components/AminoAcidBarChart'
@@ -34,6 +34,16 @@ export default function RecordDetail() {
   const prevAcc = browseIdx > 0 ? browseList[browseIdx - 1] : null
   const nextAcc = browseIdx >= 0 && browseIdx < browseList.length - 1 ? browseList[browseIdx + 1] : null
   const [embedCopied, setEmbedCopied] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+      if (e.key === 'ArrowLeft' && prevAcc) navigate(`/records/${prevAcc}`)
+      if (e.key === 'ArrowRight' && nextAcc) navigate(`/records/${nextAcc}`)
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [prevAcc, nextAcc, navigate])
 
   if (!accession) return <p>No accession specified.</p>
 

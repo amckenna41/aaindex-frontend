@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { AAIndex1DB, AAIndex2DB, AAIndex3DB, DBName } from '../types'
 import AminoAcidBarChart from '../components/AminoAcidBarChart'
 import RadarChart from '../components/RadarChart'
@@ -8,12 +8,8 @@ import ExportButton from '../components/ExportButton'
 import { exportValuesAsCSV, exportMatrixAsCSV } from '../lib/exportUtils'
 
 import db1 from '../data/aaindex1.json'
-import db2 from '../data/aaindex2.json'
-import db3 from '../data/aaindex3.json'
 
 const DB1 = db1 as unknown as AAIndex1DB
-const DB2 = db2 as unknown as AAIndex2DB
-const DB3 = db3 as unknown as AAIndex3DB
 
 type ChartType = 'bar' | 'radar' | 'heatmap' | 'scatter'
 
@@ -25,11 +21,9 @@ const CHART_LABELS: Record<ChartType, string> = {
 }
 
 const ALL_ACCS_1 = Object.keys(DB1)
-const ALL_ACCS_2 = Object.keys(DB2)
-const ALL_ACCS_3 = Object.keys(DB3)
 
-// Merged once at module level — avoids recreating on every render.
-const ALL_DBS: Record<string, { description: string }> = { ...DB1, ...DB2, ...DB3 }
+// Lazy cache — populated on first switch to the heatmap chart type.
+const lazyCache: { aaindex2?: AAIndex2DB; aaindex3?: AAIndex3DB } = {}
 
 export default function Visualiser() {
   const [chartType, setChartType] = useState<ChartType>('bar')
@@ -39,13 +33,79 @@ export default function Visualiser() {
   const [showSecond, setShowSecond] = useState(false)
   const [filter, setFilter] = useState('')
   const chartRef = useRef<HTMLDivElement>(null)
+  const [lazyDB2, setLazyDB2] = useState<AAIndex2DB | null>(null)
+  const [lazyDB3, setLazyDB3] = useState<AAIndex3DB | null>(null)
+  const [heatmapLoading, setHeatmapLoading] = useState(false)
+
+  // Lazy-load db2 and db3 only when the heatmap chart type is selected.
+  useEffect(() => {
+    if (chartType !== 'heatmap') return
+    let cancelled = false
+    const toLoad: Promise<void>[] = []
+
+    if (!lazyCache.aaindex2) {
+      toLoad.push(
+        import('../data/aaindex2.json').then((m) => {
+          if (cancelled) return
+          const loaded = m.default as unknown as AAIndex2DB
+          lazyCache.aaindex2 = loaded
+          setLazyDB2(loaded)
+        }),
+      )
+    } else if (!lazyDB2) {
+      setLazyDB2(lazyCache.aaindex2)
+    }
+
+    if (!lazyCache.aaindex3) {
+      toLoad.push(
+        import('../data/aaindex3.json').then((m) => {
+          if (cancelled) return
+          const loaded = m.default as unknown as AAIndex3DB
+          lazyCache.aaindex3 = loaded
+          setLazyDB3(loaded)
+        }),
+      )
+    } else if (!lazyDB3) {
+      setLazyDB3(lazyCache.aaindex3)
+    }
+
+    if (toLoad.length > 0) {
+      setHeatmapLoading(true)
+      Promise.all(toLoad).then(() => { if (!cancelled) setHeatmapLoading(false) })
+    }
+
+    return () => { cancelled = true }
+  }, [chartType]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Once db2 loads, default acc1 to its first entry if current acc1 isn’t in db2.
+  useEffect(() => {
+    if (!lazyDB2 || db !== 'aaindex2') return
+    const accs2 = Object.keys(lazyDB2)
+    if (accs2.length && !(acc1 in lazyDB2)) setAcc1(accs2[0])
+  }, [lazyDB2]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!lazyDB3 || db !== 'aaindex3') return
+    const accs3 = Object.keys(lazyDB3)
+    if (accs3.length && !(acc1 in lazyDB3)) setAcc1(accs3[0])
+  }, [lazyDB3]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const DB2 = lazyDB2 ?? ({} as AAIndex2DB)
+  const DB3 = lazyDB3 ?? ({} as AAIndex3DB)
+
+  const ALL_ACCS_2 = useMemo(() => Object.keys(DB2), [lazyDB2]) // eslint-disable-line react-hooks/exhaustive-deps
+  const ALL_ACCS_3 = useMemo(() => Object.keys(DB3), [lazyDB3]) // eslint-disable-line react-hooks/exhaustive-deps
+  const ALL_DBS = useMemo<Record<string, { description: string }>>(
+    () => ({ ...DB1, ...DB2, ...DB3 }),
+    [lazyDB2, lazyDB3], // eslint-disable-line react-hooks/exhaustive-deps
+  )
 
   const accs = db === 'aaindex1' ? ALL_ACCS_1 : db === 'aaindex2' ? ALL_ACCS_2 : ALL_ACCS_3
 
   const filteredAccs = useMemo(
     () => accs.filter((a) => a.toLowerCase().includes(filter.toLowerCase()) ||
       ALL_DBS[a]?.description.toLowerCase().includes(filter.toLowerCase())),
-    [accs, filter]
+    [accs, filter, ALL_DBS],
   )
 
   const rec1 = DB1[acc1]
@@ -54,7 +114,7 @@ export default function Visualiser() {
   const switchChart = (t: ChartType) => {
     setChartType(t)
     if (t === 'heatmap') setDb('aaindex2')
-    else setDb('aaindex1')
+    else { setDb('aaindex1'); setAcc1(ALL_ACCS_1[0]) }
   }
 
   const downloadPNG = async () => {
@@ -64,7 +124,9 @@ export default function Visualiser() {
     const link = document.createElement('a')
     link.download = `${acc1}_${chartType}.png`
     link.href = canvas.toDataURL()
+    document.body.appendChild(link)
     link.click()
+    document.body.removeChild(link)
   }
 
   const isDB1Chart = chartType !== 'heatmap'
@@ -99,7 +161,11 @@ export default function Visualiser() {
               {(['aaindex2', 'aaindex3'] as DBName[]).map((d) => (
                 <button
                   key={d}
-                  onClick={() => { setDb(d); setAcc1(d === 'aaindex2' ? ALL_ACCS_2[0] : ALL_ACCS_3[0]) }}
+                  onClick={() => {
+                    setDb(d)
+                    const available = d === 'aaindex2' ? ALL_ACCS_2 : ALL_ACCS_3
+                    if (available.length) setAcc1(available[0])
+                  }}
                   className={`px-3 py-1.5 rounded text-sm font-medium text-left ${
                     db === d ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
                   }`}
@@ -244,9 +310,11 @@ export default function Visualiser() {
               />
             )}
             {chartType === 'heatmap' && (
-              <MatrixHeatmap
-                matrix={(db === 'aaindex2' ? DB2[acc1] : DB3[acc1])?.matrix ?? {}}
-              />
+              heatmapLoading
+                ? <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse py-16 text-center">Loading database…</p>
+                : <MatrixHeatmap
+                    matrix={(db === 'aaindex2' ? DB2[acc1] : DB3[acc1])?.matrix ?? {}}
+                  />
             )}
             {chartType === 'scatter' && rec1 && rec2 && (
               <PropertyScatter

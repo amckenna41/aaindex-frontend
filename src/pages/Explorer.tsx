@@ -1,11 +1,12 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAAIndexStore } from '../store/useAAIndexStore'
 import { buildSearchIndex } from '../lib/search'
 import DBSwitcher from '../components/DBSwitcher'
 import SearchBar from '../components/SearchBar'
 import FilterPanel from '../components/FilterPanel'
 import RecordCard from '../components/RecordCard'
-import { AAIndex1DB, AAIndex2DB, AAIndex3DB } from '../types'
+import { AAIndex1DB, AAIndex2DB, AAIndex3DB, DBName } from '../types'
 
 import db1 from '../data/aaindex1.json'
 
@@ -17,27 +18,60 @@ const PAGE_SIZE = 20
 const lazyCache: { aaindex2?: AAIndex2DB; aaindex3?: AAIndex3DB } = {}
 
 export default function Explorer() {
-  const { activeDB, searchQuery, categoryFilter, showOnlyFavourites, favourites, setBrowseList } = useAAIndexStore()
+  const { activeDB, searchQuery, categoryFilter, showOnlyFavourites, favourites, setBrowseList,
+          setActiveDB, setSearchQuery, setCategoryFilter } = useAAIndexStore()
   const [page, setPage] = useState(1)
   const [jumpVal, setJumpVal] = useState('')
   const [lazyDB, setLazyDB] = useState<AAIndex2DB | AAIndex3DB | null>(null)
   const [lazyLoading, setLazyLoading] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const isFirstRender = useRef(true)
+
+  // Single effect: hydrate from URL on first run, then sync state → URL on subsequent runs.
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      const dbParam = searchParams.get('db')
+      const qParam  = searchParams.get('q') || ''
+      const catParam = searchParams.get('cat') || ''
+      const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
+      const validDBs: string[] = ['aaindex1', 'aaindex2', 'aaindex3']
+      if (dbParam && validDBs.includes(dbParam)) setActiveDB(dbParam as DBName)
+      if (qParam) setSearchQuery(qParam)
+      if (catParam) setCategoryFilter(catParam)
+      if (pageParam > 1) setPage(pageParam)
+      return
+    }
+    const params: Record<string, string> = {}
+    if (activeDB !== 'aaindex1') params.db = activeDB
+    if (searchQuery) params.q = searchQuery
+    if (categoryFilter) params.cat = categoryFilter
+    if (page > 1) params.page = String(page)
+    setSearchParams(params, { replace: true })
+  }, [activeDB, searchQuery, categoryFilter, page]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Lazily import db2/db3 on first switch to that database.
   useEffect(() => {
     if (activeDB === 'aaindex1') { setLazyDB(null); return }
     const cached = lazyCache[activeDB as 'aaindex2' | 'aaindex3']
     if (cached) { setLazyDB(cached); return }
+
+    let cancelled = false
     setLazyLoading(true)
+
     const mod = activeDB === 'aaindex2'
       ? import('../data/aaindex2.json')
       : import('../data/aaindex3.json')
+
     mod.then((m) => {
+      if (cancelled) return
       const loaded = m.default as unknown as AAIndex2DB | AAIndex3DB
       lazyCache[activeDB as 'aaindex2' | 'aaindex3'] = loaded as never
       setLazyDB(loaded)
       setLazyLoading(false)
     })
+
+    return () => { cancelled = true }
   }, [activeDB])
 
   const db: AAIndex1DB | AAIndex2DB | AAIndex3DB = activeDB === 'aaindex1' ? DB1 : (lazyDB ?? {} as AAIndex2DB)
@@ -97,7 +131,7 @@ export default function Explorer() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
           {pageAccessions.map((acc) => (
-            <div key={acc} onClickCapture={() => setBrowseList(filtered)}>
+            <div key={acc} className="h-full" onClickCapture={() => setBrowseList(filtered)}>
               <RecordCard
                 accession={acc}
                 record={(db as Record<string, AAIndex1DB[string]>)[acc]}

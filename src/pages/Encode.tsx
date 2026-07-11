@@ -5,6 +5,7 @@ import { AAIndex1DB } from '../types'
 import { encodeSequence, VALID_AAS } from '../lib/seqUtils'
 import { AA_FULL_NAMES } from '../lib/aminoAcids'
 import { saveAs } from 'file-saver'
+import RecordSelector from '../components/RecordSelector'
 
 import db1 from '../data/aaindex1.json'
 
@@ -12,6 +13,7 @@ const DB1 = db1 as unknown as AAIndex1DB
 const ALL_ACCS = Object.keys(DB1)
 
 interface ParsedSeq { id: string; seq: string }
+interface RejectedSeq { id: string; seq: string; reason: string }
 
 const EXAMPLES = [
   {
@@ -38,34 +40,61 @@ const EXAMPLES = [
 
 // ── Parsers ────────────────────────────────────────────────────────────────────
 
-function parseFasta(text: string): ParsedSeq[] {
-  const out: ParsedSeq[] = []
+type ParseResult = { valid: ParsedSeq[]; rejected: RejectedSeq[] }
+
+function parseFasta(text: string): ParseResult {
+  const valid: ParsedSeq[] = []
+  const rejected: RejectedSeq[] = []
   let cur: ParsedSeq | null = null
+
+  const flush = () => {
+    if (!cur) return
+    if (!cur.seq.length) {
+      rejected.push({ id: cur.id, seq: '', reason: 'Empty sequence body' })
+    } else if (![...cur.seq].some((c) => VALID_AAS.has(c))) {
+      rejected.push({ id: cur.id, seq: cur.seq, reason: 'No standard amino acid characters found' })
+    } else {
+      valid.push(cur)
+    }
+  }
+
   for (const raw of text.split('\n')) {
     const line = raw.trim()
     if (line.startsWith('>')) {
-      if (cur) out.push(cur)
-      cur = { id: line.slice(1).split(/\s+/)[0] || `seq_${out.length + 1}`, seq: '' }
+      flush()
+      cur = { id: line.slice(1).split(/\s+/)[0] || `seq_${valid.length + rejected.length + 1}`, seq: '' }
     } else if (cur) {
       cur.seq += line.replace(/\s/g, '').toUpperCase()
     }
   }
-  if (cur) out.push(cur)
-  return out
+  flush()
+  return { valid, rejected }
 }
 
-function parsePlain(text: string): ParsedSeq[] {
-  return text
-    .split('\n')
-    .map((line, i) => ({ id: `seq_${i + 1}`, seq: line.trim().replace(/\s/g, '').toUpperCase() }))
-    .filter((s) => s.seq.length > 0 && [...s.seq].some((c) => VALID_AAS.has(c)))
+function parsePlain(text: string): ParseResult {
+  const valid: ParsedSeq[] = []
+  const rejected: RejectedSeq[] = []
+
+  text.split('\n').forEach((line, i) => {
+    const seq = line.trim().replace(/\s/g, '').toUpperCase()
+    if (!seq.length) return // blank line — skip silently
+    if (![...seq].some((c) => VALID_AAS.has(c))) {
+      const chars = [...new Set(seq.split(''))].join('')
+      rejected.push({ id: `line_${i + 1}`, seq, reason: `No standard amino acids found (chars: ${chars})` })
+    } else {
+      valid.push({ id: `seq_${valid.length + 1}`, seq })
+    }
+  })
+
+  return { valid, rejected }
 }
 
-function parseFile(text: string, name: string): ParsedSeq[] {
-  const seqs = name.toLowerCase().endsWith('.fasta') || name.toLowerCase().endsWith('.fa') || text.trimStart().startsWith('>')
-    ? parseFasta(text)
-    : parsePlain(text)
-  return seqs.filter((s) => s.seq.length > 0)
+function parseFile(text: string, name: string): ParseResult {
+  const isFasta =
+    name.toLowerCase().endsWith('.fasta') ||
+    name.toLowerCase().endsWith('.fa') ||
+    text.trimStart().startsWith('>')
+  return isFasta ? parseFasta(text) : parsePlain(text)
 }
 
 // ── CSV export ─────────────────────────────────────────────────────────────────
@@ -99,42 +128,6 @@ function exportSummaryCSV(seqs: ParsedSeq[], accession: string) {
 
 // ── Subcomponents ──────────────────────────────────────────────────────────────
 
-function RecordSelector({ accession, onChange }: { accession: string; onChange: (a: string) => void }) {
-  const [filter, setFilter] = useState('')
-  const filtered = useMemo(
-    () => ALL_ACCS.filter((a) =>
-      a.toLowerCase().includes(filter.toLowerCase()) ||
-      DB1[a].description.toLowerCase().includes(filter.toLowerCase())
-    ),
-    [filter]
-  )
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">AAIndex1 record</span>
-      <input
-        type="text"
-        placeholder="Filter records…"
-        value={filter}
-        onChange={(e) => setFilter(e.target.value)}
-        className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      />
-      <select
-        value={accession}
-        onChange={(e) => onChange(e.target.value)}
-        size={10}
-        className="w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-      >
-        {filtered.map((a) => (
-          <option key={a} value={a} title={DB1[a].description}>{a}</option>
-        ))}
-      </select>
-      <p className="text-xs text-gray-500 dark:text-gray-400 italic truncate" title={DB1[accession]?.description}>
-        {DB1[accession]?.description}
-      </p>
-    </div>
-  )
-}
-
 function SeqStats({ seq, accession }: { seq: string; accession: string }) {
   const encoded = useMemo(() => encodeSequence(seq, DB1[accession]?.values ?? {}), [seq, accession])
   const nums = encoded.map((e) => e.value).filter((v): v is number => v !== null)
@@ -155,6 +148,7 @@ export default function Encode() {
   const [accession, setAccession] = useState(ALL_ACCS[0])
   const [preview, setPreview] = useState<string | null>(null)
   const [error, setError] = useState('')
+  const [rejectedSeqs, setRejectedSeqs] = useState<RejectedSeq[]>([])
   const [favsOpen, setFavsOpen] = useState(false)
   const [examplesOpen, setExamplesOpen] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -162,7 +156,8 @@ export default function Encode() {
 
   const loadExample = (fasta: string, label: string) => {
     setError('')
-    const seqs = parseFasta(fasta)
+    setRejectedSeqs([])
+    const { valid: seqs } = parseFasta(fasta)
     if (!seqs.length) return
     setSequences(seqs)
     setFileName(`${label} (example)`)
@@ -175,15 +170,17 @@ export default function Encode() {
     const reader = new FileReader()
     reader.onload = (e) => {
       const text = e.target?.result as string
-      const seqs = parseFile(text, file.name)
+      const { valid: seqs, rejected } = parseFile(text, file.name)
       if (!seqs.length) {
         setError('No valid sequences found. Expected FASTA or plain text (one sequence per line).')
         setSequences([])
         setPreview(null)
+        setRejectedSeqs(rejected)
         return
       }
       setSequences(seqs)
       setPreview(seqs[0].id)
+      setRejectedSeqs(rejected)
     }
     reader.readAsText(file)
   }
@@ -223,9 +220,28 @@ export default function Encode() {
               onChange={(e) => { const f = e.target.files?.[0]; if (f) handleFile(f) }}
             />
             {fileName ? (
-              <div>
-                <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">{fileName}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{sequences.length} sequences loaded</p>
+              <div className="flex items-start justify-between gap-1">
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">{fileName}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{sequences.length} sequences loaded</p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSequences([])
+                    setFileName('')
+                    setPreview(null)
+                    setError('')
+                    setRejectedSeqs([])
+                    if (inputRef.current) inputRef.current.value = ''
+                  }}
+                  title="Remove loaded sequence"
+                  className="shrink-0 flex items-center justify-center w-5 h-5 rounded bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-800/60 text-red-500 dark:text-red-400 transition-colors"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
             ) : (
               <div>
@@ -235,6 +251,25 @@ export default function Encode() {
             )}
           </div>
           {error && <p className="text-xs text-red-500">{error}</p>}
+          {rejectedSeqs.length > 0 && (
+            <div className="text-xs border border-amber-200 dark:border-amber-800 rounded p-2 bg-amber-50 dark:bg-amber-950/30">
+              <p className="font-semibold text-amber-700 dark:text-amber-400 mb-1">
+                {rejectedSeqs.length} sequence{rejectedSeqs.length !== 1 ? 's' : ''} skipped:
+              </p>
+              <ul className="space-y-0.5 text-amber-600 dark:text-amber-500">
+                {rejectedSeqs.map((r, i) => (
+                  <li key={i} className="leading-snug">
+                    <span className="font-mono">{r.id}</span>: {r.reason}
+                    {r.seq && (
+                      <span className="ml-1 font-mono opacity-70">
+                        {r.seq.slice(0, 16)}{r.seq.length > 16 ? '…' : ''}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {/* Example sequences */}

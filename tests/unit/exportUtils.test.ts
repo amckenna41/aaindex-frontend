@@ -201,3 +201,42 @@ describe('exportMatrixAsCSV', () => {
     expect(text).toContain('C,-1,9')
   })
 })
+
+// ── crash guards ───────────────────────────────────────────────────────────────
+
+describe('exportComparisonAsCSV — crash guards', () => {
+  it('does nothing when accessions array is empty', () => {
+    exportComparisonAsCSV([], {})
+    expect(mockSaveAs).not.toHaveBeenCalled()
+  })
+
+  it('does nothing when the first accession is missing from records', () => {
+    exportComparisonAsCSV(['NOTEXIST'], {})
+    expect(mockSaveAs).not.toHaveBeenCalled()
+  })
+})
+
+describe('exportMatrixAsCSV — crash guards', () => {
+  it('does nothing when the matrix is empty', () => {
+    exportMatrixAsCSV('EMPTY001', {})
+    expect(mockSaveAs).not.toHaveBeenCalled()
+  })
+})
+
+// ── CSV formula-injection quoting ─────────────────────────────────────────────
+
+describe('exportComparisonAsCSV — CSV quoting', () => {
+  it('wraps an accession containing a comma in double quotes in the header', async () => {
+    exportComparisonAsCSV(['A,B'], { 'A,B': { G: 0.5 } })
+    const blob = mockSaveAs.mock.calls[0][0] as Blob
+    const text = await blobText(blob)
+    expect(text.split('\n')[0]).toContain('"A,B"')
+  })
+
+  it('wraps an accession starting with = in double quotes (formula injection guard)', async () => {
+    exportComparisonAsCSV(['=CMD'], { '=CMD': { G: 1.0 } })
+    const blob = mockSaveAs.mock.calls[0][0] as Blob
+    const text = await blobText(blob)
+    expect(text.split('\n')[0]).toContain('"=CMD"')
+  })
+})

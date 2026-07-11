@@ -39,6 +39,19 @@ const INVALID_CONTENT = `12345
 !!!???
 `
 
+// Plain text file with a mix of valid sequences and invalid (non-AA) lines.
+const MIXED_PLAIN_WITH_INVALID = `ACDEFGHIKLMNPQRSTVWY
+12345678
+MKTAYIAKQRQ
+`
+
+// FASTA file where one entry has an empty body (rejected) and one is valid.
+const FASTA_WITH_EMPTY_ENTRY = `>empty_seq
+
+>valid_seq
+ACDE
+`
+
 // ── Render ─────────────────────────────────────────────────────────────────────
 
 describe('Encode — initial render', () => {
@@ -270,5 +283,91 @@ describe('Encode — record filter', () => {
     const desc = document.querySelector('p.italic')
     expect(desc).not.toBeNull()
     expect(desc!.textContent!.length).toBeGreaterThan(0)
+  })
+})
+
+// ── Rejected sequences ─────────────────────────────────────────────────────────
+
+describe('Encode — rejected sequences', () => {
+  it('shows a skipped-sequences warning when some plain text lines have no valid AAs', async () => {
+    render(<Encode />)
+    await uploadFile('mixed.txt', MIXED_PLAIN_WITH_INVALID)
+    await waitFor(() => {
+      expect(screen.getByText(/1 sequence.? skipped/i)).toBeInTheDocument()
+    })
+  })
+
+  it('loads valid sequences even when some lines are rejected', async () => {
+    render(<Encode />)
+    await uploadFile('mixed.txt', MIXED_PLAIN_WITH_INVALID)
+    await waitFor(() => {
+      expect(screen.getAllByText(/2 sequences loaded/i).length).toBeGreaterThanOrEqual(1)
+    })
+  })
+
+  it('shows a reason for each rejected sequence', async () => {
+    render(<Encode />)
+    await uploadFile('mixed.txt', MIXED_PLAIN_WITH_INVALID)
+    await waitFor(() => {
+      expect(screen.getByText(/no standard amino acids found/i)).toBeInTheDocument()
+    })
+  })
+
+  it('does not show the skipped panel when all sequences are valid', async () => {
+    render(<Encode />)
+    await uploadFile('seqs.txt', PLAIN_TWO_SEQS)
+    await waitFor(() => expect(screen.getAllByText(/2 sequences loaded/i).length).toBeGreaterThanOrEqual(1))
+    expect(screen.queryByText(/sequences? skipped/i)).not.toBeInTheDocument()
+  })
+
+  it('shows rejected panel alongside the error when all sequences are invalid', async () => {
+    render(<Encode />)
+    await uploadFile('bad.txt', INVALID_CONTENT)
+    await waitFor(() => {
+      expect(screen.getByText(/no valid sequences found/i)).toBeInTheDocument()
+      expect(screen.getByText(/2 sequences? skipped/i)).toBeInTheDocument()
+    })
+  })
+
+  it('tracks empty FASTA entries as rejected', async () => {
+    render(<Encode />)
+    await uploadFile('test.fasta', FASTA_WITH_EMPTY_ENTRY)
+    await waitFor(() => {
+      // valid_seq loads, empty_seq is rejected
+      expect(screen.getAllByText(/1 sequences? loaded/i).length).toBeGreaterThanOrEqual(1)
+      expect(screen.getByText(/1 sequence.? skipped/i)).toBeInTheDocument()
+    })
+  })
+})
+
+// ── Clear button ───────────────────────────────────────────────────────────────
+
+describe('Encode — clear (×) button', () => {
+  it('shows a clear button once a file is loaded', async () => {
+    render(<Encode />)
+    await uploadFile('test.fasta', FASTA_SINGLE)
+    await waitFor(() => {
+      expect(screen.getByTitle(/remove loaded sequence/i)).toBeInTheDocument()
+    })
+  })
+
+  it('restores the empty state when the clear button is clicked', async () => {
+    render(<Encode />)
+    await uploadFile('test.fasta', FASTA_SINGLE)
+    await waitFor(() => screen.getByTitle(/remove loaded sequence/i))
+    await userEvent.click(screen.getByTitle(/remove loaded sequence/i))
+    await waitFor(() => {
+      expect(screen.getByText(/upload a sequence file to encode/i)).toBeInTheDocument()
+    })
+  })
+
+  it('removes the rejected sequences panel when the clear button is clicked', async () => {
+    render(<Encode />)
+    await uploadFile('mixed.txt', MIXED_PLAIN_WITH_INVALID)
+    await waitFor(() => screen.getByText(/1 sequence.? skipped/i))
+    await userEvent.click(screen.getByTitle(/remove loaded sequence/i))
+    await waitFor(() => {
+      expect(screen.queryByText(/sequences? skipped/i)).not.toBeInTheDocument()
+    })
   })
 })

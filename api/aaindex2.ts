@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, methodNotAllowed } from './_helpers'
-import rawDb from '../src/data/aaindex2.json'
+import { setCorsHeaders, methodNotAllowed } from './_helpers.js'
+import rawDb from '../src/data/aaindex2.json' with { type: 'json' }
 
 interface DB2Record {
   description: string
