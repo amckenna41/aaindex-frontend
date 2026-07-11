@@ -11,11 +11,13 @@ test.describe('Explorer → Compare journey', () => {
   })
 
   test('lands on Explorer with record cards visible', async ({ page }) => {
-    await expect(page.locator('text=KYTJ820101')).toBeVisible({ timeout: 10_000 })
+    // First page shows the first records in the dataset (KYTJ820101 is deep in the list).
+    await expect(page.locator('text=ANDN920101')).toBeVisible({ timeout: 10_000 })
   })
 
   test('search filters down the record list', async ({ page }) => {
-    await page.getByPlaceholder(/search/i).fill('hydrophobicity')
+    // KYTJ820101's description is "Hydropathy index" — search matches on that.
+    await page.getByPlaceholder(/search/i).fill('hydropathy')
     await expect(page.locator('text=KYTJ820101')).toBeVisible()
     // Cards not matching the query should disappear
     const cards = page.locator('[role="button"]')
@@ -24,16 +26,17 @@ test.describe('Explorer → Compare journey', () => {
   })
 
   test('clicking a record card navigates to its detail page', async ({ page }) => {
+    await page.getByPlaceholder(/search/i).fill('hydropathy')
     await page.locator('text=KYTJ820101').first().click()
     await expect(page).toHaveURL(/\/records\/KYTJ820101/)
-    await expect(page.getByText(/Hydrophobicity/i)).toBeVisible()
+    await expect(page.getByText(/Hydropathy/i).first()).toBeVisible()
   })
 
   test('add to compare from detail page navigates to Comparator', async ({ page }) => {
     await page.goto('/records/KYTJ820101')
     await page.getByRole('button', { name: /add to compare/i }).click()
     await expect(page).toHaveURL(/\/compare/)
-    await expect(page.locator('text=KYTJ820101')).toBeVisible()
+    await expect(page.locator('text=KYTJ820101').first()).toBeVisible()
   })
 
   test('comparator shows the values table with 20 amino acid rows', async ({ page }) => {

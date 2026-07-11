@@ -4,12 +4,12 @@ import { test, expect } from '@playwright/test'
 
 const ROUTES = [
   { path: '/explorer',      label: /explorer/i },
-  { path: '/sequence',      label: /sequence analysis/i },
+  { path: '/sequence',      label: /sequence encoder/i },
   { path: '/encode',        label: /encode/i },
   { path: '/visualise',     label: /visualiser|bar chart/i },
   { path: '/stats',         label: /category/i },
   { path: '/api-reference', label: /api reference/i },
-  { path: '/guide',         label: /how.to guide/i },
+  { path: '/guide',         label: /user guide/i },
   { path: '/about',         label: /about/i },
 ]
 

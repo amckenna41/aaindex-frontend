@@ -18,7 +18,7 @@ test.describe('Encode journey', () => {
   test('clicking an example loads its sequence', async ({ page }) => {
     await page.goto('/encode')
     await page.getByText('Human Insulin B-chain').click()
-    await expect(page.getByText(/insulin/i)).toBeVisible()
+    await expect(page.getByText(/insulin/i).first()).toBeVisible()
     await expect(page.getByText(/sequences loaded/i)).toBeVisible()
   })
 
@@ -32,7 +32,7 @@ test.describe('Encode journey', () => {
     const input = page.locator('input[type="file"]')
     await input.setInputFiles(tmpFile)
 
-    await expect(page.getByText(/1\s+sequence.*loaded/i)).toBeVisible({ timeout: 5_000 })
+    await expect(page.getByRole('heading', { name: /1 sequence loaded/i })).toBeVisible({ timeout: 5_000 })
     fs.unlinkSync(tmpFile)
   })
 
