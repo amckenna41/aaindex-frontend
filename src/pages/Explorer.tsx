@@ -48,7 +48,7 @@ export default function Explorer() {
     if (categoryFilter) params.cat = categoryFilter
     if (page > 1) params.page = String(page)
     setSearchParams(params, { replace: true })
-  }, [activeDB, searchQuery, categoryFilter, page]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [activeDB, searchQuery, categoryFilter, page])
 
   // Lazily import db2/db3 on first switch to that database.
   useEffect(() => {

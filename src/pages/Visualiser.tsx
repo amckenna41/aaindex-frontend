@@ -75,29 +75,29 @@ export default function Visualiser() {
     }
 
     return () => { cancelled = true }
-  }, [chartType]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [chartType])
 
   // Once db2 loads, default acc1 to its first entry if current acc1 isn’t in db2.
   useEffect(() => {
     if (!lazyDB2 || db !== 'aaindex2') return
     const accs2 = Object.keys(lazyDB2)
     if (accs2.length && !(acc1 in lazyDB2)) setAcc1(accs2[0])
-  }, [lazyDB2]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lazyDB2])
 
   useEffect(() => {
     if (!lazyDB3 || db !== 'aaindex3') return
     const accs3 = Object.keys(lazyDB3)
     if (accs3.length && !(acc1 in lazyDB3)) setAcc1(accs3[0])
-  }, [lazyDB3]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lazyDB3])
 
   const DB2 = lazyDB2 ?? ({} as AAIndex2DB)
   const DB3 = lazyDB3 ?? ({} as AAIndex3DB)
 
-  const ALL_ACCS_2 = useMemo(() => Object.keys(DB2), [lazyDB2]) // eslint-disable-line react-hooks/exhaustive-deps
-  const ALL_ACCS_3 = useMemo(() => Object.keys(DB3), [lazyDB3]) // eslint-disable-line react-hooks/exhaustive-deps
+  const ALL_ACCS_2 = useMemo(() => Object.keys(DB2), [lazyDB2])
+  const ALL_ACCS_3 = useMemo(() => Object.keys(DB3), [lazyDB3])
   const ALL_DBS = useMemo<Record<string, { description: string }>>(
     () => ({ ...DB1, ...DB2, ...DB3 }),
-    [lazyDB2, lazyDB3], // eslint-disable-line react-hooks/exhaustive-deps
+    [lazyDB2, lazyDB3],
   )
 
   const accs = db === 'aaindex1' ? ALL_ACCS_1 : db === 'aaindex2' ? ALL_ACCS_2 : ALL_ACCS_3

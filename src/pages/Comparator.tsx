@@ -32,7 +32,7 @@ export default function Comparator() {
     clearCompare()
     accs.forEach(addToCompare)
     setNormalise(searchParams.get('norm') === 'zscore')
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, []) 
 
   // Sync store → URL on every state change
   useEffect(() => {
