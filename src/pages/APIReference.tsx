@@ -29,6 +29,27 @@ const ENDPOINTS: Endpoint[] = [
   },
   {
     method: 'GET',
+    path: '/api/search',
+    description: 'Cross-database full-text search. Filters aaindex1, aaindex2, and aaindex3 in a single request and tags each hit with its source database — no need to query and merge the three list endpoints yourself.',
+    params: [
+      { name: 'q', type: 'string', description: 'Search term (required). Matched against accession codes and descriptions across all three databases.' },
+      { name: 'limit', type: 'string', description: 'Maximum number of records to return (pagination).' },
+      { name: 'offset', type: 'string', description: 'Number of records to skip (pagination).' },
+    ],
+    example: '/api/search?q=hydrophobicity',
+    sampleResponse: JSON.stringify({
+      query: 'hydrophobicity',
+      count: 2,
+      offset: 0,
+      limit: 2,
+      records: [
+        { database: 'aaindex1', accession: 'KYTJ820101', description: 'Hydrophobicity index (Kyte-Doolittle, 1982)' },
+        { database: 'aaindex3', accession: 'MOOG990101', description: 'Hydrophobicity-related contact potential' },
+      ],
+    }, null, 2),
+  },
+  {
+    method: 'GET',
     path: '/api/aaindex1',
     description: 'List all 566 AAIndex1 physicochemical property records. Returns accession, description, and category for each entry.',
     params: [
@@ -248,6 +269,7 @@ function EndpointCard({ ep }: { ep: Endpoint }) {
 }
 
 export default function APIReference() {
+  const searchEndpoints = ENDPOINTS.filter((e) => e.path === '/api/search')
   const db1Endpoints = ENDPOINTS.filter((e) => e.path.includes('aaindex1') || e.path === '/api')
   const db2Endpoints = ENDPOINTS.filter((e) => e.path.includes('aaindex2'))
   const db3Endpoints = ENDPOINTS.filter((e) => e.path.includes('aaindex3'))
@@ -274,6 +296,15 @@ export default function APIReference() {
       <section className="flex flex-col gap-2">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Overview</h2>
         <EndpointCard ep={ENDPOINTS[0]} />
+      </section>
+
+      {/* Search */}
+      <section className="flex flex-col gap-2">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Search</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">Full-text search across all three databases in a single request.</p>
+        </div>
+        {searchEndpoints.map((ep) => <EndpointCard key={ep.path} ep={ep} />)}
       </section>
 
       {/* AAIndex1 */}

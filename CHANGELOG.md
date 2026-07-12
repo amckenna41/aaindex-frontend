@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`GET /api/search` cross-database search endpoint** (`api/search.ts`) — full-text search across aaindex1, aaindex2, and aaindex3 in a single request. Matches the `q` term against accession codes and descriptions and tags each hit with its source `database`, removing the need for clients to query the three list endpoints and merge results. Supports `limit`/`offset` pagination. Documented in the in-app API Reference and covered by `tests/unit/api/search.test.ts`.
 - **Explorer URL persistence** — the search query (`q`), active database (`db`), category filter (`cat`), and page number (`page`) are now reflected in the URL as query parameters and hydrated on load. Explorer views can be bookmarked and shared as direct links.
 - **App-level `ErrorBoundary`** (`src/components/ErrorBoundary.tsx`) — wraps the entire application so that uncaught render errors produce a "Something went wrong / Try again" recovery screen instead of a blank white page.
 - **Rejected sequence reporting in Encode** — the FASTA and plain-text parsers now track sequences that were silently skipped during upload. When rejections occur, an amber warning panel lists each skipped entry with its ID and the specific reason (empty body, no standard amino acid characters found, or the exact unexpected characters encountered). The panel is also cleared when the loaded file is removed.
@@ -38,6 +39,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Tests
 
+- Added `tests/unit/api/search.test.ts`: covers the `/api/search` endpoint — required-`q` 400, cross-database hits, per-record `database` tagging, case-insensitive matching, accession-code matching, `limit`/`offset` pagination, empty-result handling, and 405/204/CORS behaviour.
 - Updated `tests/unit/api/encode.test.ts`: two tests that expected 566 default-encoded accessions now correctly expect 50, matching the new cap.
 - Added `tests/unit/exportUtils.test.ts`: crash-guard tests for `exportComparisonAsCSV` (empty array, missing record) and `exportMatrixAsCSV` (empty matrix); CSV quoting tests for accessions containing commas or formula characters.
 - Added `tests/integration/Encode.test.tsx`: tests for rejected-sequence display (panel shown with reasons, count, cleared on remove), and clear-button behaviour (restores empty state, clears rejected panel).

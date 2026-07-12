@@ -46,8 +46,18 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         },
       },
     },
+    search: {
+      description: 'Cross-database full-text search across aaindex1, aaindex2 and aaindex3',
+      endpoint: 'GET /api/search',
+      query_params: {
+        q: 'Search term (required) — matched against accession codes and descriptions',
+        limit: 'Max records to return',
+        offset: 'Records to skip (pagination)',
+      },
+    },
     examples: [
       '/api/aaindex1',
+      '/api/search?q=hydrophobicity',
       '/api/aaindex1/KYTJ820101',
       '/api/aaindex1?q=hydrophobicity',
       '/api/aaindex1?category=hydrophobic',
