@@ -15,6 +15,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`GET /api/aaindex-updated` source-freshness endpoint** (`api/aaindex-updated.ts`) — fetches the AAIndex source page (`genome.jp/aaindex`) and extracts its footer "Last updated" date, exposing it as JSON (edge-cached 24h). The About page now shows this date live at the bottom, falling back to the last known value (February 13, 2017) if the source is unreachable. Extraction logic is unit-tested in `tests/unit/api/aaindex-updated.test.ts`.
 - **`GET /api/search` cross-database search endpoint** (`api/search.ts`) — full-text search across aaindex1, aaindex2, and aaindex3 in a single request. Matches the `q` term against accession codes and descriptions and tags each hit with its source `database`, removing the need for clients to query the three list endpoints and merge results. Supports `limit`/`offset` pagination. Documented in the in-app API Reference and covered by `tests/unit/api/search.test.ts`.
 - **Explorer URL persistence** — the search query (`q`), active database (`db`), category filter (`cat`), and page number (`page`) are now reflected in the URL as query parameters and hydrated on load. Explorer views can be bookmarked and shared as direct links.
 - **App-level `ErrorBoundary`** (`src/components/ErrorBoundary.tsx`) — wraps the entire application so that uncaught render errors produce a "Something went wrong / Try again" recovery screen instead of a blank white page.

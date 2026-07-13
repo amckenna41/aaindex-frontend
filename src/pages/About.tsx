@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { downloadAAIndex } from '../lib/aaindexFormat'
 import { AAIndex1DB, AAIndex2DB, AAIndex3DB } from '../types'
 import db1 from '../data/aaindex1.json'
@@ -43,6 +43,16 @@ function DownloadCard({ name }: { name: keyof typeof DBS }) {
 }
 
 export default function About() {
+  // Pulled live from the source database footer (genome.jp/aaindex); falls back to
+  // the last known value if the proxy endpoint is unreachable.
+  const [lastUpdated, setLastUpdated] = useState('February 13, 2017')
+  useEffect(() => {
+    fetch('/api/aaindex-updated')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d?.lastUpdated) setLastUpdated(d.lastUpdated) })
+      .catch(() => { /* keep fallback */ })
+  }, [])
+
   return (
     <div className="max-w-2xl mx-auto flex flex-col gap-8 py-4">
       <div>
@@ -193,6 +203,12 @@ export default function About() {
           Python package, which parses and exposes the full AAIndex database.
         </p>
       </section>
+
+      <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+        AAIndex database last updated: {lastUpdated} · source{' '}
+        <a href="https://www.genome.jp/aaindex/" target="_blank" rel="noopener noreferrer"
+          className="hover:underline">genome.jp/aaindex</a>
+      </p>
     </div>
   )
 }
