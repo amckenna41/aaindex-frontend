@@ -1,4 +1,5 @@
 // Minimal mock objects matching what Vercel passes to handlers.
+import dbHandler from '../../../api/db'
 
 export interface MockRes {
   statusCode: number
@@ -36,4 +37,13 @@ export function makeReq(
   } = {},
 ) {
   return { method: 'GET', query: {}, headers: {}, ...opts } as never
+}
+
+/** The three aaindex databases share one handler (api/db.ts); the rewrite in
+ *  vercel.json is what supplies `database`. This does the same for tests. */
+export function dbHandlerFor(database: string) {
+  return (req: never, res: never) => {
+    const r = req as { query?: Record<string, unknown> }
+    return dbHandler({ ...r, query: { database, ...r.query } } as never, res)
+  }
 }

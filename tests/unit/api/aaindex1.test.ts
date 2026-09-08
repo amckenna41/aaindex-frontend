@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import listHandler from '../../../api/aaindex1'
-import detailHandler from '../../../api/aaindex1/[accession]'
-import { makeReq, makeRes } from './_fixtures'
+import { makeReq, makeRes, dbHandlerFor } from './_fixtures'
+
+const listHandler = dbHandlerFor('aaindex1')
+const detailHandler = listHandler
 
 // ── List endpoint ─────────────────────────────────────────────────────────────
 

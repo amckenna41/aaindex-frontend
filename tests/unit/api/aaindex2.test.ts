@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import listHandler from '../../../api/aaindex2'
-import detailHandler from '../../../api/aaindex2/[accession]'
-import { makeReq, makeRes } from './_fixtures'
+import { makeReq, makeRes, dbHandlerFor } from './_fixtures'
+
+const listHandler = dbHandlerFor('aaindex2')
+const detailHandler = listHandler
 
 const KNOWN = 'HENS920102' // BLOSUM-62
 

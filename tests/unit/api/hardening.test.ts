@@ -1,16 +1,13 @@
 /** Regression cover for the API findings: error responses must never be cached,
  *  encode must be bounded, and prototype keys must not resolve to records. */
 import { describe, it, expect, vi, afterEach } from 'vitest'
-import { makeReq, makeRes, type MockRes } from './_fixtures'
+import { makeReq, makeRes, dbHandlerFor, type MockRes } from './_fixtures'
+
+const [list1, list2, list3] = ['aaindex1', 'aaindex2', 'aaindex3'].map(dbHandlerFor)
+const [rec1, rec2, rec3] = [list1, list2, list3]
 
 import indexHandler from '../../../api/index'
 import searchHandler from '../../../api/search'
-import list1 from '../../../api/aaindex1'
-import list2 from '../../../api/aaindex2'
-import list3 from '../../../api/aaindex3'
-import rec1 from '../../../api/aaindex1/[accession]'
-import rec2 from '../../../api/aaindex2/[accession]'
-import rec3 from '../../../api/aaindex3/[accession]'
 import encodeHandler from '../../../api/encode'
 import pubmedHandler from '../../../api/pubmed/[pmid]'
 import updatedHandler, { parseLastUpdated } from '../../../api/aaindex-updated'
