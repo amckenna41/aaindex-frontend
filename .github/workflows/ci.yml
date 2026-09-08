@@ -3,6 +3,8 @@ name: CI
 on:
   push:
     branches: ['**']
+    # Docs- or workflow-only pushes don't need a build, a browser, or a deploy.
+    paths-ignore: ['**/*.md', '**/*.yml']
   workflow_dispatch:
 
 env:

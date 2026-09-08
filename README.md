@@ -1,6 +1,6 @@
 # AAIndex Explorer
 
-<img src="public/aaindex_explorer_logo.png" alt="AAIndex Explorer logo" width="50%">
+<p align="center"><img src="public/aaindex_explorer_logo.png" alt="AAIndex Explorer logo" width="50%"></p>
 
 **[aaindex.vercel.app](https://aaindex.vercel.app/)**
 
