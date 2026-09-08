@@ -1,4 +1,5 @@
-import { saveAs } from 'file-saver'
+// Deliberately dependency-free: api/window.ts shares these encoders, and a
+// serverless function has no business importing a browser download library.
 
 export const VALID_AAS = new Set([
   'A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y',
@@ -53,11 +54,4 @@ export function zScoreNormalise(values: Record<string, number>): Record<string, 
   const mean = vals.reduce((a, b) => a + b, 0) / vals.length
   const std = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length) || 1
   return Object.fromEntries(Object.entries(values).map(([k, v]) => [k, (v - mean) / std]))
-}
-
-export function exportEncodingAsCSV(accession: string, seq: string, encoded: EncodedResidue[]) {
-  const header = 'position,amino_acid,value'
-  const rows = encoded.map(({ pos, aa, value }) => `${pos},${aa},${value ?? ''}`)
-  const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' })
-  saveAs(blob, `${accession}_encoding_${seq.slice(0, 8)}.csv`)
 }

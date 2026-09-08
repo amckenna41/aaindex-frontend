@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#0b1020"/>
+  <g fill="none" stroke="#4f46e5" stroke-width="3" opacity="0.35">
+    <path d="M0 470 C 150 380, 250 560, 400 470 S 650 380, 800 470 S 1050 560, 1200 470"/>
+    <path d="M0 520 C 150 430, 250 610, 400 520 S 650 430, 800 520 S 1050 610, 1200 520"/>
+  </g>
+  <text x="80" y="250" font-family="Helvetica, Arial, sans-serif" font-size="86" font-weight="bold" fill="#ffffff">AAIndex Explorer</text>
+  <text x="80" y="322" font-family="Helvetica, Arial, sans-serif" font-size="34" fill="#a5b4fc">Amino acid physicochemical properties — browse, compare, encode</text>
+  <text x="80" y="392" font-family="Helvetica, Arial, sans-serif" font-size="28" fill="#94a3b8">707 records · sequence analysis · free REST API</text>
+</svg>

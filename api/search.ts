@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed, tableFormat, sendTable, badFormat } from './_helpers.js'
 import db1 from '../src/data/aaindex1.json' with { type: 'json' }
 import db2 from '../src/data/aaindex2.json' with { type: 'json' }
 import db3 from '../src/data/aaindex3.json' with { type: 'json' }
@@ -15,6 +15,9 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(res)
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (req.method !== 'GET') return methodNotAllowed(res)
+
+  const fmt = tableFormat(req.query.format)
+  if (fmt === undefined) return badFormat(res)
 
   const { q, limit, offset } = req.query
   if (typeof q !== 'string' || !q) {
@@ -35,11 +38,16 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   const off = typeof offset === 'string' ? Math.max(0, parseInt(offset) || 0) : 0
   const lim = typeof limit === 'string' ? Math.min(1000, Math.max(1, parseInt(limit) || count)) : count
 
+  const records = hits.slice(off, off + lim)
+
+  if (fmt) return sendTable(res, fmt, 'search', records)
+
+  setCacheHeaders(res)
   return res.status(200).json({
     query: q,
     count,
     offset: off,
     limit: lim,
-    records: hits.slice(off, off + lim),
+    records,
   })
 }

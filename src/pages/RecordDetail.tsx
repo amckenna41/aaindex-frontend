@@ -8,16 +8,48 @@ import ExportButton from '../components/ExportButton'
 import SimilarRecords from '../components/SimilarRecords'
 import CitationHelper from '../components/CitationHelper'
 import PubMedAbstract from '../components/PubMedAbstract'
-import { AAIndex1DB, AAIndex2DB, AAIndex3DB } from '../types'
+import { AAIndex1DB, AAIndex1Record, AAIndex2Record, DBName } from '../types'
 import { categoryColour } from '../lib/categories'
 
-import db1 from '../data/aaindex1.json'
-import db2 from '../data/aaindex2.json'
-import db3 from '../data/aaindex3.json'
+// Loaded on demand, one database at a time. Importing all three statically here
+// pulled every byte of source JSON into the entry chunk and made the Explorer's
+// dynamic imports pointless.
+const LOADERS: Record<DBName, () => Promise<{ default: unknown }>> = {
+  aaindex1: () => import('../data/aaindex1.json'),
+  aaindex2: () => import('../data/aaindex2.json'),
+  aaindex3: () => import('../data/aaindex3.json'),
+}
 
-const DB1 = db1 as unknown as AAIndex1DB
-const DB2 = db2 as unknown as AAIndex2DB
-const DB3 = db3 as unknown as AAIndex3DB
+const DB_ORDER: DBName[] = ['aaindex1', 'aaindex2', 'aaindex3']
+const cache: Partial<Record<DBName, Record<string, unknown>>> = {}
+
+async function loadDB(name: DBName): Promise<Record<string, unknown>> {
+  if (!cache[name]) cache[name] = (await LOADERS[name]()).default as Record<string, unknown>
+  return cache[name]!
+}
+
+interface Located {
+  dbName: DBName
+  record: AAIndex1Record | AAIndex2Record
+  db1: AAIndex1DB | null
+}
+
+/** Walks the databases in order, loading each only until the accession is found.
+ *  Object.hasOwn, not truthiness — `constructor` and friends are inherited from
+ *  Object.prototype and would otherwise sail past the not-found guard. */
+async function locate(accession: string): Promise<Located | null> {
+  for (const dbName of DB_ORDER) {
+    const db = await loadDB(dbName)
+    if (Object.hasOwn(db, accession)) {
+      return {
+        dbName,
+        record: db[accession] as AAIndex1Record | AAIndex2Record,
+        db1: dbName === 'aaindex1' ? (db as unknown as AAIndex1DB) : null,
+      }
+    }
+  }
+  return null
+}
 
 function copyIframeSnippet(accession: string) {
   const url = `${window.location.origin}/records/${accession}`
@@ -29,6 +61,16 @@ export default function RecordDetail() {
   const { accession } = useParams<{ accession: string }>()
   const navigate = useNavigate()
   const { addToCompare, removeFromCompare, selectedAccessions, favourites, toggleFavourite, normalise, setNormalise, browseList } = useAAIndexStore()
+
+  const [located, setLocated] = useState<Located | null | undefined>(undefined)
+
+  useEffect(() => {
+    if (!accession) return
+    let cancelled = false
+    setLocated(undefined)
+    locate(accession).then((r) => { if (!cancelled) setLocated(r) })
+    return () => { cancelled = true }
+  }, [accession])
 
   const browseIdx = browseList.indexOf(accession ?? '')
   const prevAcc = browseIdx > 0 ? browseList[browseIdx - 1] : null
@@ -47,11 +89,15 @@ export default function RecordDetail() {
 
   if (!accession) return <p>No accession specified.</p>
 
-  const rec1 = DB1[accession]
-  const rec2 = DB2[accession] ?? DB3[accession]
-  const dbName = rec1 ? 'aaindex1' : DB2[accession] ? 'aaindex2' : DB3[accession] ? 'aaindex3' : null
+  if (located === undefined) {
+    return <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse py-16 text-center">Loading record…</p>
+  }
 
-  if (!dbName) {
+  const dbName = located?.dbName ?? null
+  const rec1 = located?.dbName === 'aaindex1' ? (located.record as AAIndex1Record) : null
+  const rec2 = located && located.dbName !== 'aaindex1' ? (located.record as AAIndex2Record) : null
+
+  if (!dbName || !located) {
     return (
       <div className="text-center py-16">
         <p className="text-lg font-semibold mb-2">Record not found: {accession}</p>
@@ -140,7 +186,7 @@ export default function RecordDetail() {
           <SimilarRecords
             accession={accession}
             correlationCoefficients={rec1.correlation_coefficients}
-            db={DB1}
+            db={located.db1 ?? {}}
           />
         )}
 
@@ -239,6 +285,8 @@ export default function RecordDetail() {
   }
 
   // Matrix record (aaindex2 / aaindex3)
+  if (!rec2) return null
+
   return (
     <div className="max-w-4xl mx-auto flex flex-col gap-6">
       <Link to="/explorer" className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">

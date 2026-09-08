@@ -1,23 +1,25 @@
 {
   "name": "aaindex-app",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/gen-sitemap.mjs && tsc -b && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sitemap": "node scripts/gen-sitemap.mjs"
   },
   "dependencies": {
     "file-saver": "^2.0.5",
     "fuse.js": "^7.0.0",
+    "html2canvas": "^1.4.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
+    "react-router-dom": "^7.18.3",
     "recharts": "^2.13.3",
     "zustand": "^5.0.2"
   },
@@ -34,7 +36,6 @@
     "@vitest/coverage-v8": "^4.1.9",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.17.0",
-    "html2canvas": "^1.4.1",
     "jsdom": "^29.1.1",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",

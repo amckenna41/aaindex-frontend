@@ -3,8 +3,13 @@ import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid,
 } from 'recharts'
 import { AAIndex1DB } from '../types'
-import { encodeSequence, slidingWindowEncode, exportEncodingAsCSV, VALID_AAS } from '../lib/seqUtils'
+import { encodeSequence, slidingWindowEncode, VALID_AAS } from '../lib/seqUtils'
+import { exportEncodingAsCSV } from '../lib/exportUtils'
 import { AA_FULL_NAMES } from '../lib/aminoAcids'
+import { minOf, maxOf } from '../lib/statsUtils'
+import { useUrlParam } from '../lib/useUrlParam'
+import ShareLink from '../components/ShareLink'
+import SequenceFetch from '../components/SequenceFetch'
 
 import db1 from '../data/aaindex1.json'
 import RecordSelector from '../components/RecordSelector'
@@ -64,8 +69,8 @@ function SequenceInput({ seq, onChange }: { seq: string; onChange: (s: string) =
 // ── Tab: Sequence Encoder ──────────────────────────────────────────────────────
 
 function EncoderTab() {
-  const [seq, setSeq] = useState('ACDEFGHIKLMNPQRSTVWY')
-  const [accession, setAccession] = useState(ALL_ACCS[0])
+  const [seq, setSeq] = useUrlParam('seq', 'ACDEFGHIKLMNPQRSTVWY')
+  const [accession, setAccession] = useUrlParam('acc', ALL_ACCS[0])
 
   const encoded = useMemo(
     () => (seq ? encodeSequence(seq, DB1[accession]?.values ?? {}) : []),
@@ -80,7 +85,9 @@ function EncoderTab() {
     <div className="flex gap-6">
       <aside className="w-56 shrink-0 flex flex-col gap-4">
         <SequenceInput seq={seq} onChange={setSeq} />
+        <SequenceFetch onLoad={(entries) => entries[0] && setSeq(entries[0].sequence)} />
         <RecordSelector accession={accession} onChange={setAccession} />
+        <ShareLink />
       </aside>
 
       <div className="flex-1 min-w-0">
@@ -168,9 +175,14 @@ function EncoderTab() {
 // ── Tab: Sliding Window ────────────────────────────────────────────────────────
 
 function WindowTab() {
-  const [seq, setSeq] = useState('MGSSHHHHHHSSGLVPRGSHMASMTGGQQMGRDLYDDDDKDPMSSLSSRRGKKLIRFRLRKKLVHQKEHQSGTQMLRPIFKKMKQHPQFLQKEVPQYLFYDLGMQLNKDDQRTTQYQLLGQDGNFLQLRN')
-  const [accession, setAccession] = useState('KYTJ820101') // Kyte-Doolittle
-  const [windowSize, setWindowSize] = useState(9)
+  const [seq, setSeq] = useUrlParam('seq', 'MGSSHHHHHHSSGLVPRGSHMASMTGGQQMGRDLYDDDDKDPMSSLSSRRGKKLIRFRLRKKLVHQKEHQSGTQMLRPIFKKMKQHPQFLQKEVPQYLFYDLGMQLNKDDQRTTQYQLLGQDGNFLQLRN')
+  const [accession, setAccession] = useUrlParam('acc', 'KYTJ820101') // Kyte-Doolittle
+  const [windowParam, setWindowParam] = useUrlParam('w', '9')
+  const parsedWindow = parseInt(windowParam, 10)
+  const windowSize = Number.isInteger(parsedWindow) && parsedWindow >= 3 && parsedWindow <= 25 && parsedWindow % 2 === 1
+    ? parsedWindow
+    : 9
+  const setWindowSize = (n: number) => setWindowParam(String(n))
 
   const encoded = useMemo(
     () => (seq ? encodeSequence(seq, DB1[accession]?.values ?? {}) : []),
@@ -186,6 +198,7 @@ function WindowTab() {
     <div className="flex gap-6">
       <aside className="w-56 shrink-0 flex flex-col gap-4">
         <SequenceInput seq={seq} onChange={setSeq} />
+        <SequenceFetch onLoad={(entries) => entries[0] && setSeq(entries[0].sequence)} />
         <RecordSelector accession={accession} onChange={setAccession} />
         <div>
           <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 block">
@@ -211,6 +224,7 @@ function WindowTab() {
         >
           ↓ CSV
         </button>
+        <ShareLink />
       </aside>
 
       <div className="flex-1 min-w-0">
@@ -269,9 +283,14 @@ function WindowTab() {
 // ── Tab: Multi-property Heatmap ────────────────────────────────────────────────
 
 function HeatmapTab() {
-  const [seq, setSeq] = useState('ACDEFGHIKLMNPQRSTVWY')
+  const [seq, setSeq] = useUrlParam('seq', 'ACDEFGHIKLMNPQRSTVWY')
   const [filter, setFilter] = useState('')
-  const [selected, setSelected] = useState<string[]>(() => ALL_ACCS.slice(0, 6))
+  const [idxParam, setIdxParam] = useUrlParam('idx', ALL_ACCS.slice(0, 6).join(','))
+  const selected = useMemo(
+    () => idxParam.split(',').filter((a) => a && Object.hasOwn(DB1, a)),
+    [idxParam],
+  )
+  const setSelected = (next: string[]) => setIdxParam(next.join(','))
 
   const filteredAccs = useMemo(
     () => ALL_ACCS.filter((a) =>
@@ -282,7 +301,7 @@ function HeatmapTab() {
   )
 
   const toggle = (acc: string) =>
-    setSelected((s) => s.includes(acc) ? s.filter((a) => a !== acc) : [...s, acc])
+    setSelected(selected.includes(acc) ? selected.filter((a) => a !== acc) : [...selected, acc])
 
   const upper = seq.toUpperCase()
 
@@ -295,8 +314,8 @@ function HeatmapTab() {
         VALID_AAS.has(aa) && aa in values && isFinite(values[aa]) ? values[aa] : null
       )
       const nums = row.filter((v): v is number => v !== null)
-      const min = nums.length ? Math.min(...nums) : 0
-      const max = nums.length ? Math.max(...nums) : 1
+      const min = minOf(nums) ?? 0
+      const max = maxOf(nums) ?? 1
       const range = max - min || 1
       return { acc, row, min, max, range }
     })
@@ -342,6 +361,7 @@ function HeatmapTab() {
             <button onClick={() => setSelected(filteredAccs.slice(0, 10))} className="text-xs text-gray-500 hover:text-indigo-500">Top 10</button>
           </div>
         </div>
+        <ShareLink />
       </aside>
 
       <div className="flex-1 min-w-0">
@@ -436,7 +456,9 @@ const TABS: { id: Tab; label: string; desc: string }[] = [
 ]
 
 export default function SequenceAnalysis() {
-  const [tab, setTab] = useState<Tab>('encoder')
+  const [tabParam, setTabParam] = useUrlParam('tab', 'encoder')
+  const tab = (TABS.some((t) => t.id === tabParam) ? tabParam : 'encoder') as Tab
+  const setTab = (t: Tab) => setTabParam(t)
 
   return (
     <div className="flex flex-col gap-4">

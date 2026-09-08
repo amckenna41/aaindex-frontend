@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed } from './_helpers.js'
 
 const SOURCE = 'https://www.genome.jp/aaindex/'
 
 // Exported for unit testing the extraction without a network round-trip.
 export function parseLastUpdated(html: string): string | null {
-  const m = html.match(/Last updated:\s*([^<]+?)\s*</i)
+  const m = html.match(/Last updated:[ \t]*([^<]*[^<\s])/i)
   return m ? m[1].trim() : null
 }
 
@@ -17,7 +17,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (req.method !== 'GET') return methodNotAllowed(res)
 
-  if (cached) return res.status(200).json({ lastUpdated: cached, source: SOURCE })
+  if (cached) {
+    setCacheHeaders(res)
+    return res.status(200).json({ lastUpdated: cached, source: SOURCE })
+  }
 
   try {
     const upstream = await fetch(SOURCE, {
@@ -29,9 +32,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!lastUpdated) return res.status(502).json({ error: 'Could not find "Last updated" on source page' })
 
     cached = lastUpdated
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate')
+    setCacheHeaders(res)
     return res.status(200).json({ lastUpdated, source: SOURCE })
   } catch (e) {
-    return res.status(502).json({ error: `Failed to reach genome.jp: ${String(e)}` })
+    console.error('aaindex-updated: upstream fetch failed', e)
+    return res.status(502).json({ error: 'Failed to reach genome.jp' })
   }
 }

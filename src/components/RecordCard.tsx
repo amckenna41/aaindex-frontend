@@ -6,8 +6,8 @@ import { categoryColour } from '../lib/categories'
 
 function Sparkline({ values }: { values: Record<string, number> }) {
   const ordered = AA_ORDER_ALPHA.map((aa) => values[aa] ?? 0)
-  const min = Math.min(...ordered)
-  const max = Math.max(...ordered)
+  const min = ordered.reduce((a, b) => (b < a ? b : a), ordered[0] ?? 0)
+  const max = ordered.reduce((a, b) => (b > a ? b : a), ordered[0] ?? 0)
   const range = max - min || 1
   const w = 6
   const h = 24
@@ -32,6 +32,16 @@ function Sparkline({ values }: { values: Record<string, number> }) {
   )
 }
 
+/** Several indices have gaps for particular amino acids. The detail view draws
+ *  those as hatched cells; without a marker here it's easy to pick a sparse
+ *  index off the list without noticing. */
+function coverage(values: Record<string, number>): number {
+  return AA_ORDER_ALPHA.filter((aa) => {
+    const v = values?.[aa]
+    return v != null && isFinite(v)
+  }).length
+}
+
 interface Props {
   accession: string
   record: AAIndex1Record | AAIndex2Record
@@ -47,6 +57,7 @@ export default function RecordCard({ accession, record, dbName }: Props) {
   const is1 = dbName === 'aaindex1'
   const r1 = record as AAIndex1Record
   const category = is1 ? r1.category : null
+  const covered = is1 ? coverage(r1.values) : AA_ORDER_ALPHA.length
 
   return (
     <div
@@ -64,6 +75,15 @@ export default function RecordCard({ accession, record, dbName }: Props) {
           {category && (
             <span className={`text-xs px-2 py-0.5 rounded-full font-medium shrink-0 ${categoryColour(category)}`}>
               {category}
+            </span>
+          )}
+          {covered < AA_ORDER_ALPHA.length && (
+            <span
+              title={`Only ${covered} of ${AA_ORDER_ALPHA.length} amino acids have a value in this index`}
+              aria-label={`Incomplete: ${covered} of ${AA_ORDER_ALPHA.length} amino acids covered`}
+              className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0 bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+            >
+              ⚠ {covered}/{AA_ORDER_ALPHA.length}
             </span>
           )}
         </div>

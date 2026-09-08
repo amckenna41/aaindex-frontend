@@ -2,13 +2,33 @@ import { Link, NavLink } from 'react-router-dom'
 import { useAAIndexStore } from '../../store/useAAIndexStore'
 import { useEffect, useState } from 'react'
 
+const THEME_KEY = 'aaindex_theme'
+
+/** Matches the inline bootstrap in index.html: stored choice first, OS
+ *  preference second. Reading the class here alone lost the choice on reload. */
+function initialDark(): boolean {
+  try {
+    const stored = localStorage.getItem(THEME_KEY)
+    if (stored === 'dark') return true
+    if (stored === 'light') return false
+  } catch {
+    // Storage can be blocked; fall through to the media query.
+  }
+  return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? false
+}
+
 export default function Navbar() {
   const selectedCount = useAAIndexStore((s) => s.selectedAccessions.length)
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains('dark'))
+  const [dark, setDark] = useState(initialDark)
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark)
+    try {
+      localStorage.setItem(THEME_KEY, dark ? 'dark' : 'light')
+    } catch {
+      // Non-fatal — the theme just won't survive a reload.
+    }
   }, [dark])
 
   const navLinks = [
@@ -17,6 +37,7 @@ export default function Navbar() {
     { to: '/encode',        label: 'Encode' },
     { to: '/compare',       label: 'Compare', badge: selectedCount > 0 ? selectedCount : null },
     { to: '/visualise',     label: 'Visualiser' },
+    { to: '/similarity',    label: 'Similarity' },
     { to: '/api-reference', label: 'API' },
     { to: '/guide',         label: 'Guide' },
     { to: '/about',         label: 'About' },

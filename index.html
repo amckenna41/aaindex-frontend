@@ -6,6 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>AAIndex Explorer</title>
     <meta name="description" content="Interactive browser for the AAIndex amino acid physicochemical properties database" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="AAIndex Explorer" />
+    <meta property="og:title" content="AAIndex Explorer" />
+    <meta property="og:description" content="Browse, compare, visualise and encode with the AAIndex amino acid physicochemical property database — 707 records with a free REST API." />
+    <meta property="og:url" content="https://aaindex.vercel.app/" />
+    <meta property="og:image" content="https://aaindex.vercel.app/og.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="AAIndex Explorer" />
+    <meta name="twitter:description" content="Browse, compare, visualise and encode with the AAIndex amino acid physicochemical property database — 707 records with a free REST API." />
+    <meta name="twitter:image" content="https://aaindex.vercel.app/og.svg" />
+
+    <!-- Set the theme before first paint: React mounts too late to avoid a
+         flash of the wrong theme, and the toggle's choice must survive reload. -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('aaindex_theme')
+          var dark = stored ? stored === 'dark'
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+          if (dark) document.documentElement.classList.add('dark')
+        } catch (e) { /* storage blocked — default to light */ }
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

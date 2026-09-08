@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed, tableFormat, sendTable, badFormat } from './_helpers.js'
 import rawDb from '../src/data/aaindex1.json' with { type: 'json' }
 
 interface DB1Record {
@@ -18,6 +18,9 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   setCorsHeaders(res)
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (req.method !== 'GET') return methodNotAllowed(res)
+
+  const fmt = tableFormat(req.query.format)
+  if (fmt === undefined) return badFormat(res)
 
   const { q, category, limit, offset } = req.query
 
@@ -41,6 +44,15 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   const lim = typeof limit === 'string' ? Math.min(1000, Math.max(1, parseInt(limit) || count)) : count
   const page = entries.slice(off, off + lim)
 
+  const records = page.map(([accession, rec]) => ({
+    accession,
+    description: rec.description,
+    category: rec.category,
+  }))
+
+  if (fmt) return sendTable(res, fmt, 'aaindex1', records)
+
+  setCacheHeaders(res)
   return res.status(200).json({
     database: 'aaindex1',
     description: 'Amino acid physicochemical property indices',
@@ -48,10 +60,6 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     count,
     offset: off,
     limit: lim,
-    records: page.map(([accession, rec]) => ({
-      accession,
-      description: rec.description,
-      category: rec.category,
-    })),
+    records,
   })
 }

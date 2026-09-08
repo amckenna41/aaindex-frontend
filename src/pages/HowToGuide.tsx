@@ -38,9 +38,12 @@ export default function HowToGuide() {
             ['4', 'Encode — Batch Sequence Encoding', '#encode'],
             ['5', 'Comparator — Side-by-Side Comparison', '#comparator'],
             ['6', 'Visualiser — Charts & Plots', '#visualiser'],
-            ['7', 'Favourites', '#favourites'],
-            ['8', 'Exporting Data', '#exporting'],
-            ['9', 'Citation', '#citation'],
+            ['7', 'Property Space — Whole-Database Similarity', '#similarity'],
+            ['8', 'Favourites', '#favourites'],
+            ['9', 'Exporting Data', '#exporting'],
+            ['10', 'Sharing & Reproducibility', '#sharing'],
+            ['11', 'API Access', '#api'],
+            ['12', 'Citation', '#citation'],
           ].map(([num, title, href]) => (
             <li key={href} className="flex gap-3">
               <span className="text-indigo-500 font-mono font-semibold w-4 shrink-0">{num}</span>
@@ -67,9 +70,10 @@ export default function HowToGuide() {
           <DefItem term="AAIndex3" def="47 statistical protein contact potentials representing residue-residue interaction preferences." />
         </ul>
         <p className="leading-relaxed">
-          The application is divided into six main sections accessible from the top navigation bar:
+          The application is divided into sections accessible from the top navigation bar:
           <strong> Explorer</strong>, <strong>Sequence</strong>, <strong>Encode</strong>,
-          <strong> Compare</strong>, <strong>Visualiser</strong>, and <strong>About</strong>.
+          <strong> Compare</strong>, <strong>Visualiser</strong>, <strong>Similarity</strong>,
+          <strong> API</strong>, <strong>Guide</strong>, and <strong>About</strong>.
         </p>
       </section>
 
@@ -120,6 +124,7 @@ export default function HowToGuide() {
             'The detail page shows: the full description, reference, PMID, correlation coefficients with similar records, and a bar chart of values across all 20 amino acids.',
             'Click "PubMed" to open the source publication in a new tab.',
             'Use the "Similar records" section to discover correlated or anti-correlated properties.',
+            'An amber ⚠ n/20 badge on a record card means that index has no value for some amino acids — worth noticing before you build features from it.',
           ]} />
         </SubSection>
 
@@ -151,6 +156,7 @@ export default function HowToGuide() {
             'The line chart updates in real time. Residues with no data (not covered by the selected index) appear as gaps.',
             'A colour-coded strip below the chart shows each residue letter for sequences up to 100 residues.',
             'Click "↓ CSV" to download the per-position values as a spreadsheet.',
+            'No sequence to hand? Enter a UniProt accession or PDB id in the "Fetch by accession" box and click Fetch.',
           ]} />
           <Tip>Unknown characters in your sequence (e.g. ambiguous codes like "B" or "X") are flagged with a warning and rendered as gaps in the chart.</Tip>
         </SubSection>
@@ -165,6 +171,7 @@ export default function HowToGuide() {
             'Adjust the window size slider (range 3–25). The default is 9, which matches the original Kyte–Doolittle method.',
             'At each position the displayed value is the mean of the window centred on that residue. Edge positions use a shorter window.',
             'Export the smoothed values via the "↓ CSV" button.',
+            'Click "Copy shareable link" to capture the sequence, index and window size in a URL someone else can open.',
           ]} />
           <Tip>Larger window sizes produce smoother curves that emphasise global trends (e.g. transmembrane domains). Smaller windows preserve local peaks.</Tip>
         </SubSection>
@@ -198,7 +205,9 @@ export default function HowToGuide() {
             'Click the upload area or drag-and-drop a file onto it. Accepted formats: .fasta, .fa, .txt.',
             'FASTA files: sequences are separated by ">" header lines. The first word after ">" is used as the sequence ID.',
             'Plain text files: one sequence per line. Sequences are automatically assigned IDs (seq_1, seq_2, …).',
-            'Invalid lines with no recognisable amino acid characters are silently skipped.',
+            'Invalid lines with no recognisable amino acid characters are skipped and listed in an amber panel with the reason.',
+            'Alternatively, enter a UniProt accession or PDB id (chain optional, e.g. 1CRN_A) in the "Fetch by accession" box.',
+            'Uploads are capped at 5 MB. Very large sequence sets render in the table 200 rows at a time.',
           ]} />
           <Tip>Sequences are uppercased on import. Whitespace within lines is stripped. Ambiguous residues are accepted but will produce null values in the encoding.</Tip>
         </SubSection>
@@ -226,6 +235,8 @@ export default function HowToGuide() {
           <Steps steps={[
             '"↓ All encodings (long CSV)" — one row per residue per sequence. Columns: sequence_id, position, amino_acid, value.',
             '"↓ Summary stats CSV" — one row per sequence. Columns: sequence_id, length, valid_residues, mean, min, max.',
+            '"↓ pySAR descriptor set" — a dataset CSV (sequence plus an empty activity column to fill in) and a config JSON naming the AAIndex indices, ready to hand to pySAR.',
+            '"🔗 Copy shareable link" — captures the selected index, and a single loaded sequence, in the URL.',
           ]} />
         </SubSection>
       </section>
@@ -328,8 +339,46 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 7: Favourites ─────────────────────────────────────────────── */}
+      <section id="similarity" className="guide-section mb-12">
+        <SectionHeader number="7" title="Property Space — Whole-Database Similarity" />
+        <p className="mb-6 leading-relaxed">
+          AAIndex1 ships correlation coefficients for some pairs of records, but not all of them. The
+          Property Space page derives similarity for the whole database instead: every record is projected
+          onto the first two principal components of its 20 amino-acid values, so indices that measure the
+          same underlying property land near each other.
+        </p>
+
+        <SubSection title="Reading the plot">
+          <Steps steps={[
+            'Each point is one AAIndex1 record. Points close together describe similar properties.',
+            'Colour encodes the record category — the legend below the plot doubles as a filter.',
+            'The axis labels show how much of the total variance each component captures.',
+            'Hover any point to see its accession, description, and category.',
+          ]} />
+          <Tip>Values are standardised before the projection, so a property measured in kcal/mol does not swamp one measured in cubic ångströms.</Tip>
+        </SubSection>
+
+        <SubSection title="Finding neighbours">
+          <Steps steps={[
+            'Click a point to pin it. The sidebar then lists its most correlated records.',
+            'Correlations are computed live across all 20 values, covering every record — not only the pairs AAIndex ships coefficients for.',
+            'A positive r means the two indices rank amino acids the same way; a negative r means they are inverses of each other.',
+            'Click any neighbour to pin it instead, or "Open" to jump to the pinned record\u2019s detail page.',
+          ]} />
+        </SubSection>
+
+        <SubSection title="Filtering by category">
+          <Steps steps={[
+            'Use the sidebar dropdown, or click a colour swatch in the legend, to show one category at a time.',
+            'The projection itself is computed once over the whole database, so the axes stay comparable whichever category you view.',
+            'Click the active swatch again to clear the filter.',
+          ]} />
+        </SubSection>
+      </section>
+
+      {/* ── Section 8: Favourites ─────────────────────────────────────────────── */}
       <section id="favourites" className="guide-section mb-12">
-        <SectionHeader number="7" title="Favourites" />
+        <SectionHeader number="8" title="Favourites" />
         <p className="mb-4 leading-relaxed">
           Favourites are accessible across the entire application and persist between sessions.
         </p>
@@ -342,7 +391,7 @@ export default function HowToGuide() {
 
       {/* ── Section 8: Exporting ──────────────────────────────────────────────── */}
       <section id="exporting" className="guide-section mb-12">
-        <SectionHeader number="8" title="Exporting Data" />
+        <SectionHeader number="9" title="Exporting Data" />
         <div className="overflow-x-auto">
           <table className="text-sm w-full border-collapse">
             <thead>
@@ -361,11 +410,14 @@ export default function HowToGuide() {
                 ['Sequence Analysis — Window', 'CSV', 'Per-position smoothed values'],
                 ['Encode', 'CSV (long)', 'All sequences × all positions with property value'],
                 ['Encode', 'CSV (summary)', 'Per-sequence: length, valid count, mean, min, max'],
+                ['Encode', 'pySAR set', 'Dataset CSV + config JSON naming the AAIndex indices'],
                 ['Comparator', 'CSV', 'All amino acids × all queued records'],
                 ['Comparator', 'JSON', 'Raw record data for all queued accessions'],
                 ['Visualiser (bar / radar / scatter)', 'CSV', 'Property values for selected record(s)'],
                 ['Visualiser (matrix heatmap)', 'CSV', 'Full substitution matrix'],
                 ['Any chart', 'PNG', 'Chart snapshot at screen resolution'],
+                ['API list endpoints', 'CSV / TSV', 'Add ?format=csv or ?format=tsv to any list endpoint'],
+                ['API /api/window', 'CSV / TSV', 'Per-position raw and window-averaged values'],
               ].map(([loc, fmt, desc]) => (
                 <tr key={loc + fmt + desc}>
                   <td className="py-2 pr-6 text-gray-700 dark:text-gray-300 print:text-gray-700">{loc}</td>
@@ -378,9 +430,94 @@ export default function HowToGuide() {
         </div>
       </section>
 
-      {/* ── Section 9: Citation ───────────────────────────────────────────────── */}
+      {/* ── Section 10: Sharing ───────────────────────────────────────────────── */}
+      <section id="sharing" className="guide-section mb-12">
+        <SectionHeader number="10" title="Sharing & Reproducibility" />
+        <p className="mb-6 leading-relaxed">
+          Explorer, Sequence Analysis, Encode and Property Space all keep their state in the page URL. That
+          makes any view a link — one you can bookmark, send to a collaborator, or cite in a paper so a reader
+          reproduces exactly the analysis you describe.
+        </p>
+
+        <SubSection title="What each page captures">
+          <div className="overflow-x-auto">
+            <table className="text-sm w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-300 dark:border-gray-600 print:border-gray-400">
+                  <th className="text-left py-2 pr-6 font-semibold text-gray-600 dark:text-gray-400">Page</th>
+                  <th className="text-left py-2 font-semibold text-gray-600 dark:text-gray-400">Query parameters</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
+                {[
+                  ['Explorer', 'db, q, cat, page'],
+                  ['Sequence Analysis', 'tab, seq, acc, w, idx'],
+                  ['Encode', 'acc, seq, id'],
+                  ['Property Space', 'acc, cat'],
+                ].map(([page, params]) => (
+                  <tr key={page}>
+                    <td className="py-2 pr-6 text-gray-700 dark:text-gray-300 print:text-gray-700">{page}</td>
+                    <td className="py-2 font-mono text-indigo-600 dark:text-indigo-400 text-xs">{params}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Tip>Use the "🔗 Copy shareable link" button rather than copying the address bar — it guarantees the URL is current. Sequences longer than 2,000 residues are kept in the page instead of the URL, so share those as a FASTA file or a UniProt/PDB accession.</Tip>
+        </SubSection>
+
+        <SubSection title="Embedding a record">
+          <Steps steps={[
+            'Open any record detail page and click "</> Get embed code".',
+            'An <iframe> snippet is copied to your clipboard; paste it into a page, wiki or lab notebook.',
+            'Record pages are the only routes that permit framing — the rest of the app refuses it.',
+          ]} />
+        </SubSection>
+      </section>
+
+      {/* ── Section 11: API ───────────────────────────────────────────────────── */}
+      <section id="api" className="guide-section mb-12">
+        <SectionHeader number="11" title="API Access" />
+        <p className="mb-6 leading-relaxed">
+          Everything in the app is backed by a public, read-only REST API. No key, no auth, CORS open to any
+          origin. The <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a> page
+          documents every endpoint with a live "Try it" box, and <a href="/api/openapi" className="text-indigo-600 dark:text-indigo-400 hover:underline">/api/openapi</a> serves
+          the same information as a machine-readable OpenAPI 3.1 document.
+        </p>
+
+        <SubSection title="Common calls">
+          <div className="overflow-x-auto">
+            <table className="text-sm w-full border-collapse">
+              <thead>
+                <tr className="border-b border-gray-300 dark:border-gray-600 print:border-gray-400">
+                  <th className="text-left py-2 pr-6 font-semibold text-gray-600 dark:text-gray-400">Endpoint</th>
+                  <th className="text-left py-2 font-semibold text-gray-600 dark:text-gray-400">Returns</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
+                {[
+                  ['GET /api/search?q=hydrophobicity', 'Matches across all three databases, tagged by source'],
+                  ['GET /api/aaindex1?category=hydrophobic', 'Filtered record list — add &format=csv for a table'],
+                  ['GET /api/aaindex1/KYTJ820101', 'One full record with values and citation data'],
+                  ['GET /api/window?accession=…&sequence=…&window=7', 'Sliding-window property profile'],
+                  ['GET /api/sequence?id=P01308', 'Sequence fetched from UniProt or the PDB'],
+                  ['POST /api/encode', 'One sequence encoded against up to 50 indices'],
+                ].map(([ep, ret]) => (
+                  <tr key={ep}>
+                    <td className="py-2 pr-6 font-mono text-indigo-600 dark:text-indigo-400 text-xs">{ep}</td>
+                    <td className="py-2 text-gray-600 dark:text-gray-400 print:text-gray-600">{ret}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Tip>Accession codes are case-insensitive. Successful responses are edge-cached for 24 hours; errors are never cached, so a transient upstream failure clears on the next request.</Tip>
+        </SubSection>
+      </section>
+
+      {/* ── Section 12: Citation ──────────────────────────────────────────────── */}
       <section id="citation" className="guide-section mb-12">
-        <SectionHeader number="9" title="Citation" />
+        <SectionHeader number="12" title="Citation" />
         <p className="mb-4 leading-relaxed text-sm">
           If you use AAIndex Explorer or data derived from the AAIndex database in your research, please cite
           the original AAIndex publication:
@@ -397,11 +534,6 @@ export default function HowToGuide() {
         </p>
       </section>
 
-      {/* ── Footer ────────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-gray-200 dark:border-gray-700 print:border-gray-400 pt-6 pb-12 text-xs text-gray-400 flex justify-between flex-wrap gap-2">
-        <span>AAIndex Explorer — User Guide</span>
-        <span>Data: Kawashima &amp; Kanehisa (2000) · Nucleic Acids Research 28:374</span>
-      </footer>
     </div>
   )
 }

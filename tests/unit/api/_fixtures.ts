@@ -7,6 +7,7 @@ export interface MockRes {
   ended: boolean
   status(code: number): MockRes
   json(data: unknown): MockRes
+  send(data: unknown): MockRes
   setHeader(name: string, value: string): MockRes
   end(data?: string): MockRes
 }
@@ -19,12 +20,20 @@ export function makeRes(): MockRes {
     ended: false,
     status(code) { this.statusCode = code; return this },
     json(data) { this.body = data; return this },
+    send(data) { this.body = data; return this },
     setHeader(name, value) { this.headers[name] = value; return this },
     end() { this.ended = true; return this },
   }
   return res
 }
 
-export function makeReq(opts: { method?: string; query?: Record<string, string | string[]> } = {}) {
-  return { method: 'GET', query: {}, ...opts } as never
+export function makeReq(
+  opts: {
+    method?: string
+    query?: Record<string, string | string[]>
+    body?: unknown
+    headers?: Record<string, string>
+  } = {},
+) {
+  return { method: 'GET', query: {}, headers: {}, ...opts } as never
 }

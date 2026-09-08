@@ -1,16 +1,27 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAAIndexStore } from '../store/useAAIndexStore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { AAIndex1DB } from '../types'
 import { encodeSequence, VALID_AAS } from '../lib/seqUtils'
 import { AA_FULL_NAMES } from '../lib/aminoAcids'
 import { saveAs } from 'file-saver'
+import { csvCell } from '../lib/csv'
+import { minOf, maxOf } from '../lib/statsUtils'
 import RecordSelector from '../components/RecordSelector'
+import SequenceFetch from '../components/SequenceFetch'
+import ShareLink from '../components/ShareLink'
+import { exportPySARDescriptors } from '../lib/pysar'
 
 import db1 from '../data/aaindex1.json'
 
 const DB1 = db1 as unknown as AAIndex1DB
 const ALL_ACCS = Object.keys(DB1)
+
+// A FASTA file is user input; refuse anything that would take the parser (and
+// the unvirtualised table below it) into the weeds.
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024
+const TABLE_CHUNK = 200
 
 interface ParsedSeq { id: string; seq: string }
 interface RejectedSeq { id: string; seq: string; reason: string }
@@ -101,11 +112,13 @@ function parseFile(text: string, name: string): ParseResult {
 
 function exportLongCSV(seqs: ParsedSeq[], accession: string) {
   const values = DB1[accession]?.values ?? {}
-  const rows: string[] = ['sequence_id,position,amino_acid,' + accession]
+  const rows: string[] = ['sequence_id,position,amino_acid,' + csvCell(accession)]
   for (const { id, seq } of seqs) {
     const encoded = encodeSequence(seq, values)
+    // id comes from the uploaded FASTA header — never interpolate it raw.
+    const safeId = csvCell(id)
     for (const e of encoded) {
-      rows.push(`${id},${e.pos},${e.aa},${e.value ?? ''}`)
+      rows.push([safeId, csvCell(e.pos), csvCell(e.aa), csvCell(e.value)].join(','))
     }
   }
   saveAs(new Blob([rows.join('\n')], { type: 'text/csv' }), `encoded_${accession}.csv`)
@@ -117,11 +130,12 @@ function exportSummaryCSV(seqs: ParsedSeq[], accession: string) {
   for (const { id, seq } of seqs) {
     const encoded = encodeSequence(seq, values)
     const nums = encoded.map((e) => e.value).filter((v): v is number => v !== null)
-    if (!nums.length) { rows.push(`${id},${seq.length},0,,,`); continue }
+    const safeId = csvCell(id)
+    if (!nums.length) { rows.push(`${safeId},${seq.length},0,,,`); continue }
     const mean = nums.reduce((a, b) => a + b, 0) / nums.length
-    const min  = Math.min(...nums)
-    const max  = Math.max(...nums)
-    rows.push(`${id},${seq.length},${nums.length},${mean.toFixed(4)},${min.toFixed(4)},${max.toFixed(4)}`)
+    const min  = minOf(nums)!
+    const max  = maxOf(nums)!
+    rows.push(`${safeId},${seq.length},${nums.length},${mean.toFixed(4)},${min.toFixed(4)},${max.toFixed(4)}`)
   }
   saveAs(new Blob([rows.join('\n')], { type: 'text/csv' }), `summary_${accession}.csv`)
 }
@@ -151,8 +165,48 @@ export default function Encode() {
   const [rejectedSeqs, setRejectedSeqs] = useState<RejectedSeq[]>([])
   const [favsOpen, setFavsOpen] = useState(false)
   const [examplesOpen, setExamplesOpen] = useState(true)
+  const [visibleRows, setVisibleRows] = useState(TABLE_CHUNK)
   const inputRef = useRef<HTMLInputElement>(null)
   const favourites = useAAIndexStore((s) => s.favourites)
+  const [searchParams, setSearchParams] = useSearchParams()
+  // Snapshot of what was last written to the URL. StrictMode replays mount
+  // effects with the same closure, so a first-render flag would let the replay
+  // overwrite a shared link with the page's pre-hydration defaults.
+  const syncedRef = useRef<string | null>(null)
+
+  // Hydrate from the URL once, then keep the URL in step so an analysis is a
+  // link someone can paste into a paper.
+  useEffect(() => {
+    const snapshot = JSON.stringify([accession, sequences.map((s) => `${s.id}:${s.seq}`)])
+
+    if (syncedRef.current === null) {
+      syncedRef.current = snapshot
+      const accParam = searchParams.get('acc')
+      const seqParam = searchParams.get('seq')
+      if (accParam && Object.hasOwn(DB1, accParam.toUpperCase())) setAccession(accParam.toUpperCase())
+      if (seqParam) {
+        const cleaned = seqParam.replace(/[^A-Za-z]/g, '').toUpperCase()
+        if (cleaned) {
+          const id = searchParams.get('id') || 'shared_sequence'
+          setSequences([{ id, seq: cleaned }])
+          setPreview(id)
+          setFileName('Shared link')
+        }
+      }
+      return
+    }
+
+    if (syncedRef.current === snapshot) return
+    syncedRef.current = snapshot
+
+    const params: Record<string, string> = { acc: accession }
+    // Only a single sequence round-trips through a URL; a whole file can't.
+    if (sequences.length === 1) {
+      params.seq = sequences[0].seq
+      params.id = sequences[0].id
+    }
+    setSearchParams(params, { replace: true })
+  }, [accession, sequences])
 
   const loadExample = (fasta: string, label: string) => {
     setError('')
@@ -162,10 +216,18 @@ export default function Encode() {
     setSequences(seqs)
     setFileName(`${label} (example)`)
     setPreview(seqs[0].id)
+    setVisibleRows(TABLE_CHUNK)
   }
 
   const handleFile = (file: File) => {
     setError('')
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setError(`File is ${(file.size / 1024 / 1024).toFixed(1)} MB — the limit is ${MAX_UPLOAD_BYTES / 1024 / 1024} MB.`)
+      setSequences([])
+      setPreview(null)
+      setRejectedSeqs([])
+      return
+    }
     setFileName(file.name)
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -181,8 +243,20 @@ export default function Encode() {
       setSequences(seqs)
       setPreview(seqs[0].id)
       setRejectedSeqs(rejected)
+      setVisibleRows(TABLE_CHUNK)
     }
     reader.readAsText(file)
+  }
+
+  const handleFetched = (entries: { id: string; sequence: string }[], label: string) => {
+    setError('')
+    setRejectedSeqs([])
+    const seqs = entries.map((e) => ({ id: e.id, seq: e.sequence }))
+    if (!seqs.length) return
+    setSequences(seqs)
+    setFileName(label)
+    setPreview(seqs[0].id)
+    setVisibleRows(TABLE_CHUNK)
   }
 
   const handleDrop = (e: React.DragEvent) => {
@@ -272,6 +346,8 @@ export default function Encode() {
           )}
         </div>
 
+        <SequenceFetch onLoad={handleFetched} />
+
         {/* Example sequences */}
         <div className="flex flex-col gap-1">
           <button
@@ -354,9 +430,17 @@ export default function Encode() {
             >
               ↓ Summary stats CSV
             </button>
+            <button
+              onClick={() => exportPySARDescriptors(sequences, [accession], DB1)}
+              className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+            >
+              ↓ pySAR descriptor set
+            </button>
+            <ShareLink />
             <p className="text-xs text-gray-400">
               Long CSV: sequence_id · position · amino_acid · value<br />
-              Summary: mean · min · max per sequence
+              Summary: mean · min · max per sequence<br />
+              pySAR: dataset CSV + config JSON
             </p>
           </div>
         )}
@@ -449,7 +533,7 @@ export default function Encode() {
                   </tr>
                 </thead>
                 <tbody>
-                  {sequences.map((s) => (
+                  {sequences.slice(0, visibleRows).map((s) => (
                     <tr
                       key={s.id}
                       className={`border-b border-gray-100 dark:border-gray-800 cursor-pointer ${preview === s.id ? 'bg-indigo-50 dark:bg-indigo-950' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
@@ -466,6 +550,15 @@ export default function Encode() {
                 </tbody>
               </table>
             </div>
+            {sequences.length > visibleRows && (
+              <button
+                onClick={() => setVisibleRows((n) => n + TABLE_CHUNK)}
+                className="mt-2 text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+              >
+                Show {Math.min(TABLE_CHUNK, sequences.length - visibleRows)} more
+                ({visibleRows} of {sequences.length} shown)
+              </button>
+            )}
             <p className="text-xs text-gray-400 mt-2">Click a row to preview its encoding above.</p>
           </div>
         )}

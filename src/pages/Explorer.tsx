@@ -13,6 +13,7 @@ import db1 from '../data/aaindex1.json'
 const DB1 = db1 as unknown as AAIndex1DB
 
 const PAGE_SIZE = 20
+const VALID_DBS: string[] = ['aaindex1', 'aaindex2', 'aaindex3']
 
 // Lazy-loaded DB cache — populated on first switch to each DB.
 const lazyCache: { aaindex2?: AAIndex2DB; aaindex3?: AAIndex3DB } = {}
@@ -25,23 +26,32 @@ export default function Explorer() {
   const [lazyDB, setLazyDB] = useState<AAIndex2DB | AAIndex3DB | null>(null)
   const [lazyLoading, setLazyLoading] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
-  const isFirstRender = useRef(true)
+  // Last state snapshot written to the URL. A plain "is this the first run?"
+  // ref is not enough: StrictMode replays mount effects with the *same* closure,
+  // so the replay would take the sync branch with pre-hydration values and wipe
+  // the whole query string. Comparing snapshots makes the effect idempotent.
+  const syncedRef = useRef<string | null>(null)
 
-  // Single effect: hydrate from URL on first run, then sync state → URL on subsequent runs.
+  // Single effect: hydrate from URL on first run, then sync state → URL after.
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
+    const snapshot = JSON.stringify([activeDB, searchQuery, categoryFilter, page])
+
+    if (syncedRef.current === null) {
+      syncedRef.current = snapshot
       const dbParam = searchParams.get('db')
       const qParam  = searchParams.get('q') || ''
       const catParam = searchParams.get('cat') || ''
       const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
-      const validDBs: string[] = ['aaindex1', 'aaindex2', 'aaindex3']
-      if (dbParam && validDBs.includes(dbParam)) setActiveDB(dbParam as DBName)
+      if (dbParam && VALID_DBS.includes(dbParam)) setActiveDB(dbParam as DBName)
       if (qParam) setSearchQuery(qParam)
       if (catParam) setCategoryFilter(catParam)
       if (pageParam > 1) setPage(pageParam)
       return
     }
+
+    if (syncedRef.current === snapshot) return
+    syncedRef.current = snapshot
+
     const params: Record<string, string> = {}
     if (activeDB !== 'aaindex1') params.db = activeDB
     if (searchQuery) params.q = searchQuery
@@ -103,8 +113,30 @@ export default function Explorer() {
     return accs
   }, [allAccessions, searchQuery, fuseIndex, categoryFilter, activeDB, showOnlyFavourites, favourites])
 
-  // Reset page whenever the filtered set changes.
-  useEffect(() => { setPage(1) }, [filtered])
+  // Reset to page 1 when the filter criteria actually change. Keyed on the
+  // criteria rather than on "is this the first render?", because StrictMode
+  // replays mount effects and a first-render flag would not survive it.
+  const filterKey = `${activeDB}|${searchQuery}|${categoryFilter}|${showOnlyFavourites}`
+
+  // The criteria the URL asked for. Hydration reaches this over a couple of
+  // commits, and converging on it is not a user filter change — treating it as
+  // one is what discarded a deep-linked ?page=N.
+  const urlFilterKey = useRef(
+    `${VALID_DBS.includes(searchParams.get('db') ?? '') ? searchParams.get('db') : 'aaindex1'}` +
+    `|${searchParams.get('q') ?? ''}|${searchParams.get('cat') ?? ''}|false`,
+  )
+  const settled = useRef(filterKey === urlFilterKey.current)
+  const lastFilterKey = useRef(filterKey)
+
+  useEffect(() => {
+    if (lastFilterKey.current === filterKey) return
+    lastFilterKey.current = filterKey
+    if (!settled.current) {
+      if (filterKey === urlFilterKey.current) settled.current = true
+      return
+    }
+    setPage(1)
+  }, [filterKey])
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE)
   const pageAccessions = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)

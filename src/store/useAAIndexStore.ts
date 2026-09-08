@@ -3,7 +3,14 @@ import { DBName } from '../types'
 
 const FAVS_KEY = 'aaindex_favourites'
 const loadFavs = (): string[] => {
-  try { return JSON.parse(localStorage.getItem(FAVS_KEY) ?? '[]') } catch { return [] }
+  // Runs at store-init time, before the ErrorBoundary can catch anything — a
+  // tampered or corrupted value must not be able to throw here.
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(FAVS_KEY) ?? '[]')
+    return Array.isArray(parsed) ? parsed.filter((v): v is string => typeof v === 'string') : []
+  } catch {
+    return []
+  }
 }
 const saveFavs = (favs: string[]) => localStorage.setItem(FAVS_KEY, JSON.stringify(favs))
 

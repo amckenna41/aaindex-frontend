@@ -5,11 +5,14 @@ import db1 from '../data/aaindex1.json'
 import db2 from '../data/aaindex2.json'
 import db3 from '../data/aaindex3.json'
 
+// Counts are derived, never written down — they track the bundled data.
 const DBS = {
-  aaindex1: { db: db1 as unknown as AAIndex1DB, label: 'AAIndex1', count: 566, desc: 'Scalar physicochemical indices' },
-  aaindex2: { db: db2 as unknown as AAIndex2DB, label: 'AAIndex2', count: 94,  desc: 'Substitution matrices' },
-  aaindex3: { db: db3 as unknown as AAIndex3DB, label: 'AAIndex3', count: 47,  desc: 'Contact potential matrices' },
+  aaindex1: { db: db1 as unknown as AAIndex1DB, label: 'AAIndex1', count: Object.keys(db1).length, desc: 'Scalar physicochemical indices' },
+  aaindex2: { db: db2 as unknown as AAIndex2DB, label: 'AAIndex2', count: Object.keys(db2).length, desc: 'Substitution matrices' },
+  aaindex3: { db: db3 as unknown as AAIndex3DB, label: 'AAIndex3', count: Object.keys(db3).length, desc: 'Contact potential matrices' },
 } as const
+
+const TOTAL_RECORDS = DBS.aaindex1.count + DBS.aaindex2.count + DBS.aaindex3.count
 
 function DownloadCard({ name }: { name: keyof typeof DBS }) {
   const [loading, setLoading] = useState(false)
@@ -56,6 +59,11 @@ export default function About() {
   return (
     <div className="max-w-2xl mx-auto flex flex-col gap-8 py-4">
       <div>
+        <img
+          src="/aaindex_explorer_logo.png"
+          alt="AAIndex Explorer"
+          className="w-full max-w-sm mx-auto mb-6"
+        />
         <h1 className="text-2xl font-bold mb-2">About AAIndex Explorer</h1>
         <p className="text-gray-600 dark:text-gray-400">
           An interactive browser for the AAIndex database — a collection of amino acid physicochemical properties
@@ -68,7 +76,7 @@ export default function About() {
         <div className="flex flex-col gap-3 text-sm text-gray-700 dark:text-gray-300">
           <div>
             <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">AAIndex1</span>
-            <span className="text-gray-400 dark:text-gray-500 ml-2">(566 records)</span>
+            <span className="text-gray-400 dark:text-gray-500 ml-2">({DBS.aaindex1.count} records)</span>
             <p className="mt-1">
               A collection of published numerical indices representing physicochemical and biochemical properties of amino acids,
               such as hydrophobicity, polarity, charge, and secondary structure preference.
@@ -76,7 +84,7 @@ export default function About() {
           </div>
           <div>
             <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">AAIndex2</span>
-            <span className="text-gray-400 dark:text-gray-500 ml-2">(94 records)</span>
+            <span className="text-gray-400 dark:text-gray-500 ml-2">({DBS.aaindex2.count} records)</span>
             <p className="mt-1">
               Amino acid substitution matrices — 20×20 matrices capturing the likelihood of one amino acid being
               replaced by another during evolution (e.g. PAM, BLOSUM series).
@@ -84,7 +92,7 @@ export default function About() {
           </div>
           <div>
             <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">AAIndex3</span>
-            <span className="text-gray-400 dark:text-gray-500 ml-2">(47 records)</span>
+            <span className="text-gray-400 dark:text-gray-500 ml-2">({DBS.aaindex3.count} records)</span>
             <p className="mt-1">
               Statistical amino acid pair contact potentials — matrices capturing the propensity of amino acid
               pairs to be in contact in protein structures.
@@ -107,9 +115,9 @@ export default function About() {
       <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-3">
         <h2 className="font-semibold text-lg">What this app provides</h2>
         <ul className="text-sm text-gray-700 dark:text-gray-300 flex flex-col gap-2 list-disc list-inside">
-          <li>Browse, search, and filter all 707 records across all three databases</li>
+          <li>Browse, search, and filter all {TOTAL_RECORDS} records across all three databases</li>
           <li>Star/favourite records and filter to your personal set</li>
-          <li>Shareable deep-linked URLs for every record</li>
+          <li>Shareable deep-linked URLs — Explorer, Sequence Analysis, Encode and Property Space all keep their state in the query string, so any analysis is a link</li>
           <li>Interactive bar charts with z-score normalisation toggle and missing-value indicators</li>
           <li>Diverging colour heatmaps for AAIndex2/3 substitution matrices</li>
           <li>Side-by-side comparator for up to 4 records (raw or z-score normalised)</li>
@@ -121,6 +129,10 @@ export default function About() {
           <li>Scatter plot explorer — any two indices vs amino acids, with Pearson r</li>
           <li>Redundancy filter — find all indices correlated above a threshold</li>
           <li>Similar records panel — top 5 correlated and anti-correlated records on each detail page</li>
+          <li>Property space — the whole of AAIndex1 projected onto its first two principal components, with live nearest-neighbour correlations for any record</li>
+          <li>Fetch by accession — pull a sequence straight from UniProt or the PDB, no FASTA file required</li>
+          <li>pySAR descriptor export — dataset CSV plus config JSON, ready for downstream SAR modelling</li>
+          <li>Coverage badges — indices with gaps for particular amino acids are flagged in the record list</li>
           <li>PubMed abstract fetch — pull the abstract for any PMID directly from NCBI</li>
           <li>Citation helper — one-click BibTeX, APA, and plain-text citations</li>
           <li>Category statistics — mean/min/max/stddev per amino acid across any category</li>
@@ -131,16 +143,22 @@ export default function About() {
       </section>
 
       <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-4">
-        <h2 className="font-semibold text-lg">Developer API (planned)</h2>
+        <h2 className="font-semibold text-lg">Developer API</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400">
-          A FastAPI backend is planned to expose the following endpoints for programmatic access:
+          A public, read-only REST API — no key, no auth, CORS open to any origin. See the{' '}
+          <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a>{' '}
+          for the full documentation with a live &quot;Try it&quot; box, or{' '}
+          <a href="/api/openapi" className="text-indigo-600 dark:text-indigo-400 hover:underline">/api/openapi</a>{' '}
+          for the machine-readable OpenAPI 3.1 description.
         </p>
         <div className="flex flex-col gap-3 text-xs font-mono">
           {[
-            { method: 'POST', path: '/api/encode', desc: 'Encode a protein sequence with a given accession. Body: {"sequence": "ACDEF...", "accession": "KYTJ820101"}' },
-            { method: 'POST', path: '/api/compare', desc: 'Bulk encoding for feature engineering. Body: {"sequence": "ACDEF...", "accessions": ["KYTJ820101", "EISD840101"]}' },
-            { method: 'GET',  path: '/api/records/{accession}/similar?threshold=0.8', desc: 'Records correlated above threshold.' },
-            { method: 'GET',  path: '/api/stats?category=hydrophobic', desc: 'Mean/min/max/std per amino acid for a category.' },
+            { method: 'GET',  path: '/api/search?q=hydrophobicity', desc: 'Cross-database full-text search, each hit tagged with its source database.' },
+            { method: 'GET',  path: '/api/aaindex1?category=hydrophobic', desc: 'Filtered record list. Add &format=csv or &format=tsv for a delimited table.' },
+            { method: 'GET',  path: '/api/aaindex1/{accession}', desc: 'One full record — values, correlations and citation data.' },
+            { method: 'GET',  path: '/api/window?accession=…&sequence=…&window=7', desc: 'Kyte–Doolittle-style sliding-window property profile.' },
+            { method: 'GET',  path: '/api/sequence?id=P01308', desc: 'Fetch a sequence by UniProt accession or PDB id (chain optional, e.g. 1CRN_A).' },
+            { method: 'POST', path: '/api/encode', desc: 'Encode a sequence against up to 50 indices. Body: {"sequence": "ACDEF...", "accessions": ["KYTJ820101", "EISD840101"]}' },
             { method: 'GET',  path: '/api/pubmed/{pmid}', desc: 'Proxied, cached PubMed abstract.' },
           ].map(({ method, path, desc }) => (
             <div key={path} className="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-700">

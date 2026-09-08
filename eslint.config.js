@@ -71,9 +71,12 @@ export default tseslint.config(
     },
   },
 
-  // ── Config files (Vite, Playwright, PostCSS, Tailwind) ─────────────────────
+  // ── Config files and build scripts (Node.js environment) ──────────────────
   {
-    files: ['*.config.{js,ts,mjs,cjs}', 'postcss.config.js', 'tailwind.config.js'],
+    files: ['*.config.{js,ts,mjs,cjs}', 'postcss.config.js', 'tailwind.config.js', 'scripts/**/*.{js,mjs}'],
+    extends: [
+      ...tseslint.configs.recommended,
+    ],
     languageOptions: {
       globals: {
         ...globals.node,

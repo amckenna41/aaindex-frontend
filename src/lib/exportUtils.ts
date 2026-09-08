@@ -1,17 +1,10 @@
 import { saveAs } from 'file-saver'
-
-/** Wraps a CSV cell value in quotes if it contains commas, quotes, newlines,
- *  or formula-injection trigger characters (=, +, -, @, |). */
-function csvCell(v: string | number | null | undefined): string {
-  if (v == null) return ''
-  const s = String(v)
-  if (/[,"\n\r=+\-@|]/.test(s)) return `"${s.replace(/"/g, '""')}"`
-  return s
-}
+import { csvCell } from './csv'
+import type { EncodedResidue } from './seqUtils'
 
 export function exportValuesAsCSV(accession: string, values: Record<string, number>) {
   const header = 'amino_acid,value'
-  const rows = Object.entries(values).map(([aa, v]) => `${aa},${v}`)
+  const rows = Object.entries(values).map(([aa, v]) => [csvCell(aa), csvCell(v)].join(','))
   const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' })
   saveAs(blob, `${accession}_values.csv`)
 }
@@ -29,8 +22,8 @@ export function exportComparisonAsCSV(
 ) {
   if (!accessions.length || !records[accessions[0]]) return
   const aas = Object.keys(records[accessions[0]])
-  const header = ['amino_acid', ...accessions.map(csvCell)].join(',')
-  const rows = aas.map((aa) => [aa, ...accessions.map((a) => records[a][aa] ?? '')].join(','))
+  const header = ['amino_acid', ...accessions.map((a) => csvCell(a))].join(',')
+  const rows = aas.map((aa) => [csvCell(aa), ...accessions.map((a) => csvCell(records[a][aa]))].join(','))
   const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' })
   saveAs(blob, `comparison_${accessions.join('_')}.csv`)
 }
@@ -39,8 +32,15 @@ export function exportMatrixAsCSV(accession: string, matrix: Record<string, Reco
   const rows = Object.keys(matrix)
   if (!rows.length) return
   const cols = Object.keys(matrix[rows[0]])
-  const header = ['', ...cols].join(',')
-  const lines = rows.map((r) => [r, ...cols.map((c) => matrix[r][c] ?? '')].join(','))
+  const header = ['', ...cols.map((c) => csvCell(c))].join(',')
+  const lines = rows.map((r) => [csvCell(r), ...cols.map((c) => csvCell(matrix[r][c]))].join(','))
   const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' })
   saveAs(blob, `${accession}_matrix.csv`)
+}
+
+export function exportEncodingAsCSV(accession: string, seq: string, encoded: EncodedResidue[]) {
+  const header = 'position,amino_acid,value'
+  const rows = encoded.map(({ pos, aa, value }) => [csvCell(pos), csvCell(aa), csvCell(value)].join(','))
+  const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' })
+  saveAs(blob, `${accession}_encoding_${seq.slice(0, 8)}.csv`)
 }

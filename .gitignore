@@ -29,3 +29,9 @@ yarn-error.log*
 .idea/
 
 /extra
+# generated at build time
+public/sitemap.xml
+
+# Playwright
+test-results/
+playwright-report/

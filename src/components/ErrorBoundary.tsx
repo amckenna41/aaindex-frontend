@@ -30,12 +30,22 @@ export default class ErrorBoundary extends Component<Props, State> {
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6 break-words">
               {this.state.message}
             </p>
-            <button
-              onClick={() => this.setState({ hasError: false, message: '' })}
-              className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
-            >
-              Try again
-            </button>
+            {/* Clearing hasError alone just re-throws: the failing route is
+                still mounted. A full navigation resets route and subtree. */}
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 rounded border border-gray-300 dark:border-gray-700 text-sm"
+              >
+                Reload
+              </button>
+              <button
+                onClick={() => window.location.assign('/explorer')}
+                className="px-4 py-2 rounded bg-indigo-600 text-white hover:bg-indigo-700 text-sm"
+              >
+                Back to Explorer
+              </button>
+            </div>
           </div>
         </div>
       )

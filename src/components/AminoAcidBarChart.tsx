@@ -34,8 +34,8 @@ export default function AminoAcidBarChart({ values, height = 280, normalise = fa
   }))
 
   const definedVals = data.filter((d) => d.value != null).map((d) => d.value as number)
-  const min = definedVals.length ? Math.min(...definedVals) : 0
-  const max = definedVals.length ? Math.max(...definedVals) : 1
+  const min = definedVals.length ? definedVals.reduce((a, b) => (b < a ? b : a)) : 0
+  const max = definedVals.length ? definedVals.reduce((a, b) => (b > a ? b : a)) : 1
 
   const getColor = (v: number | null, missing: boolean) => {
     if (missing || v == null) return '#d1d5db' // grey for missing

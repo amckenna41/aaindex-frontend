@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed, tableFormat, sendTable, badFormat } from './_helpers.js'
 import rawDb from '../src/data/aaindex2.json' with { type: 'json' }
 
 interface DB2Record {
@@ -21,6 +21,9 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(204).end()
   if (req.method !== 'GET') return methodNotAllowed(res)
 
+  const fmt = tableFormat(req.query.format)
+  if (fmt === undefined) return badFormat(res)
+
   const { q, limit, offset } = req.query
 
   let entries = Object.entries(db)
@@ -39,6 +42,15 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   const lim = typeof limit === 'string' ? Math.min(1000, Math.max(1, parseInt(limit) || count)) : count
   const page = entries.slice(off, off + lim)
 
+  const records = page.map(([accession, rec]) => ({
+    accession,
+    description: rec.description,
+    is_symmetric: rec.is_symmetric,
+  }))
+
+  if (fmt) return sendTable(res, fmt, 'aaindex2', records)
+
+  setCacheHeaders(res)
   return res.status(200).json({
     database: 'aaindex2',
     description: 'Amino acid mutation matrices',
@@ -46,10 +58,6 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     count,
     offset: off,
     limit: lim,
-    records: page.map(([accession, rec]) => ({
-      accession,
-      description: rec.description,
-      is_symmetric: rec.is_symmetric,
-    })),
+    records,
   })
 }

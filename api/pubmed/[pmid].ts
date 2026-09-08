@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders } from '../_helpers.js'
+import { setCorsHeaders, setCacheHeaders } from '../_helpers.js'
 
 interface PubMedData {
   title: string
@@ -67,6 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (cache.has(pmid)) {
     res.setHeader('X-Cache', 'HIT')
+    setCacheHeaders(res)
     return res.status(200).json({ pmid, ...cache.get(pmid) })
   }
 
@@ -103,10 +104,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     cache.set(pmid, data)
 
     res.setHeader('X-Cache', 'MISS')
-    res.setHeader('Cache-Control', 's-maxage=86400, stale-while-revalidate')
+    setCacheHeaders(res)
     return res.status(200).json({ pmid, ...data })
   } catch (e) {
-    return res.status(502).json({ error: `Failed to reach NCBI: ${String(e)}` })
+    console.error(`pubmed/${pmid}: upstream fetch failed`, e)
+    return res.status(502).json({ error: 'Failed to reach NCBI' })
   }
 }
 
