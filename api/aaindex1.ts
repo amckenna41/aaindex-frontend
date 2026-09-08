@@ -8,7 +8,7 @@ interface DB1Record {
   pmid: string
   references: string
   notes: string
-  values: Record<string, number>
+  values: Record<string, number | null>
   correlation_coefficients: Record<string, number>
 }
 

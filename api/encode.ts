@@ -5,7 +5,7 @@ import rawDb from '../src/data/aaindex1.json' with { type: 'json' }
 interface DB1Record {
   description: string
   category: string
-  values: Record<string, number>
+  values: Record<string, number | null>
 }
 
 const db = rawDb as Record<string, DB1Record>
@@ -14,11 +14,11 @@ const MAX_ACCESSIONS = 50
 
 const VALID_AAS = new Set(['A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y'])
 
-function encode(seq: string, values: Record<string, number>) {
+function encode(seq: string, values: Record<string, number | null>) {
   return seq.toUpperCase().split('').map((aa, i) => ({
     pos: i + 1,
     aa,
-    value: VALID_AAS.has(aa) && aa in values && isFinite(values[aa]) ? values[aa] : null,
+    value: VALID_AAS.has(aa) && aa in values && values[aa] != null && isFinite(values[aa]) ? values[aa] : null,
   }))
 }
 

@@ -10,7 +10,7 @@ interface DB2Record {
   is_symmetric: boolean
   row_order: string[]
   col_order: string[]
-  matrix: Record<string, Record<string, number>>
+  matrix: Record<string, Record<string, number | null>>
   correlation_coefficients: Record<string, number>
 }
 

@@ -11,7 +11,7 @@ export interface EncodedResidue {
   value: number | null // null = missing (AA not in index)
 }
 
-export function encodeSequence(seq: string, values: Record<string, number>): EncodedResidue[] {
+export function encodeSequence(seq: string, values: Record<string, number | null>): EncodedResidue[] {
   return seq
     .toUpperCase()
     .split('')

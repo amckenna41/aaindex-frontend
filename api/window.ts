@@ -8,7 +8,7 @@ import rawDb from '../src/data/aaindex1.json' with { type: 'json' }
 interface DB1Record {
   description: string
   category: string
-  values: Record<string, number>
+  values: Record<string, number | null>
 }
 
 const db = rawDb as Record<string, DB1Record>
