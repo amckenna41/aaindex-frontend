@@ -1,3 +1,5 @@
+import { MAX_COMPARE } from '../store/useAAIndexStore'
+
 export default function HowToGuide() {
   return (
     <div className="max-w-3xl mx-auto text-gray-800 dark:text-gray-200 print:text-black">
@@ -101,6 +103,15 @@ export default function HowToGuide() {
           <Tip>Search for property keywords like "hydrophobicity", "helix", "charge", or "volume" to find related records across all categories.</Tip>
         </SubSection>
 
+        <SubSection title="Sorting results">
+          <Steps steps={[
+            'Use the "Sort by" dropdown to order the list by accession, description, category, or number of missing amino acids.',
+            '"Default order" keeps database order — or best match first while a search is active.',
+            'Category and missing-amino-acid sorts are available for AAIndex1 only; sorting by missing amino acids surfaces sparse indices first.',
+            'Changing the sort returns to page 1, and the choice is kept in the URL (?sort=).',
+          ]} />
+        </SubSection>
+
         <SubSection title="Filtering by category">
           <Steps steps={[
             'Use the Category dropdown in the sidebar to restrict the list to a single property category (e.g. "Energy transfer", "Hydrophobicity").',
@@ -132,8 +143,8 @@ export default function HowToGuide() {
           <Steps steps={[
             'Click the "Add to compare" button on any record card.',
             'A count badge appears on the Compare nav link showing how many records are queued.',
-            'You can queue up to 4 records at a time.',
-            'A drawer appears at the bottom of the screen showing queued records — click "Compare" to proceed.',
+            `You can queue up to ${MAX_COMPARE} records at a time.`,
+            'Click the Compare link in the navbar to open the Comparator.',
           ]} />
         </SubSection>
       </section>
@@ -143,7 +154,8 @@ export default function HowToGuide() {
         <SectionHeader number="3" title="Sequence Analysis" />
         <p className="mb-6 leading-relaxed">
           The Sequence Analysis page encodes a single protein sequence against one or more AAIndex1 properties
-          and visualises the result as a line chart or colour-coded heatmap. It contains three tabs.
+          and visualises the result as a line chart or colour-coded heatmap, and applies the AAIndex2 substitution
+          and AAIndex3 contact matrices to sequences. It contains six tabs.
         </p>
 
         <SubSection title="Tab 1 — Sequence Encoder">
@@ -189,6 +201,47 @@ export default function HowToGuide() {
             'Hover a cell to see the exact value and residue identity in a tooltip.',
           ]} />
         </SubSection>
+
+        <SubSection title="Tab 4 — Hydrophobic Moment">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Measures how amphipathic a segment is: the Eisenberg hydrophobic moment μH = |Σ hₖ·e^(iδk)| / n,
+            where hₖ is the property value of residue k and δ the angle between successive residues.
+          </p>
+          <Steps steps={[
+            'Paste a sequence and choose a hydrophobicity index (the default is Eisenberg\'s consensus scale, EISD840101).',
+            'Pick the periodicity: 100° for an α-helix, 120° for a 3₁₀-helix, 160–180° for a β-strand.',
+            'The helical wheel shows up to 18 residues, coloured low (blue) to high (amber); the arrow points along the moment — towards the hydrophobic face. Use "Start" to move along longer sequences.',
+            'The moment profile plots μH and the mean value ⟨H⟩ in a sliding window, so amphipathic stretches stand out as μH peaks.',
+          ]} />
+        </SubSection>
+
+        <SubSection title="Tab 5 — Pairwise Alignment">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Aligns two sequences with any complete AAIndex2 substitution matrix — PAM, BLOSUM and the rest — using
+            affine gap penalties (a gap of length k costs open + (k − 1) × extend).
+          </p>
+          <Steps steps={[
+            'Enter sequences A and B (up to 2,000 residues each; non-standard residues are removed).',
+            'Choose Global (Needleman–Wunsch) to align end to end, or Local (Smith–Waterman) to find the best-matching region.',
+            'Gap penalties default to values scaled to the chosen matrix, since AAIndex2 matrices use very different units; edit them freely.',
+            'Distance matrices such as Grantham or Miyata (lower = more similar) are detected and scored as mean − value; the checkbox overrides the detection.',
+            'Results show the score, identity, similarity and gaps, with the alignment in 60-column blocks: | identical, : positive substitution score.',
+          ]} />
+        </SubSection>
+
+        <SubSection title="Tab 6 — Contact Energy">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
+            Scores a sequence against an AAIndex3 contact potential. Without a structure there is no way to know
+            which residues touch, so the matrix value is averaged over every residue pair — a composition-level
+            estimate, not the energy of a folded structure.
+          </p>
+          <Steps steps={[
+            'Paste a sequence and choose a contact matrix (the default is Miyazawa–Jernigan, MIYS960102).',
+            '"Mean pair value" summarises the whole sequence; check the record description for its sign and units.',
+            'The per-residue profile shows each residue\'s mean value against the rest of the sequence, with a 9-residue moving average.',
+            '"By residue type" ranks the residue types present, lowest (for energy potentials, most favourable) first.',
+          ]} />
+        </SubSection>
       </section>
 
       {/* ── Section 4: Encode ─────────────────────────────────────────────────── */}
@@ -207,6 +260,7 @@ export default function HowToGuide() {
             'Plain text files: one sequence per line. Sequences are automatically assigned IDs (seq_1, seq_2, …).',
             'Invalid lines with no recognisable amino acid characters are skipped and listed in an amber panel with the reason.',
             'Alternatively, enter a UniProt accession or PDB id (chain optional, e.g. 1CRN_A) in the "Fetch by accession" box.',
+            'Or pick one of the built-in sequences under "Examples" — the loaded example stays highlighted until you load something else.',
             'Uploads are capped at 5 MB. Very large sequence sets render in the table 200 rows at a time.',
           ]} />
           <Tip>Sequences are uppercased on import. Whitespace within lines is stripped. Ambiguous residues are accepted but will produce null values in the encoding.</Tip>
@@ -228,6 +282,7 @@ export default function HowToGuide() {
             'The sequence table lists all loaded sequences with their length and a summary of encoding statistics (valid residues · mean value).',
             'Click any row in the table to load that sequence into the preview chart.',
             'For multi-sequence files a dropdown also appears in the preview header for quick switching.',
+            'The composition panel below the chart shows the count and percentage of each amino acid in the previewed sequence; non-standard characters are counted separately and excluded from the percentages.',
           ]} />
         </SubSection>
 
@@ -245,25 +300,25 @@ export default function HowToGuide() {
       <section id="comparator" className="guide-section mb-12">
         <SectionHeader number="5" title="Comparator — Side-by-Side Comparison" />
         <p className="mb-6 leading-relaxed">
-          The Comparator lets you place up to four AAIndex1 records side by side in a table and examine how
+          The Comparator lets you place up to {MAX_COMPARE} AAIndex1 records side by side in a table and examine how
           property values differ across all 20 amino acids.
         </p>
 
         <SubSection title="Building the comparison set">
           <Steps steps={[
-            'Navigate to the Explorer and click "Add to compare" on each record you want to include (maximum 4).',
-            'The sticky drawer at the bottom of the screen shows queued records.',
-            'Click "Compare" in the drawer, or navigate directly to the Compare page from the navbar.',
-            'Records can also be removed from the drawer by clicking the × next to their accession.',
+            `Navigate to the Explorer and click "Add to compare" on each record you want to include (maximum ${MAX_COMPARE}).`,
+            'The Compare link in the navbar shows a badge with the number of queued records — click it to open the Comparator.',
+            'Records can be removed on the Compare page by clicking the × next to their accession.',
           ]} />
         </SubSection>
 
         <SubSection title="Reading the comparison table">
           <Steps steps={[
             'Each column represents one AAIndex1 record; each row is one amino acid.',
-            'Toggle "Normalise (z-score)" to scale all values to comparable z-scores — useful when records use different units.',
-            'Values are colour-coded within each column: dark blue = high, dark red = low, grey = missing.',
-            'Click any column header to sort by that property.',
+            'Toggle "z-score normalise" to scale all values to comparable z-scores — useful when records use different units.',
+            'In each amino-acid row, the highest value across the compared records is highlighted green and the lowest red; a legend above the table says so.',
+            'Without normalisation, records on larger scales tend to take the green in every row — the legend reminds you to enable z-score for a fair comparison.',
+            'Missing values show as "—".',
           ]} />
         </SubSection>
 
@@ -280,7 +335,7 @@ export default function HowToGuide() {
         <SectionHeader number="6" title="Visualiser — Charts & Plots" />
         <p className="mb-6 leading-relaxed">
           The Visualiser provides interactive charts for a single record or a pair of records.
-          Select a chart type from the left sidebar, choose your record(s), and export as PNG or CSV.
+          Select a chart type from the left sidebar, choose your record(s), and export as PNG, SVG or CSV.
         </p>
 
         <SubSection title="Bar chart">
@@ -293,7 +348,7 @@ export default function HowToGuide() {
             'Positive values are shaded blue (darker = larger); negative values are shaded red.',
             'Missing values render as grey bars.',
             'Hover any bar to see the full amino acid name and exact value.',
-            'Export with "↓ CSV" (values table) or "↓ PNG" (chart image).',
+            'Export with "↓ CSV" (values table), "↓ PNG" (chart image) or "↓ SVG" (editable vector image for papers and slides).',
           ]} />
         </SubSection>
 
@@ -415,7 +470,8 @@ export default function HowToGuide() {
                 ['Comparator', 'JSON', 'Raw record data for all queued accessions'],
                 ['Visualiser (bar / radar / scatter)', 'CSV', 'Property values for selected record(s)'],
                 ['Visualiser (matrix heatmap)', 'CSV', 'Full substitution matrix'],
-                ['Any chart', 'PNG', 'Chart snapshot at screen resolution'],
+                ['Bar, radar and scatter charts', 'PNG', 'Chart image at 2× resolution, legend included'],
+                ['Bar, radar and scatter charts', 'SVG', 'Editable vector image of the chart'],
                 ['API list endpoints', 'CSV / TSV', 'Add ?format=csv or ?format=tsv to any list endpoint'],
                 ['API /api/window', 'CSV / TSV', 'Per-position raw and window-averaged values'],
               ].map(([loc, fmt, desc]) => (
@@ -450,8 +506,8 @@ export default function HowToGuide() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
                 {[
-                  ['Explorer', 'db, q, cat, page'],
-                  ['Sequence Analysis', 'tab, seq, acc, w, idx'],
+                  ['Explorer', 'db, q, cat, page, sort'],
+                  ['Sequence Analysis', 'tab, seq, acc, w, idx, angle, seqA, seqB, mat, mode, cmat'],
                   ['Encode', 'acc, seq, id'],
                   ['Property Space', 'acc, cat'],
                 ].map(([page, params]) => (

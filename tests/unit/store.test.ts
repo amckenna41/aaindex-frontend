@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { useAAIndexStore } from '../../src/store/useAAIndexStore'
+import { useAAIndexStore, MAX_COMPARE } from '../../src/store/useAAIndexStore'
 
 // Reset store and localStorage before every test
 beforeEach(() => {
@@ -131,12 +131,15 @@ describe('addToCompare', () => {
     expect(useAAIndexStore.getState().selectedAccessions).toHaveLength(1)
   })
 
-  it('caps the compare list at 4 accessions', () => {
-    for (const acc of ['A1','A2','A3','A4','A5']) {
-      useAAIndexStore.getState().addToCompare(acc)
-    }
-    expect(useAAIndexStore.getState().selectedAccessions).toHaveLength(4)
-    expect(useAAIndexStore.getState().selectedAccessions).not.toContain('A5')
+  it('caps the compare list at MAX_COMPARE accessions', () => {
+    const accs = Array.from({ length: MAX_COMPARE + 1 }, (_, i) => `A${i + 1}`)
+    for (const acc of accs) useAAIndexStore.getState().addToCompare(acc)
+    expect(useAAIndexStore.getState().selectedAccessions).toHaveLength(MAX_COMPARE)
+    expect(useAAIndexStore.getState().selectedAccessions).not.toContain(accs.at(-1))
+  })
+
+  it('MAX_COMPARE is 4 — the guide, About page and record cards all read it', () => {
+    expect(MAX_COMPARE).toBe(4)
   })
 
   it('preserves insertion order', () => {

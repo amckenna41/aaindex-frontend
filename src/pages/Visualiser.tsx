@@ -8,6 +8,7 @@ import ExportButton from '../components/ExportButton'
 import { exportValuesAsCSV, exportMatrixAsCSV } from '../lib/exportUtils'
 
 import db1 from '../data/aaindex1.json'
+import { downloadChartPNG, downloadChartSVG } from '../lib/chartExport'
 
 const DB1 = db1 as unknown as AAIndex1DB
 
@@ -117,17 +118,8 @@ export default function Visualiser() {
     else { setDb('aaindex1'); setAcc1(ALL_ACCS_1[0]) }
   }
 
-  const downloadPNG = async () => {
-    if (!chartRef.current) return
-    const { default: html2canvas } = await import('html2canvas')
-    const canvas = await html2canvas(chartRef.current)
-    const link = document.createElement('a')
-    link.download = `${acc1}_${chartType}.png`
-    link.href = canvas.toDataURL()
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+  const downloadPNG = () => { if (chartRef.current) downloadChartPNG(chartRef.current, `${acc1}_${chartType}`) }
+  const downloadSVG = () => { if (chartRef.current) downloadChartSVG(chartRef.current, `${acc1}_${chartType}`) }
 
   const isDB1Chart = chartType !== 'heatmap'
 
@@ -282,6 +274,12 @@ export default function Visualiser() {
                     className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                   >
                     ↓ PNG
+                  </button>
+                  <button
+                    onClick={downloadSVG}
+                    className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                  >
+                    ↓ SVG
                   </button>
                 </>
               )}

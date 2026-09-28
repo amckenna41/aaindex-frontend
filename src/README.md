@@ -10,7 +10,9 @@ holds the router; every route except the Explorer is lazy-loaded behind
 main.tsx        Mount point
 App.tsx         Routes + ErrorBoundary
 index.css       Global styles / Tailwind layer
-components/     Reusable UI, incl. layout/ (Layout, Navbar)
+components/     Reusable UI, incl. layout/ (Layout, Navbar) and sequence/
+                (the lazy-loaded Hydrophobic Moment, Pairwise Alignment and
+                Contact Energy tabs of the Sequence Analysis page)
 pages/          One file per route
 lib/            Pure logic — no React, unit-tested directly
 store/          Zustand global state (useAAIndexStore)
@@ -26,7 +28,7 @@ types/          Shared TypeScript types
 | `/records/:accession` | `RecordDetail.tsx` |
 | `/compare` | `Comparator.tsx` |
 | `/visualise` | `Visualiser.tsx` |
-| `/sequence` | `SequenceAnalysis.tsx` |
+| `/sequence` | `SequenceAnalysis.tsx` — six tabs; the three matrix/moment tabs live in `components/sequence/` |
 | `/encode` | `Encode.tsx` |
 | `/similarity` | `Similarity.tsx` — PCA over the whole database |
 | `/about`, `/guide`, `/api-reference` | Static docs pages |
@@ -39,24 +41,28 @@ Keep logic here, not in components: it stays testable without a DOM and, for a
 few modules, runs unchanged inside the serverless functions.
 
 - `search.ts` — Fuse.js full-text search
-- `seqUtils.ts` — sequence parsing and encoders; **shared with `api/window.ts`**,
+- `seqUtils.ts` — sequence parsing, encoders, hydrophobic moment and composition; **shared with `api/window.ts`**,
   so it is deliberately dependency-free
 - `statsUtils.ts` — fold-based min/max/summary stats (avoids `Math.min(...xs)`
   blowing the argument limit on long sequences)
 - `pca.ts` — dependency-free 20×20 Jacobi eigendecomposition for the similarity view
 - `pysar.ts` — PySAR-style descriptors
 - `csv.ts` — CSV/TSV writer with formula-injection escaping, shared with the API
-- `exportUtils.ts` — browser download helpers (file-saver, html2canvas)
+- `exportUtils.ts` — browser download helpers (file-saver)
+- `chartExport.ts` — chart SVG/PNG export (serialises the Recharts SVG; PNG via canvas)
+- `matrixUtils.ts` — AAIndex2 alignment (Gotoh, global/local, distance matrices scored as mean − value)
+  and AAIndex3 contact profile; dependency-free like `seqUtils`
 - `apiSpec.ts` — single source of truth for the public API, rendered by the API
   reference page and served by `/api/openapi`
 - `aaindexFormat.ts`, `aminoAcids.ts`, `categories.ts` — canonical orderings,
-  labels and badge colours
+  labels, badge colours and per-record `coverage`
 - `useUrlParam.ts` — keeps page state in the query string so any analysis is a link
 
 ## Conventions
 
 - State that must survive navigation or be shared across pages goes in
-  `store/useAAIndexStore.ts`; everything else stays local.
+  `store/useAAIndexStore.ts`; everything else stays local. Limits shared by
+  several components (e.g. `MAX_COMPARE`) are exported from the store too.
 - `data/*.json` is the single dataset for both the UI and the API — never fork it.
 - Charts use Recharts; components under `components/` should stay presentational.
 

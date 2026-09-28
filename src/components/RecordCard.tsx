@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import { AAIndex1Record, AAIndex2Record, DBName } from '../types'
-import { useAAIndexStore } from '../store/useAAIndexStore'
-import { AA_ORDER_ALPHA } from '../lib/aminoAcids'
+import { useAAIndexStore, MAX_COMPARE } from '../store/useAAIndexStore'
+import { AA_ORDER_ALPHA, coverage } from '../lib/aminoAcids'
 import { categoryColour } from '../lib/categories'
 
 function Sparkline({ values }: { values: Record<string, number> }) {
@@ -32,16 +32,6 @@ function Sparkline({ values }: { values: Record<string, number> }) {
   )
 }
 
-/** Several indices have gaps for particular amino acids. The detail view draws
- *  those as hatched cells; without a marker here it's easy to pick a sparse
- *  index off the list without noticing. */
-function coverage(values: Record<string, number>): number {
-  return AA_ORDER_ALPHA.filter((aa) => {
-    const v = values?.[aa]
-    return v != null && isFinite(v)
-  }).length
-}
-
 interface Props {
   accession: string
   record: AAIndex1Record | AAIndex2Record
@@ -52,7 +42,7 @@ export default function RecordCard({ accession, record, dbName }: Props) {
   const navigate = useNavigate()
   const { selectedAccessions, addToCompare, removeFromCompare, favourites, toggleFavourite } = useAAIndexStore()
   const isSelected = selectedAccessions.includes(accession)
-  const isFull = selectedAccessions.length >= 4 && !isSelected
+  const isFull = selectedAccessions.length >= MAX_COMPARE && !isSelected
   const isFav = favourites.includes(accession)
   const is1 = dbName === 'aaindex1'
   const r1 = record as AAIndex1Record
@@ -118,7 +108,7 @@ export default function RecordCard({ accession, record, dbName }: Props) {
                 : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300 hover:bg-indigo-200'
             }`}
           >
-            {isSelected ? '✓ Added' : isFull ? 'Max 4' : '+ Compare'}
+            {isSelected ? '✓ Added' : isFull ? `Max ${MAX_COMPARE}` : '+ Compare'}
           </button>
         )}
       </div>

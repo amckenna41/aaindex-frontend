@@ -3,8 +3,8 @@ import { useSearchParams } from 'react-router-dom'
 import { useAAIndexStore } from '../store/useAAIndexStore'
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts'
 import { AAIndex1DB } from '../types'
-import { encodeSequence, VALID_AAS } from '../lib/seqUtils'
-import { AA_FULL_NAMES } from '../lib/aminoAcids'
+import { encodeSequence, composition, VALID_AAS } from '../lib/seqUtils'
+import { AA_FULL_NAMES, AA_ORDER_ALPHA } from '../lib/aminoAcids'
 import { saveAs } from 'file-saver'
 import { csvCell } from '../lib/csv'
 import { minOf, maxOf } from '../lib/statsUtils'
@@ -151,6 +151,41 @@ function SeqStats({ seq, accession }: { seq: string; accession: string }) {
     <span className="text-xs text-gray-600 dark:text-gray-400 font-mono">
       {nums.length}/{seq.length} · μ={mean.toFixed(2)}
     </span>
+  )
+}
+
+function CompositionPanel({ seq }: { seq: string }) {
+  const comp = useMemo(() => composition(seq), [seq])
+  const maxPct = Math.max(...Object.values(comp.percent)) || 1
+  return (
+    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+      <div className="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
+        <h2 className="font-semibold text-sm">Amino-acid composition</h2>
+        <p className="text-xs text-gray-500 dark:text-gray-400">
+          {comp.total} standard residues
+          {comp.other > 0 && ` · ${comp.other} non-standard excluded`}
+        </p>
+      </div>
+      <div className="grid grid-cols-5 sm:grid-cols-10 gap-1.5">
+        {AA_ORDER_ALPHA.map((aa) => (
+          <div
+            key={aa}
+            title={`${AA_FULL_NAMES[aa]}: ${comp.counts[aa]} (${comp.percent[aa].toFixed(1)}%)`}
+            className="flex flex-col items-center rounded bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 px-1 pt-1 pb-1.5"
+          >
+            <span className="font-mono text-xs font-bold text-gray-700 dark:text-gray-300">{aa}</span>
+            <div className="w-full h-8 flex items-end mt-0.5">
+              <div
+                className="w-full rounded-sm bg-indigo-400 dark:bg-indigo-500"
+                style={{ height: `${(comp.percent[aa] / maxPct) * 100}%` }}
+              />
+            </div>
+            <span className="text-[10px] font-mono text-gray-600 dark:text-gray-400 mt-1">{comp.counts[aa]}</span>
+            <span className="text-[10px] font-mono text-gray-400">{comp.percent[aa].toFixed(1)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -364,17 +399,22 @@ export default function Encode() {
           </button>
           {examplesOpen && (
             <ul className="flex flex-col gap-0.5">
-              {EXAMPLES.map((ex) => (
+              {EXAMPLES.map((ex) => {
+                // ponytail: selection derived from fileName; any other load/clear resets it
+                const selected = fileName === `${ex.label} (example)`
+                return (
                 <li key={ex.label}>
                   <button
                     onClick={() => loadExample(ex.fasta, ex.label)}
-                    className="w-full text-left px-2 py-1.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950 group"
+                    aria-pressed={selected}
+                    className={`w-full text-left px-2 py-1.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950 group border-l-2 ${selected ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-500' : 'border-transparent'}`}
                   >
-                    <p className="text-xs font-medium text-gray-700 dark:text-gray-300 group-hover:text-indigo-700 dark:group-hover:text-indigo-300">{ex.label}</p>
+                    <p className={`text-xs font-medium group-hover:text-indigo-700 dark:group-hover:text-indigo-300 ${selected ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>{ex.label}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500">{ex.description}</p>
                   </button>
                 </li>
-              ))}
+                )
+              })}
             </ul>
           )}
         </div>
@@ -513,6 +553,8 @@ export default function Encode() {
             </ResponsiveContainer>
           </div>
         )}
+
+        {sequences.length > 0 && previewSeq && <CompositionPanel seq={previewSeq.seq} />}
 
         {/* Sequence table */}
         {sequences.length > 0 && (

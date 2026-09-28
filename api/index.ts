@@ -20,7 +20,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({
     name: 'AAIndex API',
     description: 'REST API for the AAIndex amino acid physicochemical property database',
-    version: '1.2.0',
+    version: '1.3.0',
     databases: {
       aaindex1: {
         description: 'Amino acid physicochemical property indices',

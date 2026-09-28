@@ -55,3 +55,62 @@ export function zScoreNormalise(values: Record<string, number>): Record<string, 
   const std = Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / vals.length) || 1
   return Object.fromEntries(Object.entries(values).map(([k, v]) => [k, (v - mean) / std]))
 }
+
+export interface MomentResult {
+  /** Mean hydrophobic moment, |Σ hᵢ·e^{iδk}| / n (Eisenberg et al., 1982). */
+  moment: number
+  /** Mean property value over the residues with data. */
+  meanH: number
+  /** Direction of the moment vector in degrees, same frame as the residue angles. */
+  direction: number
+  /** Residues with a defined value. */
+  n: number
+}
+
+/** Hydrophobic moment of a segment. δ = 100° for an α-helix, 160–180° for a β-strand.
+ *  Residues with no value are skipped but keep their angular position. */
+export function hydrophobicMoment(values: (number | null)[], angleDeg = 100): MomentResult | null {
+  const d = (angleDeg * Math.PI) / 180
+  let sin = 0, cos = 0, sum = 0, n = 0
+  values.forEach((h, k) => {
+    if (h == null) return
+    sin += h * Math.sin(d * k)
+    cos += h * Math.cos(d * k)
+    sum += h; n++
+  })
+  if (!n) return null
+  return {
+    moment: Math.hypot(sin, cos) / n,
+    meanH: sum / n,
+    direction: (Math.atan2(sin, cos) * 180) / Math.PI,
+    n,
+  }
+}
+
+/** Hydrophobic moment of each window, reported at the window's centre residue. */
+export function momentProfile(encoded: EncodedResidue[], windowSize: number, angleDeg = 100) {
+  const half = Math.floor(windowSize / 2)
+  return encoded.map((r, i) => {
+    if (i < half || i + half >= encoded.length) return { pos: r.pos, aa: r.aa, moment: null, meanH: null }
+    const res = hydrophobicMoment(encoded.slice(i - half, i + half + 1).map((e) => e.value), angleDeg)
+    return { pos: r.pos, aa: r.aa, moment: res?.moment ?? null, meanH: res?.meanH ?? null }
+  })
+}
+
+/** Residue counts and percentages over the 20 standard amino acids. `other`
+ *  counts everything else (X, B, Z, gaps…), which is excluded from the percentages. */
+export function composition(seq: string) {
+  const counts: Record<string, number> = Object.fromEntries([...VALID_AAS].map((aa) => [aa, 0]))
+  let other = 0
+  for (const c of seq.toUpperCase()) {
+    if (c in counts) counts[c]++
+    else if (c.trim()) other++
+  }
+  const total = Object.values(counts).reduce((a, b) => a + b, 0)
+  return {
+    counts,
+    percent: Object.fromEntries(Object.entries(counts).map(([aa, c]) => [aa, total ? (100 * c) / total : 0])),
+    total,
+    other,
+  }
+}

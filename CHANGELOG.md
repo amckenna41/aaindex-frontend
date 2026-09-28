@@ -5,6 +5,72 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.3.0] — 2026-09-28
+
+### Added
+
+- **Sequence Analysis: three new tabs.** The AAIndex2 and AAIndex3 matrices were browsable but never applied to a sequence.
+  - **Hydrophobic Moment** — helical wheel (up to 18 residues, coloured by value, arrow along the moment) plus a sliding-window μH / ⟨H⟩ profile; α-helix, 3₁₀-helix and β-strand periodicities.
+  - **Pairwise Alignment** — global (Needleman–Wunsch) or local (Smith–Waterman) alignment with affine gaps (Gotoh) against any complete AAIndex2 matrix. Gap defaults scale to each matrix's spread, because AAIndex matrices use different units (its BLOSUM62 spans −6..16). Distance matrices (Grantham, Miyata…) are detected and scored as mean − value, which the user can override. Verified against the Durbin et al. textbook example (global 1, local 28).
+  - **Contact Energy** — mean AAIndex3 contact value over all residue pairs, a per-residue profile and a ranking by residue type. This is labelled as a sequence-only estimate, since there is no structure.
+  - Each tab is lazy-loaded, so the AAIndex2/3 data downloads only when its tab is opened.
+- **Explorer sorting** — by accession, description, category or missing amino acids, synced to `?sort=`.
+- **Encode: amino-acid composition panel** for the previewed sequence.
+- **Visualiser: SVG export** alongside PNG.
+- **Compare: colour legend** for the highest/lowest values per amino acid.
+- **Encode: the selected example stays highlighted.**
+
+### Changed
+
+- **Chart PNG export no longer uses `html2canvas`** (about 200 kB of shipped output). `src/lib/chartExport.ts` serialises the chart's own SVG, redraws the HTML legend inside it, and rasterises through a canvas at 2×.
+- **The compare limit lives in one place** (`MAX_COMPARE` in the store); the guide and About page read it too.
+
+### Removed
+
+- **The fixed compare drawer at the bottom of the screen.** The navbar's Compare badge and the Compare page's own controls cover it. The guide's steps that described the drawer were rewritten.
+
+### Documentation
+
+- **In-app guide:**
+  - Section 2 gains "Sorting results".
+  - Section 3 now describes six tabs, with new subsections for Hydrophobic Moment, Pairwise Alignment and Contact Energy.
+  - Section 4 covers the Examples list and the composition panel.
+  - Section 6 and the export table list SVG export and the 2× PNG with its legend.
+  - The "What each page captures" table adds `sort` (Explorer) and `angle`, `seqA`, `seqB`, `mat`, `mode`, `cmat` (Sequence Analysis).
+- **Guide corrections:** "Reading the comparison table" described per-column blue/red colouring and header-click sorting, neither of which exists. It now describes the per-row green/red highlighting and its legend. The toggle's name is also fixed ("z-score normalise").
+- **README and About page:** the feature lists cover sorting, the three new Sequence tabs, the composition panel, the Compare legend and PNG/SVG export. A stray typo in the README intro ("suCENbstitution") is fixed.
+- **`src/README.md`:** documents `components/sequence/`, `matrixUtils.ts`, `chartExport.ts`, the new `seqUtils` functions, `coverage` in `aminoAcids.ts`, and `MAX_COMPARE` living in the store. The html2canvas mention is removed.
+
+### Tests
+
+- 38 more vitest tests than before this work (547 → 585), all passing alongside the 27 Playwright e2e tests, `tsc`, `eslint` and a production build.
+- `tests/unit/matrixUtils.test.ts`:
+  - The Durbin et al. global (1) and local (28, AWGHE / AW-HE) alignments.
+  - Self-alignment, a preference for one long gap, and alignment against an empty sequence.
+  - Distance-matrix detection, and a non-empty local alignment under Grantham.
+  - `isComplete`, `defaultGaps` and `cleanSequence`.
+  - `contactProfile` checked against a brute-force O(n²) average.
+- `tests/unit/seqUtils.test.ts`:
+  - `hydrophobicMoment`: μ = 1 for alternating ±1 at 180°, zero for a uniform full turn, and missing values skipped.
+  - `momentProfile`: edge windows are left empty.
+  - `composition`.
+- `tests/unit/chartExport.test.ts`:
+  - The plot SVG is exported, not a legend icon.
+  - The export has a background and `xmlns`.
+  - The HTML legend is redrawn inside the SVG, including the fallback to a stroke-only icon's colour.
+- `tests/unit/aminoAcids.test.ts`: `coverage`.
+- `tests/unit/store.test.ts`: the cap follows `MAX_COMPARE`.
+- `tests/unit/config.test.ts`: html2canvas must not be declared at all (this replaces the B2 check that it was a runtime dependency).
+- Integration:
+  - **Explorer:** `?sort=` hydrates alongside `?page=`, the missing-amino-acid sort puts sparse indices first, and changing the sort resets to page 1.
+  - **Sequence Analysis:** each new tab renders, local mode changes the alignment, and the 2,000-residue cap is enforced.
+  - **Encode:** composition counts, and the example highlight follows the loaded example and clears on upload.
+  - **Compare:** the legend appears only for two or more records, and the z-score hint appears only for raw values.
+  - **Visualiser:** the SVG button.
+  - **Layout:** no compare drawer renders while records are queued.
+
+---
+
 ## [1.2.0] — 2026-09-04
 
 Audit remediation: 6 security findings, 8 bugs, 1 dependency advisory, plus the

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render as rtlRender, screen, within } from '@testing-library/react'
+import { render as rtlRender, screen, within, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import SequenceAnalysis from '../../src/pages/SequenceAnalysis'
@@ -12,7 +12,7 @@ vi.mock('recharts', () => {
   const stub = ({ children }: any) => React.createElement('div', { 'data-testid': 'recharts-stub' }, children)
   return {
     LineChart: stub, Line: stub, XAxis: stub, YAxis: stub,
-    Tooltip: stub, CartesianGrid: stub, ReferenceLine: stub,
+    Tooltip: stub, CartesianGrid: stub, ReferenceLine: stub, Legend: stub,
     ResponsiveContainer: stub,
   }
 })
@@ -221,3 +221,43 @@ describe('SequenceAnalysis — record selection', () => {
 
 // Helper: fireEvent is not imported from vitest, get it from testing-library
 import { fireEvent } from '@testing-library/react'
+
+// ── Matrix and moment tabs ─────────────────────────────────────────────────────
+
+describe('SequenceAnalysis — Hydrophobic Moment tab', () => {
+  it('draws a helical wheel with the moment for the default melittin sequence', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /hydrophobic moment/i }))
+    expect(await screen.findByRole('img', { name: /helical wheel of 18 residues/i })).toBeInTheDocument()
+    expect(screen.getByText(/mean hydrophobic moment/i).nextElementSibling!.textContent).toMatch(/^\d+\.\d{3}$/)
+  })
+})
+
+describe('SequenceAnalysis — Pairwise Alignment tab', () => {
+  it('aligns the default pair and switches to local mode', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /pairwise alignment/i }))
+    const pre = await screen.findByLabelText('Alignment')
+    expect(pre.textContent).toContain('A     1')
+    await userEvent.click(screen.getByLabelText(/local \(smith–waterman\)/i))
+    // Local alignments of this pair start mid-sequence.
+    await waitFor(() => expect(screen.getByLabelText('Alignment').textContent).not.toContain('A     1 '))
+  })
+
+  it('refuses sequences over the length cap', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /pairwise alignment/i }))
+    const a = await screen.findByLabelText(/sequence a/i)
+    fireEvent.change(a, { target: { value: 'A'.repeat(2001) } })
+    expect(screen.getByText(/limited to 2000 residues/i)).toBeInTheDocument()
+  })
+})
+
+describe('SequenceAnalysis — Contact Energy tab', () => {
+  it('shows the mean pair value for the default sequence', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /contact energy/i }))
+    expect(await screen.findByText(/mean pair value/i)).toBeInTheDocument()
+    expect(screen.getByText('MIYS960102', { selector: 'p' })).toBeInTheDocument()
+  })
+})

@@ -1,6 +1,6 @@
 # AAIndex Explorer
 
-<p align="center"><img src="public/aaindex_explorer_logo.png" alt="AAIndex Explorer logo" width="50%"></p>
+<img src="public/aaindex_explorer_logo.png" alt="AAIndex Explorer logo" width="50%">
 
 **[aaindex.vercel.app](https://aaindex.vercel.app/)**
 
@@ -24,14 +24,17 @@ The database is bundled from the [`aaindex`](https://github.com/amckenna41/aaind
 
 ## Features
 
-- Browse, search, and filter all 707 records
+- Browse, search, filter and sort all 707 records (by accession, description, category or missing amino acids)
 - Record detail pages with interactive bar charts, z-score normalisation, and missing-value indicators
 - Diverging colour heatmaps for AAIndex2/3 matrices
-- Side-by-side comparator for up to 4 records
+- Side-by-side comparator for up to 4 records, with a legend for the per-amino-acid highest/lowest highlighting
 - Radar chart fingerprint visualisation
-- **Sequence Encoder** — upload a FASTA or plain-text file and encode each sequence using any AAIndex1 index; invalid/non-AA sequences are flagged with specific rejection reasons
+- **Sequence Encoder** — upload a FASTA or plain-text file and encode each sequence using any AAIndex1 index; invalid/non-AA sequences are flagged with specific rejection reasons, and the previewed sequence gets an amino-acid composition panel
 - Sliding window analysis (Kyte-Doolittle-style smoothed property profiles)
 - Multi-property heatmap (sequence × N indices feature engineering view)
+- **Hydrophobic moment** — helical wheel and Eisenberg μH profile for α-helix, 3₁₀-helix and β-strand periodicities
+- **Pairwise alignment** — global (Needleman–Wunsch) or local (Smith–Waterman) alignment with affine gaps against any AAIndex2 substitution matrix; distance matrices such as Grantham are handled
+- **Contact energy** — score a sequence against any AAIndex3 contact potential (a sequence-only, all-pairs estimate) with a per-residue profile
 - Correlation network graph — force-directed visualisation of correlated records
 - Scatter plot explorer — any two indices vs amino acids, with Pearson r
 - Redundancy filter — find all indices correlated above a threshold
@@ -44,7 +47,7 @@ The database is bundled from the [`aaindex`](https://github.com/amckenna41/aaind
 - Citation helper — BibTeX, APA, and plain-text formats
 - Category statistics — mean/min/max/stddev per amino acid across any category
 - Shareable analysis URLs — Explorer, Sequence Analysis and Encode all keep their state in the query string, so any view or analysis is a link
-- Favourites, CSV/JSON export, dark mode
+- Favourites, CSV/JSON export, PNG/SVG chart export, dark mode
 - Embeddable iframe widget per record
 - App-level error boundary — runtime errors show a recovery screen instead of a blank page
 

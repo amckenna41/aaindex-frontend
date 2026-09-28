@@ -161,3 +161,26 @@ describe('Comparator — values table', () => {
     await waitFor(() => screen.getByText(/share/i))
   })
 })
+
+// ── Colour legend ─────────────────────────────────────────────────────────────
+
+describe('Comparator — highest/lowest colour legend', () => {
+  it('explains green and red once two or more records are compared', async () => {
+    renderWithRoute('?ids=KYTJ820101,CHOP780201')
+    expect(await screen.findByText(/highest value for that amino acid across indices/i)).toBeInTheDocument()
+    expect(screen.getByText(/lowest value for that amino acid across indices/i)).toBeInTheDocument()
+  })
+
+  it('is hidden for a single record, where nothing is highlighted', async () => {
+    renderWithRoute('?ids=KYTJ820101')
+    await screen.findAllByText('KYTJ820101')
+    expect(screen.queryByText(/highest value for that amino acid/i)).toBeNull()
+  })
+
+  it('suggests z-score only while values are raw', async () => {
+    renderWithRoute('?ids=KYTJ820101,CHOP780201')
+    expect(await screen.findByText(/raw scales differ/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByLabelText(/z-score normalise/i))
+    await waitFor(() => expect(screen.queryByText(/raw scales differ/i)).toBeNull())
+  })
+})

@@ -8,6 +8,7 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import RecordDetail from '../../src/pages/RecordDetail'
 import Explorer from '../../src/pages/Explorer'
 import Navbar from '../../src/components/layout/Navbar'
+import Layout from '../../src/components/layout/Layout'
 import ErrorBoundary from '../../src/components/ErrorBoundary'
 import { useAAIndexStore } from '../../src/store/useAAIndexStore'
 
@@ -98,6 +99,29 @@ describe('B4 — a deep-linked page number survives the first render', () => {
     expect(useAAIndexStore.getState().searchQuery).toBe('hydro')
   })
 
+  it('hydrates ?sort= and keeps it alongside the page number', async () => {
+    atExplorer('?sort=accession&page=2')
+    await screen.findByText(/Page 2 of/)
+    expect((screen.getByLabelText(/sort by/i) as HTMLSelectElement).value).toBe('accession')
+    await waitFor(() => expect(screen.getByTestId('search').textContent).toContain('sort=accession'))
+  })
+
+  it('sorting by missing amino acids puts sparse indices first', async () => {
+    atExplorer('?sort=missing')
+    await screen.findByText(/Page 1 of/)
+    // Every card on the first page is an index with gaps.
+    expect(screen.getAllByText(/⚠/).length).toBeGreaterThan(0)
+    const firstCard = screen.getAllByText(/^[A-Z]{4}\d{6}$/)[0].closest('div')!
+    expect(firstCard.parentElement!.textContent).toMatch(/⚠/)
+  })
+
+  it('changing the sort returns to page 1', async () => {
+    atExplorer('?page=3')
+    await screen.findByText(/Page 3 of/)
+    await userEvent.selectOptions(screen.getByLabelText(/sort by/i), 'name')
+    await waitFor(() => expect(screen.getByText(/Page 1 of/)).toBeInTheDocument())
+  })
+
   it('does not wipe the query string on mount', async () => {
     atExplorer('?q=hydro&page=2')
     await screen.findByText(/Page 2 of/)
@@ -161,5 +185,23 @@ describe('B8 — a corrupted favourites value cannot throw at store init', () =>
     vi.resetModules()
     const { useAAIndexStore: fresh } = await import('../../src/store/useAAIndexStore')
     expect(fresh.getState().favourites).toEqual(['KYTJ820101'])
+  })
+})
+
+describe('the compare drawer is gone', () => {
+  it('no fixed "Compare:" bar renders with records queued; the navbar badge carries the count', () => {
+    useAAIndexStore.setState({ selectedAccessions: ['KYTJ820101', 'CHOP780201'] })
+    const { container } = render(
+      <MemoryRouter initialEntries={['/about']}>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/about" element={<p>About page</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(screen.queryByText('Compare:')).toBeNull()
+    expect(container.querySelector('.fixed.bottom-0')).toBeNull()
+    expect(screen.getAllByRole('link', { name: /compare/i })[0].textContent).toContain('2')
   })
 })

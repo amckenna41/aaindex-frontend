@@ -5,6 +5,9 @@ import {
   pearsonR,
   zScoreNormalise,
   VALID_AAS,
+  hydrophobicMoment,
+  momentProfile,
+  composition,
 } from '../../src/lib/seqUtils'
 
 // ── VALID_AAS ──────────────────────────────────────────────────────────────────
@@ -298,5 +301,42 @@ describe('zScoreNormalise', () => {
     const input = {}
     const result = zScoreNormalise(input)
     expect(result).toEqual(input)
+  })
+})
+
+// ── hydrophobicMoment / momentProfile / composition ──────────────────────────
+
+describe('hydrophobicMoment', () => {
+  it('alternating ±1 at 180° is perfectly amphipathic (μ = 1)', () => {
+    const r = hydrophobicMoment([1, -1, 1, -1], 180)!
+    expect(r.moment).toBeCloseTo(1, 10)
+    expect(r.meanH).toBeCloseTo(0, 10)
+  })
+
+  it('a uniform segment over a full turn has no moment', () => {
+    // 18 residues × 100° = 5 full turns, so the vectors cancel exactly.
+    expect(hydrophobicMoment(Array(18).fill(1), 100)!.moment).toBeCloseTo(0, 10)
+  })
+
+  it('skips missing values but returns null when none are defined', () => {
+    expect(hydrophobicMoment([null, null])).toBeNull()
+    expect(hydrophobicMoment([2, null], 100)!.n).toBe(1)
+  })
+
+  it('momentProfile leaves edge residues without a full window empty', () => {
+    const enc = encodeSequence('ACDEFGH', { A: 1, C: 1, D: 1, E: 1, F: 1, G: 1, H: 1 })
+    const p = momentProfile(enc, 5)
+    expect(p.map((r) => r.moment === null)).toEqual([true, true, false, false, false, true, true])
+  })
+})
+
+describe('composition', () => {
+  it('counts standard residues and reports the rest separately', () => {
+    const c = composition('aacX-z')
+    expect(c.counts.A).toBe(2)
+    expect(c.counts.C).toBe(1)
+    expect(c.total).toBe(3)
+    expect(c.other).toBe(3)
+    expect(c.percent.A).toBeCloseTo(66.667, 2)
   })
 })

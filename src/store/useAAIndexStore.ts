@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { DBName } from '../types'
 
+/** Most records the Comparator shows side by side. */
+export const MAX_COMPARE = 4
+
 const FAVS_KEY = 'aaindex_favourites'
 const loadFavs = (): string[] => {
   // Runs at store-init time, before the ErrorBoundary can catch anything — a
@@ -49,7 +52,7 @@ export const useAAIndexStore = create<AAIndexState>((set) => ({
   addToCompare: (acc) =>
     set((s) => ({
       selectedAccessions:
-        s.selectedAccessions.includes(acc) || s.selectedAccessions.length >= 4
+        s.selectedAccessions.includes(acc) || s.selectedAccessions.length >= MAX_COMPARE
           ? s.selectedAccessions
           : [...s.selectedAccessions, acc],
     })),

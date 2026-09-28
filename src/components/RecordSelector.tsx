@@ -7,27 +7,31 @@ const ALL_ACCS = Object.keys(DB1)
 
 interface Props {
   accession: string
+  /** Records to pick from. Defaults to AAIndex1. */
+  db?: Record<string, { description: string }>
+  label?: string
   onChange: (a: string) => void
   /** Number of visible rows in the listbox. Defaults to 8. */
   size?: number
 }
 
-export default function RecordSelector({ accession, onChange, size = 8 }: Props) {
+export default function RecordSelector({ accession, onChange, size = 8, db = DB1, label = 'AAIndex1 record' }: Props) {
   const [filter, setFilter] = useState('')
+  const accs = useMemo(() => (db === DB1 ? ALL_ACCS : Object.keys(db)), [db])
   const filtered = useMemo(
     () =>
-      ALL_ACCS.filter(
+      accs.filter(
         (a) =>
           a.toLowerCase().includes(filter.toLowerCase()) ||
-          DB1[a].description.toLowerCase().includes(filter.toLowerCase()),
+          db[a].description.toLowerCase().includes(filter.toLowerCase()),
       ),
-    [filter],
+    [filter, accs, db],
   )
 
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        AAIndex1 record
+        {label}
       </span>
       <input
         type="text"
@@ -43,16 +47,16 @@ export default function RecordSelector({ accession, onChange, size = 8 }: Props)
         className="w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
       >
         {filtered.map((a) => (
-          <option key={a} value={a} title={DB1[a].description}>
+          <option key={a} value={a} title={db[a].description}>
             {a}
           </option>
         ))}
       </select>
       <p
         className="text-xs text-gray-500 dark:text-gray-400 italic truncate"
-        title={DB1[accession]?.description}
+        title={db[accession]?.description}
       >
-        {DB1[accession]?.description}
+        {db[accession]?.description}
       </p>
     </div>
   )

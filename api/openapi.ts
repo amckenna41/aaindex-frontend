@@ -44,7 +44,7 @@ function buildSpec(origin: string) {
     openapi: '3.1.0',
     info: {
       title: 'AAIndex API',
-      version: '1.2.0',
+      version: '1.3.0',
       description: 'REST API for the AAIndex amino acid physicochemical property database.',
       license: { name: 'MIT' },
     },

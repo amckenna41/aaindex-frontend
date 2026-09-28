@@ -375,3 +375,34 @@ describe('Encode — clear (×) button', () => {
     })
   })
 })
+
+describe('Encode — composition panel', () => {
+  it('shows residue counts for the previewed sequence', async () => {
+    render(<Encode />)
+    await uploadFile('one.fasta', '>s\nAACX\n')
+    expect(await screen.findByText(/amino-acid composition/i)).toBeInTheDocument()
+    expect(screen.getByText(/3 standard residues · 1 non-standard excluded/)).toBeInTheDocument()
+    expect(screen.getByTitle('Alanine: 2 (66.7%)')).toBeInTheDocument()
+  })
+})
+
+describe('Encode — selected example highlight', () => {
+  const example = (name: RegExp) => screen.getByRole('button', { name })
+
+  it('marks only the loaded example as selected', async () => {
+    render(<Encode />)
+    expect(example(/human insulin b-chain/i)).toHaveAttribute('aria-pressed', 'false')
+    await userEvent.click(example(/human insulin b-chain/i))
+    expect(example(/human insulin b-chain/i)).toHaveAttribute('aria-pressed', 'true')
+    await userEvent.click(example(/bee venom melittin/i))
+    expect(example(/human insulin b-chain/i)).toHaveAttribute('aria-pressed', 'false')
+    expect(example(/bee venom melittin/i)).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('clears the highlight when a file is uploaded instead', async () => {
+    render(<Encode />)
+    await userEvent.click(example(/human ubiquitin/i))
+    await uploadFile('mine.fasta', FASTA_SINGLE)
+    await waitFor(() => expect(example(/human ubiquitin/i)).toHaveAttribute('aria-pressed', 'false'))
+  })
+})

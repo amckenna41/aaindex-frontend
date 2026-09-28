@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, lazy, Suspense } from 'react'
 import {
   LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid,
 } from 'recharts'
@@ -10,6 +10,7 @@ import { minOf, maxOf } from '../lib/statsUtils'
 import { useUrlParam } from '../lib/useUrlParam'
 import ShareLink from '../components/ShareLink'
 import SequenceFetch from '../components/SequenceFetch'
+import SequenceInput from '../components/SequenceInput'
 
 import db1 from '../data/aaindex1.json'
 import RecordSelector from '../components/RecordSelector'
@@ -17,7 +18,12 @@ import RecordSelector from '../components/RecordSelector'
 const DB1 = db1 as unknown as AAIndex1DB
 const ALL_ACCS = Object.keys(DB1)
 
-type Tab = 'encoder' | 'window' | 'heatmap'
+type Tab = 'encoder' | 'window' | 'heatmap' | 'moment' | 'align' | 'contact'
+
+// Lazy so the AAIndex2/3 matrices only download when their tab is opened.
+const MomentTab  = lazy(() => import('../components/sequence/MomentTab'))
+const AlignTab   = lazy(() => import('../components/sequence/AlignTab'))
+const ContactTab = lazy(() => import('../components/sequence/ContactTab'))
 
 // ── Colour helpers ─────────────────────────────────────────────────────────────
 
@@ -32,38 +38,6 @@ function heatColor(t: number): string {
   // t in [0,1]: blue → white → red
   if (t < 0.5) return lerp(t * 2, '#3b82f6', '#ffffff')
   return lerp((t - 0.5) * 2, '#ffffff', '#ef4444')
-}
-
-// ── Shared record selector sidebar ────────────────────────────────────────────
-
-// ── Sequence input ─────────────────────────────────────────────────────────────
-
-function SequenceInput({ seq, onChange }: { seq: string; onChange: (s: string) => void }) {
-  const upper = seq.toUpperCase()
-  const invalid = [...new Set(upper.split('').filter((c) => c.trim() && !VALID_AAS.has(c)))]
-
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-        Protein sequence (single-letter code)
-      </span>
-      <textarea
-        value={seq}
-        onChange={(e) => onChange(e.target.value.replace(/\s/g, ''))}
-        placeholder="e.g. ACDEFGHIKLMNPQRSTVWY"
-        rows={3}
-        className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
-      />
-      <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-        <span>{upper.length} residues</span>
-        {invalid.length > 0 && (
-          <span className="text-amber-600 dark:text-amber-400">
-            Unknown chars: {invalid.join(', ')} (will show as missing)
-          </span>
-        )}
-      </div>
-    </div>
-  )
 }
 
 // ── Tab: Sequence Encoder ──────────────────────────────────────────────────────
@@ -453,6 +427,9 @@ const TABS: { id: Tab; label: string; desc: string }[] = [
   { id: 'encoder', label: 'Sequence Encoder', desc: 'Encode a sequence using an AAIndex1 property and export as CSV or line plot.' },
   { id: 'window',  label: 'Sliding Window',   desc: 'Smoothed property profile via a sliding window average — classic Kyte-Doolittle style.' },
   { id: 'heatmap', label: 'Multi-property Heatmap', desc: 'Encode against multiple indices simultaneously. Colour is normalised per row.' },
+  { id: 'moment',  label: 'Hydrophobic Moment', desc: 'Helical wheel and Eisenberg hydrophobic moment — how amphipathic a helix or strand is.' },
+  { id: 'align',   label: 'Pairwise Alignment', desc: 'Align two sequences with any AAIndex2 substitution matrix (global or local, affine gaps).' },
+  { id: 'contact', label: 'Contact Energy',     desc: 'Score a sequence against an AAIndex3 contact potential, averaged over all residue pairs.' },
 ]
 
 export default function SequenceAnalysis() {
@@ -463,12 +440,12 @@ export default function SequenceAnalysis() {
   return (
     <div className="flex flex-col gap-4">
       {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800 pb-0">
+      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800 pb-0 overflow-x-auto">
         {TABS.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
+            className={`shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
               tab === t.id
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950'
                 : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
@@ -486,6 +463,11 @@ export default function SequenceAnalysis() {
       {tab === 'encoder' && <EncoderTab />}
       {tab === 'window' && <WindowTab />}
       {tab === 'heatmap' && <HeatmapTab />}
+      <Suspense fallback={<p className="text-sm text-gray-400 animate-pulse py-16 text-center">Loading…</p>}>
+        {tab === 'moment' && <MomentTab />}
+        {tab === 'align' && <AlignTab />}
+        {tab === 'contact' && <ContactTab />}
+      </Suspense>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import SearchBar from '../components/SearchBar'
 import FilterPanel from '../components/FilterPanel'
 import RecordCard from '../components/RecordCard'
 import { AAIndex1DB, AAIndex2DB, AAIndex3DB, DBName } from '../types'
+import { coverage } from '../lib/aminoAcids'
 
 import db1 from '../data/aaindex1.json'
 
@@ -15,6 +16,16 @@ const DB1 = db1 as unknown as AAIndex1DB
 const PAGE_SIZE = 20
 const VALID_DBS: string[] = ['aaindex1', 'aaindex2', 'aaindex3']
 
+// `db1Only` sorts need per-record fields that only aaindex1 has.
+const SORTS = [
+  { id: 'relevance', label: 'Default order' },
+  { id: 'accession', label: 'Accession (A–Z)' },
+  { id: 'name',      label: 'Description (A–Z)' },
+  { id: 'category',  label: 'Category', db1Only: true },
+  { id: 'missing',   label: 'Missing amino acids (most first)', db1Only: true },
+] as const
+type SortId = typeof SORTS[number]['id']
+
 // Lazy-loaded DB cache — populated on first switch to each DB.
 const lazyCache: { aaindex2?: AAIndex2DB; aaindex3?: AAIndex3DB } = {}
 
@@ -22,6 +33,7 @@ export default function Explorer() {
   const { activeDB, searchQuery, categoryFilter, showOnlyFavourites, favourites, setBrowseList,
           setActiveDB, setSearchQuery, setCategoryFilter } = useAAIndexStore()
   const [page, setPage] = useState(1)
+  const [sort, setSort] = useState<SortId>('relevance')
   const [jumpVal, setJumpVal] = useState('')
   const [lazyDB, setLazyDB] = useState<AAIndex2DB | AAIndex3DB | null>(null)
   const [lazyLoading, setLazyLoading] = useState(false)
@@ -34,18 +46,20 @@ export default function Explorer() {
 
   // Single effect: hydrate from URL on first run, then sync state → URL after.
   useEffect(() => {
-    const snapshot = JSON.stringify([activeDB, searchQuery, categoryFilter, page])
+    const snapshot = JSON.stringify([activeDB, searchQuery, categoryFilter, page, sort])
 
     if (syncedRef.current === null) {
       syncedRef.current = snapshot
       const dbParam = searchParams.get('db')
       const qParam  = searchParams.get('q') || ''
       const catParam = searchParams.get('cat') || ''
+      const sortParam = searchParams.get('sort')
       const pageParam = Math.max(1, parseInt(searchParams.get('page') || '1', 10) || 1)
       if (dbParam && VALID_DBS.includes(dbParam)) setActiveDB(dbParam as DBName)
       if (qParam) setSearchQuery(qParam)
       if (catParam) setCategoryFilter(catParam)
       if (pageParam > 1) setPage(pageParam)
+      if (SORTS.some((o) => o.id === sortParam)) setSort(sortParam as SortId)
       return
     }
 
@@ -57,8 +71,9 @@ export default function Explorer() {
     if (searchQuery) params.q = searchQuery
     if (categoryFilter) params.cat = categoryFilter
     if (page > 1) params.page = String(page)
+    if (sort !== 'relevance') params.sort = sort
     setSearchParams(params, { replace: true })
-  }, [activeDB, searchQuery, categoryFilter, page])
+  }, [activeDB, searchQuery, categoryFilter, page, sort])
 
   // Lazily import db2/db3 on first switch to that database.
   useEffect(() => {
@@ -110,8 +125,17 @@ export default function Explorer() {
       accs = accs.filter((acc) => favourites.includes(acc))
     }
 
-    return accs
-  }, [allAccessions, searchQuery, fuseIndex, categoryFilter, activeDB, showOnlyFavourites, favourites])
+    const is1 = activeDB === 'aaindex1'
+    const desc = (acc: string) => (db as Record<string, { description: string }>)[acc]?.description ?? ''
+    const byAcc = (a: string, b: string) => a.localeCompare(b)
+    switch (sort) {
+      case 'accession': return [...accs].sort(byAcc)
+      case 'name':      return [...accs].sort((a, b) => desc(a).localeCompare(desc(b)) || byAcc(a, b))
+      case 'category':  return is1 ? [...accs].sort((a, b) => DB1[a].category.localeCompare(DB1[b].category) || byAcc(a, b)) : accs
+      case 'missing':   return is1 ? [...accs].sort((a, b) => coverage(DB1[a].values) - coverage(DB1[b].values) || byAcc(a, b)) : accs
+      default:          return accs
+    }
+  }, [allAccessions, searchQuery, fuseIndex, categoryFilter, activeDB, showOnlyFavourites, favourites, sort, db])
 
   // Reset to page 1 when the filter criteria actually change. Keyed on the
   // criteria rather than on "is this the first render?", because StrictMode
@@ -152,6 +176,21 @@ export default function Explorer() {
       <aside className="w-64 shrink-0 flex flex-col gap-4">
         <DBSwitcher />
         <SearchBar resultCount={filtered.length} totalCount={allAccessions.length} />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="explorer-sort" className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+            Sort by
+          </label>
+          <select
+            id="explorer-sort"
+            value={activeDB !== 'aaindex1' && (sort === 'category' || sort === 'missing') ? 'relevance' : sort}
+            onChange={(e) => { setSort(e.target.value as SortId); setPage(1) }}
+            className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            {SORTS.filter((o) => !('db1Only' in o) || activeDB === 'aaindex1').map((o) => (
+              <option key={o.id} value={o.id}>{o.id === 'relevance' && searchQuery ? 'Best match' : o.label}</option>
+            ))}
+          </select>
+        </div>
         {activeDB === 'aaindex1' && <FilterPanel categories={categories} />}
       </aside>
 

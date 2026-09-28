@@ -4,7 +4,7 @@
 
 @media print {
   .no-print { display: none !important; }
-  nav, .compare-drawer-root { display: none !important; }
+  nav { display: none !important; }
   body { background: white !important; color: black !important; }
   .guide-section { page-break-before: always; }
   .guide-section:first-of-type { page-break-before: avoid; }

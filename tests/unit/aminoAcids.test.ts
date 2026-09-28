@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { AA_FULL_NAMES, AA_ORDER, AA_ORDER_ALPHA } from '../../src/lib/aminoAcids'
+import { AA_FULL_NAMES, AA_ORDER, AA_ORDER_ALPHA, coverage } from '../../src/lib/aminoAcids'
 
 describe('AA_ORDER', () => {
   it('contains exactly 20 entries', () => {
@@ -91,5 +91,23 @@ describe('AA_FULL_NAMES', () => {
     for (const key of Object.keys(AA_FULL_NAMES)) {
       expect(key).toMatch(/^[A-Z]$/)
     }
+  })
+})
+
+describe('coverage', () => {
+  const full = Object.fromEntries(AA_ORDER_ALPHA.map((aa) => [aa, 1]))
+
+  it('counts all 20 when every amino acid has a finite value', () => {
+    expect(coverage(full)).toBe(20)
+  })
+
+  it('does not count missing, null or non-finite values', () => {
+    const sparse = { ...full, A: NaN, C: Infinity, D: null as unknown as number }
+    delete (sparse as Record<string, number>).E
+    expect(coverage(sparse)).toBe(16)
+  })
+
+  it('ignores keys that are not standard amino acids', () => {
+    expect(coverage({ X: 1, B: 2 })).toBe(0)
   })
 })

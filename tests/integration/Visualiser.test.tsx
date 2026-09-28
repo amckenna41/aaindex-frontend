@@ -56,6 +56,11 @@ describe('Visualiser — initial render', () => {
     render(<Visualiser />)
     expect(screen.getByRole('button', { name: /png/i })).toBeInTheDocument()
   })
+
+  it('shows the SVG download button', () => {
+    render(<Visualiser />)
+    expect(screen.getByRole('button', { name: /svg/i })).toBeInTheDocument()
+  })
 })
 
 // ── Chart type switching ───────────────────────────────────────────────────────

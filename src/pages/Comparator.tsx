@@ -145,7 +145,22 @@ export default function Comparator() {
 
       {/* Values table */}
       <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-        <h2 className="font-semibold mb-4">Values Table {normalise && <span className="text-xs font-normal text-amber-500">(z-score)</span>}</h2>
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h2 className="font-semibold">Values Table {normalise && <span className="text-xs font-normal text-amber-500">(z-score)</span>}</h2>
+          {selectedAccessions.length > 1 && (
+            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700" />
+                Highest value for that amino acid across indices
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700" />
+                Lowest value for that amino acid across indices
+              </span>
+              {!normalise && <span className="text-amber-600 dark:text-amber-400">Raw scales differ; enable z-score to compare fairly</span>}
+            </div>
+          )}
+        </div>
         <div className="overflow-x-auto">
           <table className="text-sm w-full">
             <thead>

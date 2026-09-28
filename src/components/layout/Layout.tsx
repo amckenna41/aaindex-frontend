@@ -1,12 +1,11 @@
 import { Link, Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
-import CompareDrawer from '../CompareDrawer'
 
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100">
       <Navbar />
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6 pb-24">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-6">
         <Outlet />
       </main>
       <footer className="border-t border-gray-200 dark:border-gray-800 text-sm text-gray-500 dark:text-gray-400">
@@ -35,7 +34,6 @@ export default function Layout() {
           </nav>
         </div>
       </footer>
-      <CompareDrawer />
     </div>
   )
 }

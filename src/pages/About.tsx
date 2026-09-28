@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { downloadAAIndex } from '../lib/aaindexFormat'
 import { AAIndex1DB, AAIndex2DB, AAIndex3DB } from '../types'
+import { MAX_COMPARE } from '../store/useAAIndexStore'
 import db1 from '../data/aaindex1.json'
 import db2 from '../data/aaindex2.json'
 import db3 from '../data/aaindex3.json'
@@ -115,16 +116,19 @@ export default function About() {
       <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-3">
         <h2 className="font-semibold text-lg">What this app provides</h2>
         <ul className="text-sm text-gray-700 dark:text-gray-300 flex flex-col gap-2 list-disc list-inside">
-          <li>Browse, search, and filter all {TOTAL_RECORDS} records across all three databases</li>
+          <li>Browse, search, filter and sort all {TOTAL_RECORDS} records across all three databases</li>
           <li>Star/favourite records and filter to your personal set</li>
           <li>Shareable deep-linked URLs — Explorer, Sequence Analysis, Encode and Property Space all keep their state in the query string, so any analysis is a link</li>
           <li>Interactive bar charts with z-score normalisation toggle and missing-value indicators</li>
           <li>Diverging colour heatmaps for AAIndex2/3 substitution matrices</li>
-          <li>Side-by-side comparator for up to 4 records (raw or z-score normalised)</li>
-          <li>Radar chart fingerprint visualisation</li>
-          <li>Sequence Encoder — encode a protein sequence using any AAIndex1 index to a numerical vector</li>
+          <li>Side-by-side comparator for up to {MAX_COMPARE} records (raw or z-score normalised)</li>
+          <li>Radar chart fingerprint visualisation, with PNG and SVG chart export</li>
+          <li>Sequence Encoder — encode a protein sequence using any AAIndex1 index to a numerical vector, with an amino-acid composition breakdown</li>
           <li>Sliding window analysis — Kyte-Doolittle-style smoothed property profiles</li>
           <li>Multi-property heatmap — sequence × N indices feature engineering view</li>
+          <li>Hydrophobic moment — helical wheel and Eisenberg μH profile along a sequence</li>
+          <li>Pairwise alignment — global or local alignment with affine gaps using any AAIndex2 substitution matrix</li>
+          <li>Contact energy — score a sequence against any AAIndex3 contact potential</li>
           <li>Correlation network graph — force-directed visualisation of correlated records</li>
           <li>Scatter plot explorer — any two indices vs amino acids, with Pearson r</li>
           <li>Redundancy filter — find all indices correlated above a threshold</li>

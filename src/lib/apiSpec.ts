@@ -43,7 +43,7 @@ export const ENDPOINTS: Endpoint[] = [
     example: '/api',
     sampleResponse: JSON.stringify({
       name: 'AAIndex API',
-      version: '1.2.0',
+      version: '1.3.0',
       databases: {
         aaindex1: { description: 'Amino acid physicochemical property indices', count: 566 },
         aaindex2: { description: 'Amino acid mutation matrices', count: 94 },
@@ -59,7 +59,7 @@ export const ENDPOINTS: Endpoint[] = [
     example: '/api/openapi',
     sampleResponse: JSON.stringify({
       openapi: '3.1.0',
-      info: { title: 'AAIndex API', version: '1.2.0' },
+      info: { title: 'AAIndex API', version: '1.3.0' },
       paths: { '/api/aaindex1': { get: { summary: 'List aaindex1 records' } } },
     }, null, 2),
   },

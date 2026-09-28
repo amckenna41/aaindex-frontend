@@ -17,12 +17,11 @@ const headersFor = (source: string) =>
       .flatMap((r) => r.headers.map((h) => [h.key, h.value])),
   )
 
-describe('B2 — html2canvas is a runtime dependency', () => {
-  it('is declared under dependencies', () => {
-    expect(pkg.dependencies).toHaveProperty('html2canvas')
-  })
-
-  it('is not also a devDependency', () => {
+describe('html2canvas is no longer shipped', () => {
+  // Chart export rasterises the chart's own SVG (src/lib/chartExport.ts);
+  // the 200 kB html2canvas bundle it replaced must not creep back in.
+  it('is not declared at all', () => {
+    expect(pkg.dependencies?.html2canvas).toBeUndefined()
     expect(pkg.devDependencies?.html2canvas).toBeUndefined()
   })
 })
