@@ -132,4 +132,25 @@ describe('POST /api/encode', () => {
     handler(makePostReq({ sequence: 'ACDE' }), res)
     expect(res.headers['Access-Control-Allow-Origin']).toBe('*')
   })
+
+  it('encodes each accession once, whatever its case or repetition', () => {
+    const res = makeRes()
+    handler(makePostReq({ sequence: 'ACDE', accessions: ['KYTJ820101', 'kytj820101', 'KYTJ820101'] }), res)
+    const body = res.body as { accessions_encoded: number; encodings: Record<string, unknown> }
+    expect(body.accessions_encoded).toBe(1)
+    expect(Object.keys(body.encodings)).toEqual(['KYTJ820101'])
+  })
+
+  it('does not treat inherited object keys as accessions', () => {
+    const res = makeRes()
+    handler(makePostReq({ sequence: 'ACDE', accessions: ['constructor', '__proto__', 'toString'] }), res)
+    expect(res.statusCode).toBe(400)
+  })
+
+  it('sends no Cache-Control on a POST response', () => {
+    const res = makeRes()
+    handler(makePostReq({ sequence: 'ACDE' }), res)
+    expect(res.statusCode).toBe(200)
+    expect(res.headers['Cache-Control']).toBeUndefined()
+  })
 })

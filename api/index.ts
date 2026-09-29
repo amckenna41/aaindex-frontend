@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, setCacheHeaders } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, API_VERSION } from './_helpers.js'
 import db1 from '../src/data/aaindex1.json' with { type: 'json' }
 import db2 from '../src/data/aaindex2.json' with { type: 'json' }
 import db3 from '../src/data/aaindex3.json' with { type: 'json' }
@@ -20,7 +20,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({
     name: 'AAIndex API',
     description: 'REST API for the AAIndex amino acid physicochemical property database',
-    version: '1.3.0',
+    version: API_VERSION,
     databases: {
       aaindex1: {
         description: 'Amino acid physicochemical property indices',

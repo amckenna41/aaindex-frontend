@@ -37,6 +37,25 @@ export function slidingWindowEncode(
   })
 }
 
+/** Runs of consecutive positions whose (windowed) value is at or above
+ *  `threshold` — e.g. Kyte–Doolittle ≥ 1.6 with a 19-residue window marks likely
+ *  transmembrane segments. A null value ends a run. Positions are 1-based. */
+export function regionsAbove(profile: EncodedResidue[], threshold: number) {
+  const regions: Array<{ start: number; end: number; length: number; peak: number }> = []
+  for (const r of profile) {
+    const last = regions[regions.length - 1]
+    if (r.value === null || r.value < threshold) continue
+    if (last && last.end === r.pos - 1) {
+      last.end = r.pos
+      last.length++
+      last.peak = Math.max(last.peak, r.value)
+    } else {
+      regions.push({ start: r.pos, end: r.pos, length: 1, peak: r.value })
+    }
+  }
+  return regions
+}
+
 export function pearsonR(xs: number[], ys: number[]): number {
   const n = xs.length
   if (n < 2) return 0

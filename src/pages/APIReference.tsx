@@ -1,7 +1,20 @@
 import { useState } from 'react'
+import { saveAs } from 'file-saver'
 import { ENDPOINTS, type Endpoint } from '../lib/apiSpec'
+import { snippet, SNIPPET_LANGS, type SnippetLang } from '../lib/snippets'
+import { downloadAAIndex } from '../lib/aaindexFormat'
+import type { AAIndex1DB, AAIndex2DB, AAIndex3DB } from '../types'
 
 const BASE = typeof window !== 'undefined' ? window.location.origin : ''
+const SNIPPET_BASE = BASE || 'https://aaindex.vercel.app'
+
+// Loaded on click, so the ~2 MB of data stays out of this page's bundle.
+const LOADERS = {
+  aaindex1: () => import('../data/aaindex1.json'),
+  aaindex2: () => import('../data/aaindex2.json'),
+  aaindex3: () => import('../data/aaindex3.json'),
+} as const
+type DBName = keyof typeof LOADERS
 
 function Badge({ type }: { type: string }) {
   const colour = type === 'path'
@@ -84,6 +97,77 @@ function TryIt({ path }: { path: string }) {
   )
 }
 
+function Snippets({ ep }: { ep: Endpoint }) {
+  const [lang, setLang] = useState<SnippetLang>('curl')
+  const [copied, setCopied] = useState(false)
+  const code = snippet(ep, lang, SNIPPET_BASE)
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      // Clipboard blocked — the code is still selectable.
+    }
+  }
+
+  return (
+    <div>
+      <div className="flex items-center gap-1 mb-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mr-2">Code</p>
+        {SNIPPET_LANGS.map((l) => (
+          <button
+            key={l.id}
+            onClick={() => setLang(l.id)}
+            aria-pressed={lang === l.id}
+            className={`text-xs px-2 py-0.5 rounded ${
+              lang === l.id
+                ? 'bg-indigo-600 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+            }`}
+          >
+            {l.label}
+          </button>
+        ))}
+        <button onClick={copy} className="ml-auto text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre className="text-xs bg-gray-900 text-gray-100 rounded p-3 overflow-x-auto">{code}</pre>
+    </div>
+  )
+}
+
+function DatabaseDownload({ name, label }: { name: DBName; label: string }) {
+  const [busy, setBusy] = useState(false)
+
+  const download = async (format: 'json' | 'flat') => {
+    setBusy(true)
+    try {
+      const db = (await LOADERS[name]()).default
+      if (format === 'json') {
+        saveAs(new Blob([JSON.stringify(db)], { type: 'application/json' }), `${name}.json`)
+      } else {
+        downloadAAIndex(db as unknown as AAIndex1DB | AAIndex2DB | AAIndex3DB, name)
+      }
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const btn = 'text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40'
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <span className="font-mono text-sm font-semibold text-indigo-600 dark:text-indigo-400">{label}</span>
+      <div className="flex gap-2">
+        <button disabled={busy} onClick={() => download('json')} className={btn}>↓ JSON</button>
+        <button disabled={busy} onClick={() => download('flat')} className={btn}>↓ AAIndex flat file</button>
+      </div>
+    </div>
+  )
+}
+
 function EndpointCard({ ep }: { ep: Endpoint }) {
   const [open, setOpen] = useState(false)
 
@@ -137,6 +221,8 @@ function EndpointCard({ ep }: { ep: Endpoint }) {
               {ep.sampleResponse}
             </pre>
           </div>
+
+          <Snippets ep={ep} />
 
           {ep.method === 'GET' && <TryIt path={ep.example} />}
         </div>
@@ -222,6 +308,21 @@ export default function APIReference() {
         blurb="Upstream release date and the PubMed proxy behind each record's abstract."
         eps={pick('/api/aaindex-updated', '/api/pubmed/{pmid}')}
       />
+
+      <section className="flex flex-col gap-2">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Download the full database</h2>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+            Every record with all its values, straight from the data this API serves — for offline work or bulk
+            analysis without paging through the list endpoints.
+          </p>
+        </div>
+        <div className="border border-gray-200 dark:border-gray-800 rounded-lg divide-y divide-gray-200 dark:divide-gray-800">
+          <DatabaseDownload name="aaindex1" label="AAIndex1" />
+          <DatabaseDownload name="aaindex2" label="AAIndex2" />
+          <DatabaseDownload name="aaindex3" label="AAIndex3" />
+        </div>
+      </section>
 
       {/* Notes */}
       <section className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 text-sm text-indigo-800 dark:text-indigo-300 flex flex-col gap-2">

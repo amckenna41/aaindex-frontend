@@ -41,19 +41,24 @@ Keep logic here, not in components: it stays testable without a DOM and, for a
 few modules, runs unchanged inside the serverless functions.
 
 - `search.ts` — Fuse.js full-text search
-- `seqUtils.ts` — sequence parsing, encoders, hydrophobic moment and composition; **shared with `api/window.ts`**,
+- `seqUtils.ts` — sequence parsing, encoders, hydrophobic moment, composition and `regionsAbove` (runs over a
+  threshold, for the sliding-window cutoff); **shared with `api/window.ts`**,
   so it is deliberately dependency-free
 - `statsUtils.ts` — fold-based min/max/summary stats (avoids `Math.min(...xs)`
   blowing the argument limit on long sequences)
 - `pca.ts` — dependency-free 20×20 Jacobi eigendecomposition for the similarity view
 - `pysar.ts` — PySAR-style descriptors
-- `csv.ts` — CSV/TSV writer with formula-injection escaping, shared with the API
+- `csv.ts` — CSV/TSV writer, shared with the API. Text a spreadsheet would run as a formula (leading
+  `=`, `+`, `-`, `@`, tab, CR) gets a `'` prefix — quoting alone does not stop Excel evaluating it
 - `exportUtils.ts` — browser download helpers (file-saver)
 - `chartExport.ts` — chart SVG/PNG export (serialises the Recharts SVG; PNG via canvas)
 - `matrixUtils.ts` — AAIndex2 alignment (Gotoh, global/local, distance matrices scored as mean − value)
   and AAIndex3 contact profile; dependency-free like `seqUtils`
 - `apiSpec.ts` — single source of truth for the public API, rendered by the API
   reference page and served by `/api/openapi`
+- `snippets.ts` — curl / Python / R example calls built from `apiSpec.ts`
+- `citation.ts` — parses AAIndex's free-text references and builds BibTeX, RIS, APA 7 and
+  plain-text citations; books and chapters fall back to the raw text
 - `aaindexFormat.ts`, `aminoAcids.ts`, `categories.ts` — canonical orderings,
   labels, badge colours and per-record `coverage`
 - `useUrlParam.ts` — keeps page state in the query string so any analysis is a link

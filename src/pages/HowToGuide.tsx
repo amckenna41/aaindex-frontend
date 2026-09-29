@@ -182,8 +182,10 @@ export default function HowToGuide() {
             'Paste your sequence and select a property as above.',
             'Adjust the window size slider (range 3–25). The default is 9, which matches the original Kyte–Doolittle method.',
             'At each position the displayed value is the mean of the window centred on that residue. Edge positions use a shorter window.',
+            'The dashed amber threshold line marks a cutoff; every stretch at or above it is shaded and listed under the chart with its start, end, length and peak.',
+            'For Kyte–Doolittle the threshold defaults to 1.6 — with a window of 19, a region above it is a likely transmembrane helix. Other scales start at their mean value; type any cutoff, or untick "Threshold line" to hide it.',
             'Export the smoothed values via the "↓ CSV" button.',
-            'Click "Copy shareable link" to capture the sequence, index and window size in a URL someone else can open.',
+            'Click "Copy shareable link" to capture the sequence, index, window size and threshold in a URL someone else can open.',
           ]} />
           <Tip>Larger window sizes produce smoother curves that emphasise global trends (e.g. transmembrane domains). Smaller windows preserve local peaks.</Tip>
         </SubSection>
@@ -460,7 +462,9 @@ export default function HowToGuide() {
               {[
                 ['Explorer / Record Detail', 'CSV', 'All 20 amino acid values for one record'],
                 ['Explorer / Record Detail', 'JSON', 'Full record metadata + values'],
-                ['Explorer / Record Detail', 'AAIndex', 'Canonical AAIndex flat-file format (whole DB)'],
+                ['About / API Reference', 'AAIndex', 'Canonical AAIndex flat-file format (whole DB)'],
+                ['API Reference', 'JSON', 'Whole database — every record with all its values'],
+                ['Record Detail — Cite', 'BibTeX / RIS / TXT', 'Citation of the record\u2019s source paper (APA and plain text as .txt)'],
                 ['Sequence Analysis — Encoder', 'CSV', 'Per-position: position, amino acid, property value'],
                 ['Sequence Analysis — Window', 'CSV', 'Per-position smoothed values'],
                 ['Encode', 'CSV (long)', 'All sequences × all positions with property value'],
@@ -507,7 +511,7 @@ export default function HowToGuide() {
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
                 {[
                   ['Explorer', 'db, q, cat, page, sort'],
-                  ['Sequence Analysis', 'tab, seq, acc, w, idx, angle, seqA, seqB, mat, mode, cmat'],
+                  ['Sequence Analysis', 'tab, seq, acc, w, thr, idx, angle, seqA, seqB, mat, mode, cmat'],
                   ['Encode', 'acc, seq, id'],
                   ['Property Space', 'acc, cat'],
                 ].map(([page, params]) => (
@@ -569,6 +573,22 @@ export default function HowToGuide() {
           </div>
           <Tip>Accession codes are case-insensitive. Successful responses are edge-cached for 24 hours; errors are never cached, so a transient upstream failure clears on the next request.</Tip>
         </SubSection>
+
+        <SubSection title="Code examples">
+          <Steps steps={[
+            'Expand any endpoint on the API Reference page to see a ready-to-run call in curl, Python (requests) or R (httr2).',
+            'Switch language with the buttons above the code and click "Copy" to put it on your clipboard.',
+            'Examples are generated from the same definition as the OpenAPI document, so they always match what the API accepts. The R examples use the native |> pipe and need R 4.1 or later.',
+          ]} />
+        </SubSection>
+
+        <SubSection title="Downloading the full database">
+          <Steps steps={[
+            'At the bottom of the API Reference page, "Download the full database" offers each of AAIndex1, AAIndex2 and AAIndex3.',
+            '"↓ JSON" saves every record with all its values — the same data the API serves — for offline or bulk work without paging through list endpoints.',
+            '"↓ AAIndex flat file" saves the canonical AAIndex text format, as on the About page.',
+          ]} />
+        </SubSection>
       </section>
 
       {/* ── Section 12: Citation ──────────────────────────────────────────────── */}
@@ -584,11 +604,35 @@ export default function HowToGuide() {
           <p className="mt-1">Nucleic Acids Research, 28(1): 374, 2000.</p>
           <p className="mt-1 text-gray-500">PMID: 10592278 · DOI: 10.1093/nar/28.1.374</p>
         </blockquote>
-        <p className="text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           The AAIndex database is maintained by the Kanehisa Laboratories and is freely available at
           {' '}<span className="font-mono text-indigo-600 dark:text-indigo-400">https://www.genome.jp/aaindex/</span>.
         </p>
+
+        <SubSection title="Citing an individual record">
+          <Steps steps={[
+            'Every record detail page has a "Cite this record" panel for the paper the index or matrix comes from.',
+            'BibTeX — author, title, journal, volume, pages and year, plus the PMID and AAIndex accession.',
+            'RIS — imports directly into Zotero, EndNote or Mendeley.',
+            'APA — APA 7th edition as plain text, with a PubMed link when the record has a PMID.',
+            'Plain — the reference exactly as AAIndex records it, with the accession and PMID appended.',
+            'Click "Copy to clipboard", or the download button to save the current format as .bib, .ris or .txt.',
+          ]} />
+          <Tip>Books and book chapters don't follow the journal pattern, so their APA citation shows the reference as written and their RIS entry is typed as generic with the full reference kept as a note — check these before submitting.</Tip>
+        </SubSection>
       </section>
+
+      <div className="no-print flex justify-center pb-4">
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 rounded-lg transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+          </svg>
+          Back to top
+        </button>
+      </div>
 
     </div>
   )

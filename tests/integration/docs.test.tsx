@@ -99,6 +99,49 @@ describe('APIReference — rendered from the shared spec', () => {
   })
 })
 
+describe('APIReference — code examples and downloads', () => {
+  const openCard = async (path: string) => {
+    const user = (await import('@testing-library/user-event')).default
+    const card = screen.getAllByRole('button').find((b) => b.textContent?.includes(path) && b.textContent.includes('▼'))!
+    await user.click(card)
+    return user
+  }
+
+  it('shows a curl example by default and switches to Python and R', async () => {
+    render(<MemoryRouter><APIReference /></MemoryRouter>)
+    const user = await openCard('/api/window')
+    expect(screen.getByText(/^curl "http/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Python' }))
+    expect(screen.getByText(/import requests/)).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'R', exact: true } as never))
+    expect(screen.getByText(/library\(httr2\)/)).toBeInTheDocument()
+  })
+
+  it('shows the POST body in the encode example', async () => {
+    render(<MemoryRouter><APIReference /></MemoryRouter>)
+    await openCard('/api/encode')
+    expect(screen.getByText(/-X POST/)).toBeInTheDocument()
+  })
+
+  it('offers JSON and flat-file downloads for all three databases', () => {
+    render(<MemoryRouter><APIReference /></MemoryRouter>)
+    expect(screen.getAllByRole('button', { name: '↓ JSON' })).toHaveLength(3)
+    expect(screen.getAllByRole('button', { name: '↓ AAIndex flat file' })).toHaveLength(3)
+  })
+
+  it('saves the full database as JSON', async () => {
+    const { saveAs } = await import('file-saver')
+    vi.mocked(saveAs).mockClear()
+    const user = (await import('@testing-library/user-event')).default
+    render(<MemoryRouter><APIReference /></MemoryRouter>)
+    await user.click(screen.getAllByRole('button', { name: '↓ JSON' })[0])
+    await vi.waitFor(() => expect(saveAs).toHaveBeenCalled())
+    const [blob, filename] = vi.mocked(saveAs).mock.calls[0] as [Blob, string]
+    expect(filename).toBe('aaindex1.json')
+    expect(Object.keys(JSON.parse(await blob.text()))).toHaveLength(COUNTS.aaindex1)
+  })
+})
+
 describe('the Try-it box only calls this origin', () => {
   it('refuses an off-origin target', async () => {
     const fetchSpy = vi.spyOn(globalThis, 'fetch')

@@ -1,5 +1,10 @@
 import type { VercelResponse } from '@vercel/node'
 import { toTable } from '../src/lib/csv.js'
+import pkg from '../package.json' with { type: 'json' }
+
+/** Single source for the version the API reports and sends upstream. */
+export const API_VERSION = pkg.version
+export const USER_AGENT = `AAIndex-Explorer/${API_VERSION} (https://aaindex.vercel.app)`
 
 export function setCorsHeaders(res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*')

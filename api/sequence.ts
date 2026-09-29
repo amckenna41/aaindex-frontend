@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, setCacheHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed, USER_AGENT } from './_helpers.js'
 
 type Source = 'uniprot' | 'pdb'
 
@@ -10,15 +10,17 @@ interface Entry { id: string; description: string; sequence: string; length: num
 const ID_RE = /^[A-Za-z0-9][A-Za-z0-9_.-]{2,19}$/
 const PDB_RE = /^[0-9][A-Za-z0-9]{3}(_[A-Za-z0-9]{1,4})?$/
 
-function parseFasta(text: string): Entry[] {
+function parseFasta(text: string, source: Source): Entry[] {
   const entries: Entry[] = []
   let cur: { header: string; parts: string[] } | null = null
   const flush = () => {
     if (!cur) return
     const sequence = cur.parts.join('').toUpperCase()
     if (!sequence) return
-    const [id, ...rest] = cur.header.split(/\s+/)
-    entries.push({ id, description: rest.join(' '), sequence, length: sequence.length })
+    // RCSB headers are pipe-delimited ("1CRN_1|Chains A, B[auth C]|CRAMBIN|..."),
+    // UniProt's are "sp|P01308|INS_HUMAN Insulin OS=..." with the id up to the first space.
+    const [id, ...rest] = source === 'pdb' ? cur.header.split('|') : cur.header.split(/\s+/)
+    entries.push({ id, description: rest.join(source === 'pdb' ? '|' : ' '), sequence, length: sequence.length })
   }
   for (const raw of text.split('\n')) {
     const line = raw.trim()
@@ -27,6 +29,17 @@ function parseFasta(text: string): Entry[] {
   }
   flush()
   return entries
+}
+
+/** Chain ids an RCSB entity covers, from the field before the first "|" of its
+ *  description ("Chains A, B[auth C]"). Both the label id (B) and the author id
+ *  (C) are returned — users quote either. */
+export function pdbChains(description: string): string[] {
+  const field = description.split('|')[0].replace(/^Chains?\s+/i, '')
+  return field.split(',').flatMap((item) => {
+    const m = item.trim().match(/^([A-Za-z0-9]+)(?:\[auth ([A-Za-z0-9]+)\])?$/)
+    return m ? [m[1], m[2]].filter(Boolean).map((c) => c.toUpperCase()) : []
+  })
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -60,7 +73,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const upstream = await fetch(url, {
-      headers: { 'User-Agent': 'AAIndex-Explorer/1.1 (https://aaindex.vercel.app)' },
+      headers: { 'User-Agent': USER_AGENT },
     })
 
     if (upstream.status === 404 || upstream.status === 400) {
@@ -71,15 +84,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(502).json({ error: `Failed to reach ${source}` })
     }
 
-    let entries = parseFasta(await upstream.text())
+    let entries = parseFasta(await upstream.text(), source)
     if (!entries.length) {
       return res.status(404).json({ error: `No sequence found for '${entryId}'` })
     }
 
     if (chain) {
-      const matched = entries.filter((e) => e.description.toUpperCase().includes(`CHAIN${chain}`)
-        || e.id.toUpperCase().endsWith(`_${chain}`)
-        || e.description.toUpperCase().split(/[\s,|]+/).includes(chain))
+      const matched = entries.filter((e) => pdbChains(e.description).includes(chain))
       if (!matched.length) {
         return res.status(404).json({ error: `Chain '${chain}' not found in ${entryId}` })
       }

@@ -124,7 +124,7 @@ export default function About() {
           <li>Side-by-side comparator for up to {MAX_COMPARE} records (raw or z-score normalised)</li>
           <li>Radar chart fingerprint visualisation, with PNG and SVG chart export</li>
           <li>Sequence Encoder — encode a protein sequence using any AAIndex1 index to a numerical vector, with an amino-acid composition breakdown</li>
-          <li>Sliding window analysis — Kyte-Doolittle-style smoothed property profiles</li>
+          <li>Sliding window analysis — Kyte-Doolittle-style smoothed property profiles, with an adjustable threshold that marks likely transmembrane segments</li>
           <li>Multi-property heatmap — sequence × N indices feature engineering view</li>
           <li>Hydrophobic moment — helical wheel and Eisenberg μH profile along a sequence</li>
           <li>Pairwise alignment — global or local alignment with affine gaps using any AAIndex2 substitution matrix</li>
@@ -138,7 +138,7 @@ export default function About() {
           <li>pySAR descriptor export — dataset CSV plus config JSON, ready for downstream SAR modelling</li>
           <li>Coverage badges — indices with gaps for particular amino acids are flagged in the record list</li>
           <li>PubMed abstract fetch — pull the abstract for any PMID directly from NCBI</li>
-          <li>Citation helper — one-click BibTeX, APA, and plain-text citations</li>
+          <li>Citation helper — BibTeX, RIS, APA 7 and plain-text citations, copied or downloaded in one click</li>
           <li>Category statistics — mean/min/max/stddev per amino acid across any category</li>
           <li>Embeddable widget — copy an iframe snippet for any record detail page</li>
           <li>CSV and JSON export for any record, encoding, or comparison</li>
@@ -151,7 +151,7 @@ export default function About() {
         <p className="text-sm text-gray-600 dark:text-gray-400">
           A public, read-only REST API — no key, no auth, CORS open to any origin. See the{' '}
           <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a>{' '}
-          for the full documentation with a live &quot;Try it&quot; box, or{' '}
+          for the full documentation with a live &quot;Try it&quot; box and curl, Python and R examples for every endpoint, or{' '}
           <a href="/api/openapi" className="text-indigo-600 dark:text-indigo-400 hover:underline">/api/openapi</a>{' '}
           for the machine-readable OpenAPI 3.1 description.
         </p>
@@ -184,7 +184,8 @@ export default function About() {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Download the full database files in the standard AAIndex flat-file format
             (same as <a href="https://github.com/amckenna41/aaindex/tree/main/aaindex/data" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">amckenna41/aaindex</a>).
-            Each file is reconstructed from the bundled JSON data.
+            Each file is reconstructed from the bundled JSON data. The same data is available as JSON from the{' '}
+            <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a>.
           </p>
         </div>
         <div className="flex flex-col gap-2">

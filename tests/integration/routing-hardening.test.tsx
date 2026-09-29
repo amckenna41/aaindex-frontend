@@ -17,7 +17,7 @@ vi.mock('recharts', () => {
   const stub = ({ children }: any) => React.createElement('div', { 'data-testid': 'recharts-stub' }, children)
   return {
     BarChart: stub, Bar: stub, LineChart: stub, Line: stub, XAxis: stub, YAxis: stub,
-    Tooltip: stub, CartesianGrid: stub, ReferenceLine: stub, Cell: stub,
+    Tooltip: stub, CartesianGrid: stub, ReferenceLine: stub, ReferenceArea: stub, Cell: stub,
     ResponsiveContainer: stub, ScatterChart: stub, Scatter: stub, ZAxis: stub,
   }
 })

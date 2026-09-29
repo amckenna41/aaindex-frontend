@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, setCacheHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed, USER_AGENT } from './_helpers.js'
 
 const SOURCE = 'https://www.genome.jp/aaindex/'
 
@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const upstream = await fetch(SOURCE, {
-      headers: { 'User-Agent': 'AAIndex-Explorer/1.0 (https://aaindex.vercel.app)' },
+      headers: { 'User-Agent': USER_AGENT },
     })
     if (!upstream.ok) return res.status(502).json({ error: `genome.jp returned ${upstream.status}` })
 

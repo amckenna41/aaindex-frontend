@@ -1,9 +1,9 @@
 import { useState, useMemo, lazy, Suspense } from 'react'
 import {
-  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, CartesianGrid,
+  LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, CartesianGrid,
 } from 'recharts'
 import { AAIndex1DB } from '../types'
-import { encodeSequence, slidingWindowEncode, VALID_AAS } from '../lib/seqUtils'
+import { encodeSequence, slidingWindowEncode, regionsAbove, VALID_AAS } from '../lib/seqUtils'
 import { exportEncodingAsCSV } from '../lib/exportUtils'
 import { AA_FULL_NAMES } from '../lib/aminoAcids'
 import { minOf, maxOf } from '../lib/statsUtils'
@@ -148,6 +148,18 @@ function EncoderTab() {
 
 // ── Tab: Sliding Window ────────────────────────────────────────────────────────
 
+/** Kyte & Doolittle (1982): a 19-residue window averaging ≥ 1.6 marks a likely
+ *  transmembrane helix. Other scales have no published cutoff, so they start at
+ *  the scale's mean — "above average" — for the user to adjust. */
+const KD = 'KYTJ820101'
+const KD_THRESHOLD = 1.6
+
+function suggestedThreshold(accession: string): number {
+  if (accession === KD) return KD_THRESHOLD
+  const vals = Object.values(DB1[accession]?.values ?? {}).filter((v): v is number => v != null)
+  return vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 100) / 100 : 0
+}
+
 function WindowTab() {
   const [seq, setSeq] = useUrlParam('seq', 'MGSSHHHHHHSSGLVPRGSHMASMTGGQQMGRDLYDDDDKDPMSSLSSRRGKKLIRFRLRKKLVHQKEHQSGTQMLRPIFKKMKQHPQFLQKEVPQYLFYDLGMQLNKDDQRTTQYQLLGQDGNFLQLRN')
   const [accession, setAccession] = useUrlParam('acc', 'KYTJ820101') // Kyte-Doolittle
@@ -157,12 +169,26 @@ function WindowTab() {
     ? parsedWindow
     : 9
   const setWindowSize = (n: number) => setWindowParam(String(n))
+  // 'auto' = the scale's suggested cutoff, 'off' = hidden, otherwise a number.
+  const [thrParam, setThrParam] = useUrlParam('thr', 'auto')
+  const parsedThr = parseFloat(thrParam)
+  const threshold = thrParam === 'off' ? null
+    : Number.isFinite(parsedThr) ? parsedThr
+    : suggestedThreshold(accession)
+  const setAccessionAndThreshold = (acc: string) => {
+    setAccession(acc)
+    if (thrParam !== 'off') setThrParam('auto') // a typed cutoff rarely suits a different scale
+  }
 
   const encoded = useMemo(
     () => (seq ? encodeSequence(seq, DB1[accession]?.values ?? {}) : []),
     [seq, accession]
   )
   const windowed = useMemo(() => slidingWindowEncode(encoded, windowSize), [encoded, windowSize])
+  const regions = useMemo(
+    () => (threshold === null ? [] : regionsAbove(windowed, threshold)),
+    [windowed, threshold]
+  )
 
   const chartData = windowed.map((e) => ({ pos: e.pos, aa: e.aa, value: e.value }))
   const allVals = windowed.map((e) => e.value).filter((v): v is number => v !== null)
@@ -173,7 +199,7 @@ function WindowTab() {
       <aside className="w-56 shrink-0 flex flex-col gap-4">
         <SequenceInput seq={seq} onChange={setSeq} />
         <SequenceFetch onLoad={(entries) => entries[0] && setSeq(entries[0].sequence)} />
-        <RecordSelector accession={accession} onChange={setAccession} />
+        <RecordSelector accession={accession} onChange={setAccessionAndThreshold} />
         <div>
           <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 block">
             Window size: {windowSize}
@@ -190,6 +216,32 @@ function WindowTab() {
           <div className="flex justify-between text-xs text-gray-400 mt-0.5">
             <span>3</span><span>25</span>
           </div>
+        </div>
+        <div>
+          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+            <input
+              type="checkbox"
+              checked={threshold !== null}
+              onChange={(e) => setThrParam(e.target.checked ? 'auto' : 'off')}
+              className="accent-indigo-600"
+            />
+            Threshold line
+          </label>
+          {threshold !== null && (
+            <input
+              type="number"
+              step={0.1}
+              aria-label="Threshold value"
+              value={threshold}
+              onChange={(e) => setThrParam(e.target.value === '' ? 'auto' : e.target.value)}
+              className="w-full text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+            />
+          )}
+          {accession === KD && threshold !== null && (
+            <p className="text-xs text-gray-400 mt-1">
+              Kyte–Doolittle: a window of 19 averaging ≥ 1.6 suggests a transmembrane helix.
+            </p>
+          )}
         </div>
         <button
           onClick={() => exportEncodingAsCSV(accession, seq, windowed)}
@@ -225,6 +277,18 @@ function WindowTab() {
                 />
                 <YAxis tick={{ fontSize: 11 }} width={55} />
                 {hasNeg && <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="4 2" />}
+                {regions.map((r) => (
+                  <ReferenceArea key={r.start} x1={r.start} x2={r.end} fill="#f59e0b" fillOpacity={0.15} />
+                ))}
+                {threshold !== null && (
+                  <ReferenceLine
+                    y={threshold}
+                    ifOverflow="extendDomain" // keep the cutoff visible even when no window reaches it
+                    stroke="#f59e0b"
+                    strokeDasharray="6 3"
+                    label={{ value: `threshold ${threshold}`, position: 'insideTopRight', fontSize: 10, fill: '#d97706' }}
+                  />
+                )}
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
@@ -247,6 +311,38 @@ function WindowTab() {
                 />
               </LineChart>
             </ResponsiveContainer>
+          )}
+
+          {seq && threshold !== null && (
+            <div className="mt-4">
+              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+                {regions.length
+                  ? `${regions.length} region${regions.length === 1 ? '' : 's'} at or above ${threshold}`
+                  : `No region reaches ${threshold}`}
+              </p>
+              {regions.length > 0 && (
+                <table className="text-xs w-full max-w-md">
+                  <thead>
+                    <tr className="text-left text-gray-500 dark:text-gray-400">
+                      <th className="font-medium pr-4">Start</th>
+                      <th className="font-medium pr-4">End</th>
+                      <th className="font-medium pr-4">Length</th>
+                      <th className="font-medium">Peak</th>
+                    </tr>
+                  </thead>
+                  <tbody className="font-mono text-gray-700 dark:text-gray-300">
+                    {regions.map((r) => (
+                      <tr key={r.start}>
+                        <td className="pr-4">{r.start}</td>
+                        <td className="pr-4">{r.end}</td>
+                        <td className="pr-4">{r.length}</td>
+                        <td>{r.peak.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           )}
         </div>
       </div>

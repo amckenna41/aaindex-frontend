@@ -57,7 +57,7 @@ describe('S1 — CSV exports sanitise every cell, not just the header', () => {
       { pos: 2, aa: 'A', value: null },
     ])
     const text = await (mockSaveAs.mock.calls[0][0] as Blob).text()
-    expect(text).toContain('"=cmd|calc"')
+    expect(text).toContain(`"'=cmd|calc"`)
   })
 
   it('leaves ordinary rows untouched', async () => {
@@ -144,7 +144,7 @@ describe('pySAR export', () => {
   it('sanitises a malicious sequence id', async () => {
     exportPySARDescriptors([{ id: '=cmd|calc', seq: 'ACDEF' }], ['KYTJ820101'], db)
     const text = await (mockSaveAs.mock.calls[0][0] as Blob).text()
-    expect(text).toContain('"=cmd|calc"')
+    expect(text).toContain(`"'=cmd|calc"`)
   })
 
   it('does nothing without sequences', () => {

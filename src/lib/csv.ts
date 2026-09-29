@@ -1,10 +1,13 @@
-/** Wraps a CSV/TSV cell value in quotes if it contains commas, quotes, newlines,
- *  or formula-injection trigger characters (=, +, -, @, |).
+/** Formats one CSV/TSV cell. Text that a spreadsheet would run as a formula
+ *  (leading =, +, -, @, tab or CR) gets a ' prefix — quoting alone does not stop
+ *  Excel evaluating it — and cells with the delimiter, quotes, newlines or those
+ *  characters are quoted. Numbers pass through, so negatives stay numeric.
  *  Shared by the browser exporters and the API's ?format=csv|tsv responses. */
 export function csvCell(v: string | number | null | undefined, delim = ','): string {
   if (v == null) return ''
   if (typeof v === 'number') return String(v)
-  const s = String(v)
+  let s = String(v)
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`
   if (/[,"\n\r=+\-@|]/.test(s) || s.includes(delim)) return `"${s.replace(/"/g, '""')}"`
   return s
 }

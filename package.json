@@ -1,8 +1,11 @@
 {
   "name": "aaindex-app",
   "private": true,
-  "version": "1.3.0",
+  "version": "1.3.1",
   "type": "module",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "vite",
     "build": "node scripts/gen-sitemap.mjs && tsc -b && vite build",

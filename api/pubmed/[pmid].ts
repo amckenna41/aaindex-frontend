@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, setCacheHeaders } from '../_helpers.js'
+import { setCorsHeaders, setCacheHeaders, USER_AGENT } from '../_helpers.js'
 
 interface PubMedData {
   title: string
@@ -25,6 +25,16 @@ function decodeEntities(s: string): string {
 function extractFirst(xml: string, tag: string): string {
   const m = xml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`))
   return m ? decodeEntities(m[1].replace(/<[^>]*>/g, '').trim()) : ''
+}
+
+/** Publication year. The first <Year> in the document is usually DateCompleted
+ *  (when NLM indexed it), so read it from <PubDate>, whose year is either a
+ *  <Year> tag or embedded in a free-text <MedlineDate> such as "1998 Dec-1999 Jan". */
+export function parseYear(xml: string): string {
+  const pubDate = xml.match(/<PubDate>([\s\S]*?)<\/PubDate>/)?.[1] ?? ''
+  return extractFirst(pubDate, 'Year')
+    || extractFirst(pubDate, 'MedlineDate').match(/\d{4}/)?.[0]
+    || ''
 }
 
 function parseAbstract(xml: string): string {
@@ -76,9 +86,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id=${pmid}&rettype=abstract&retmode=xml${apiKey}`
 
     const upstream = await fetch(url, {
-      headers: {
-        'User-Agent': 'AAIndex-Explorer/1.0 (https://aaindex.vercel.app; contact: aaindex@research.dev)',
-      },
+      headers: { 'User-Agent': USER_AGENT },
     })
 
     if (!upstream.ok) {
@@ -96,7 +104,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const abstract = parseAbstract(xml) || 'Abstract not available for this record.'
     const authors  = parseAuthors(xml)
     const journal  = extractFirst(xml, 'ISOAbbreviation') || extractFirst(xml, 'Title')
-    const year     = extractFirst(xml, 'Year')
+    const year     = parseYear(xml)
 
     const data: PubMedData = { title, abstract, authors, journal, year }
 

@@ -10,5 +10,5 @@
     "strict": true,
     "noEmit": true
   },
-  "include": ["**/*.ts", "../src/data/*.json"]
+  "include": ["**/*.ts", "../src/data/*.json", "../package.json"]
 }

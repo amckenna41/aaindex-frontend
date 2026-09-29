@@ -15,12 +15,17 @@ describe('csvCell', () => {
     expect(csvCell(undefined)).toBe('')
   })
 
-  it('quotes a formula-injection payload from a FASTA header', () => {
-    expect(csvCell("=cmd|'/c calc'!A1")).toBe('"=cmd|\'/c calc\'!A1"')
+  it('neutralises a formula-injection payload from a FASTA header', () => {
+    expect(csvCell("=cmd|'/c calc'!A1")).toBe('"\'=cmd|\'/c calc\'!A1"')
   })
 
-  it.each(['=SUM(A1)', '+1', '-1+1', '@SUM', 'a|b'])('quotes %s', (payload) => {
-    expect(csvCell(payload).startsWith('"')).toBe(true)
+  it.each(['=SUM(A1)', '+1', '-1+1', '@SUM', '\tcmd'])('prefixes %s with an apostrophe', (payload) => {
+    expect(csvCell(payload).replace(/^"/, '')).toMatch(/^'/)
+  })
+
+  it('quotes but does not prefix a formula character mid-cell', () => {
+    expect(csvCell('a|b')).toBe('"a|b"')
+    expect(csvCell('alpha-helix')).toBe('"alpha-helix"')
   })
 
   it('quotes and escapes embedded commas and quotes', () => {
@@ -44,7 +49,7 @@ describe('toTable', () => {
   })
 
   it('sanitises a malicious value in a data row', () => {
-    expect(toTable([{ id: '=HYPERLINK("http://x")' }])).toContain('"=HYPERLINK(""http://x"")"')
+    expect(toTable([{ id: '=HYPERLINK("http://x")' }])).toContain('"\'=HYPERLINK(""http://x"")"')
   })
 
   it('returns an empty string for no rows', () => {

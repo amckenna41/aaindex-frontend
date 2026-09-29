@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
+  regionsAbove,
   encodeSequence,
   slidingWindowEncode,
   pearsonR,
@@ -197,6 +198,25 @@ describe('slidingWindowEncode', () => {
 })
 
 // ── pearsonR ───────────────────────────────────────────────────────────────────
+
+describe('regionsAbove', () => {
+  const profile = (vals: Array<number | null>) => vals.map((value, i) => ({ pos: i + 1, aa: 'A', value }))
+
+  it('returns contiguous runs at or above the threshold, 1-based and inclusive', () => {
+    expect(regionsAbove(profile([0, 2, 1.6, 0, 3, 3]), 1.6)).toEqual([
+      { start: 2, end: 3, length: 2, peak: 2 },
+      { start: 5, end: 6, length: 2, peak: 3 },
+    ])
+  })
+
+  it('splits a run at a null (no data) position', () => {
+    expect(regionsAbove(profile([2, null, 2]), 1)).toHaveLength(2)
+  })
+
+  it('returns nothing when no value reaches the threshold', () => {
+    expect(regionsAbove(profile([0, 1, 1.5]), 1.6)).toEqual([])
+  })
+})
 
 describe('pearsonR', () => {
   it('returns 1.0 for perfectly positively correlated arrays', () => {

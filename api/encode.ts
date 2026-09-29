@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, setCacheHeaders } from './_helpers.js'
+import { setCorsHeaders } from './_helpers.js'
 import rawDb from '../src/data/aaindex1.json' with { type: 'json' }
 
 interface DB1Record {
@@ -18,7 +18,7 @@ function encode(seq: string, values: Record<string, number | null>) {
   return seq.toUpperCase().split('').map((aa, i) => ({
     pos: i + 1,
     aa,
-    value: VALID_AAS.has(aa) && aa in values && values[aa] != null && isFinite(values[aa]) ? values[aa] : null,
+    value: VALID_AAS.has(aa) && Object.hasOwn(values, aa) && values[aa] != null && isFinite(values[aa]) ? values[aa] : null,
   }))
 }
 
@@ -53,9 +53,10 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
         error: `\`accessions\` must not exceed ${MAX_ACCESSIONS} entries`,
       })
     }
-    accs = (body.accessions as unknown[])
-      .filter((a): a is string => typeof a === 'string' && a.toUpperCase() in db)
+    accs = [...new Set((body.accessions as unknown[])
+      .filter((a): a is string => typeof a === 'string')
       .map((a) => a.toUpperCase())
+      .filter((a) => Object.hasOwn(db, a)))]
     if (accs.length === 0) {
       return res.status(400).json({ error: 'None of the provided `accessions` were found in aaindex1' })
     }
@@ -78,7 +79,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  setCacheHeaders(res)
+  // No Cache-Control: CDNs don't cache POST responses, so it would be noise.
   return res.status(200).json({
     sequence: seq,
     length: seq.length,

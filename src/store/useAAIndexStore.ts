@@ -15,7 +15,15 @@ const loadFavs = (): string[] => {
     return []
   }
 }
-const saveFavs = (favs: string[]) => localStorage.setItem(FAVS_KEY, JSON.stringify(favs))
+const saveFavs = (favs: string[]) => {
+  // Blocked or full storage (e.g. inside an embedding iframe) must not stop the
+  // star toggling — the favourite just won't survive a reload.
+  try {
+    localStorage.setItem(FAVS_KEY, JSON.stringify(favs))
+  } catch {
+    // Non-fatal.
+  }
+}
 
 interface AAIndexState {
   activeDB: DBName

@@ -25,6 +25,12 @@ directly with mock req/res objects — no server is started. `unit/api/_fixtures
 holds the shared mocks; `hardening.test.ts` files cover bad input, wrong methods
 and injection-style payloads rather than the happy path.
 
+`unit/config.test.ts` guards configuration that type-checking can't see:
+`vercel.json` security headers (the CSP must carry the hash of the inline theme
+script in `index.html` — edit that script and the test tells you to regenerate
+it), CI action and CLI pinning, the social preview image, and the reported API
+version.
+
 ## `integration/`
 
 Renders a page or component and drives it via `@testing-library/user-event`.

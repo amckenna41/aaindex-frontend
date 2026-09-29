@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { useAAIndexStore, MAX_COMPARE } from '../../src/store/useAAIndexStore'
 
 // Reset store and localStorage before every test
@@ -77,6 +77,18 @@ describe('setActiveDB', () => {
 // ── toggleFavourite ────────────────────────────────────────────────────────────
 
 describe('toggleFavourite', () => {
+  it('still toggles when storage is blocked or full', () => {
+    const spy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new DOMException('blocked', 'SecurityError')
+    })
+    try {
+      expect(() => useAAIndexStore.getState().toggleFavourite('ACCE000101')).not.toThrow()
+      expect(useAAIndexStore.getState().favourites).toEqual(['ACCE000101'])
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
   it('adds an accession to an empty favourites list', () => {
     useAAIndexStore.getState().toggleFavourite('ACCE000101')
     expect(useAAIndexStore.getState().favourites).toContain('ACCE000101')

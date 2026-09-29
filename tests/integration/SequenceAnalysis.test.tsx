@@ -12,7 +12,7 @@ vi.mock('recharts', () => {
   const stub = ({ children }: any) => React.createElement('div', { 'data-testid': 'recharts-stub' }, children)
   return {
     LineChart: stub, Line: stub, XAxis: stub, YAxis: stub,
-    Tooltip: stub, CartesianGrid: stub, ReferenceLine: stub, Legend: stub,
+    Tooltip: stub, CartesianGrid: stub, ReferenceLine: stub, ReferenceArea: stub, Legend: stub,
     ResponsiveContainer: stub,
   }
 })
@@ -152,6 +152,35 @@ describe('SequenceAnalysis — tab switching', () => {
     const slider = screen.getByRole('slider')
     fireEvent.change(slider, { target: { value: '15' } })
     expect(screen.getByText(/window size: 15/i)).toBeInTheDocument()
+  })
+
+  it('Sliding Window defaults to the Kyte-Doolittle 1.6 threshold', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /sliding window/i }))
+    expect(screen.getByRole('spinbutton', { name: /threshold value/i })).toHaveValue(1.6)
+    expect(screen.getByText(/at or above 1\.6|no region reaches 1\.6/i)).toBeInTheDocument()
+  })
+
+  it('a threshold no window reaches reports no regions', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /sliding window/i }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: /threshold value/i }), { target: { value: '99' } })
+    expect(screen.getByText(/no region reaches 99/i)).toBeInTheDocument()
+  })
+
+  it('a threshold every window reaches reports one region spanning the sequence', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /sliding window/i }))
+    fireEvent.change(screen.getByRole('spinbutton', { name: /threshold value/i }), { target: { value: '-99' } })
+    expect(screen.getByText(/^1 region at or above -99$/i)).toBeInTheDocument()
+  })
+
+  it('unticking the threshold hides it', async () => {
+    render(<SequenceAnalysis />)
+    await userEvent.click(screen.getByRole('button', { name: /sliding window/i }))
+    await userEvent.click(screen.getByRole('checkbox', { name: /threshold line/i }))
+    expect(screen.queryByRole('spinbutton', { name: /threshold value/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/region/i)).not.toBeInTheDocument()
   })
 
   it('clicking Multi-property Heatmap tab activates it', async () => {

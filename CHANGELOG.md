@@ -5,6 +5,77 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ---
 
+## [1.3.1] — 2026-09-29
+
+### Added
+
+- **Sliding Window: threshold line.** A dashed cutoff on the smoothed profile; every run of positions at or above it is shaded and listed with start, end, length and peak.
+  - Kyte–Doolittle defaults to 1.6 — with a 19-residue window, the published cutoff for a likely transmembrane helix — with a note saying so. Other scales start at their own mean.
+  - Type any value, or untick "Threshold line" to hide it. The setting is kept in the URL (`?thr=`, `off` to hide); changing the index resets a typed value to that scale's default.
+  - The y-axis extends to the line, so it stays visible when no window reaches it.
+  - The region logic is `regionsAbove()` in `src/lib/seqUtils.ts`.
+- **API Reference: code examples.** Every endpoint shows a ready-to-run call in curl, Python (`requests`) and R (`httr2`), with a copy button. They are built from `src/lib/apiSpec.ts` by the new `src/lib/snippets.ts`, so they can't drift from the API.
+- **API Reference: full-database downloads.** AAIndex1, 2 and 3 as JSON (every record with all its values) or as the AAIndex flat file. The data is imported only when a button is clicked, so it stays out of the page bundle.
+- **Citations: RIS and a real APA 7.** A new `src/lib/citation.ts` parses AAIndex's free-text references (`Authors 'Title' Journal Vol, pages (Year)`) — 706 of 707 records.
+  - **RIS** imports into Zotero, EndNote and Mendeley.
+  - **APA** used to repeat the raw reference; it is now proper APA 7 with a PubMed link.
+  - **BibTeX** now carries author, journal, volume and pages (`--` range), and uses `@misc` for books.
+  - Books and chapters don't match the journal pattern: APA shows them as written, and RIS types them `GEN` with the full reference kept as a note.
+  - Each format can be downloaded (`.bib`, `.ris`, `.txt`) as well as copied.
+- **Guide: "Back to top" button** at the end of the page (hidden when printing).
+
+### Fixed
+
+- **Spreadsheet formula injection.** `csvCell` only quoted cells starting with `=`, `+`, `-` or `@`, and Excel still evaluates a quoted formula. Such text — and text starting with a tab or carriage return — now gets a `'` prefix. This mattered because a shared Encode link sets the sequence ID (`?id=`) that goes into the exported CSV. The API's `?format=csv|tsv` output uses the same function.
+- **PubMed year** came from the first `<Year>` in the record, usually `DateCompleted` (when NLM indexed the paper). It now comes from `<PubDate>`, including free-text dates such as "1998 Dec-1999 Jan".
+- **`/api/sequence` with PDB ids:**
+  - RCSB headers (`1CRN_1|Chain A|CRAMBIN|…`) were split on whitespace, so the returned `id` was `1CRN_1|Chain`. They are now split on `|`.
+  - Chain selection matched any word in the description, so asking for chain C also matched "Protein kinase C". It now matches the chain ids only, both label and author (`B[auth C]`).
+- **Favourites with blocked storage.** Saving to `localStorage` wasn't guarded, so where storage is blocked (e.g. some embedding iframes) or full, the star did nothing. It now toggles; the choice just doesn't survive a reload.
+- **Social previews** pointed at an SVG, which Twitter/X, Facebook, LinkedIn and Slack don't display. `public/og.png` (1200×630, rendered from `og.svg`) is used instead, with width/height tags.
+- **`/api/encode`:** accessions are looked up with `Object.hasOwn` (not `in`, which also sees inherited keys) and de-duplicated, and the POST response no longer sends a `Cache-Control` header that CDNs ignore.
+
+### Security
+
+- **Content-Security-Policy and Permissions-Policy** on every route. Scripts are limited to the site plus the inline theme bootstrap, allowed by its SHA-256 hash; connections, images and fonts are limited to the site. Framing is still denied everywhere except `/records/`.
+- **`X-XSS-Protection` removed.** It is deprecated and ignored by current browsers.
+- **CI pins what it runs:** GitHub Actions to commit SHAs, and the deploy to `vercel@61.0.0` instead of `vercel@latest`.
+
+### Changed
+
+- **Node 24.** CI moved from Node 20, which Vercel deprecates on 1 October 2026, and `package.json` declares `"engines": { "node": "24.x" }` so Vercel runs the same version.
+- **API version and User-Agent come from `package.json`.** `API_VERSION` and `USER_AGENT` in `api/_helpers.ts` replace the hardcoded `1.3.0` in `/api` and `/api/openapi` and three different User-Agent strings (1.0 / 1.1).
+
+### Documentation
+
+- **In-app guide:**
+  - Section 3's Sliding Window steps describe the threshold line.
+  - Section 9's export table adds the whole-database JSON and the citation downloads, and credits the flat file to About / API Reference rather than Explorer.
+  - Section 10's URL table adds `thr`.
+  - Section 11 gains "Code examples" and "Downloading the full database".
+  - Section 12 gains "Citing an individual record".
+- **About page:** the feature list covers the threshold line and the citation formats; the API and download sections point to the code examples and JSON downloads.
+- **README:** features and API sections updated for the above.
+- **`api/README.md`:** the file table was stale. It listed per-database files that were merged into `db.ts`, described `/api/sequence` as composition stats, and said every endpoint was GET-only. It now matches the code and documents `API_VERSION` / `USER_AGENT` and the upstream-parsing rules.
+- **`src/README.md`:** documents `citation.ts`, `snippets.ts`, `regionsAbove` and the new CSV escaping.
+- **`public/README.md`:** documents `og.png` and that it is rendered from `og.svg`.
+- **`tests/README.md`:** describes what `config.test.ts` guards.
+
+### Tests
+
+- 100 more vitest tests than before this work (585 → 685), all passing alongside the 27 Playwright e2e tests, `tsc`, `eslint` and a production build. The production build was also served with the real `vercel.json` headers and every page loaded with no CSP violations or console errors.
+- New: `tests/unit/citation.test.ts`, `tests/unit/snippets.test.ts`, `tests/unit/api/pubmed.test.ts` and `tests/integration/CitationHelper.test.tsx`.
+- `tests/unit/csv.test.ts`, `exportUtils.test.ts` and `hardening.test.tsx` now expect the `'` prefix; a formula character mid-cell is still only quoted.
+- `tests/unit/api/sequence.test.ts`: a clean RCSB entity id, chain selection by label or author id without matching the molecule name, and `pdbChains`.
+- `tests/unit/api/encode.test.ts`: de-duplication, inherited keys rejected, no `Cache-Control` on POST.
+- `tests/unit/seqUtils.test.ts`: `regionsAbove`.
+- `tests/integration/SequenceAnalysis.test.tsx`: the Kyte–Doolittle default, threshold edits, and hiding the line.
+- `tests/integration/docs.test.tsx`: the API Reference code examples and the full-database JSON download.
+- `tests/unit/store.test.ts`: favourites toggle when storage throws.
+- `tests/unit/config.test.ts`: the CSP carries the inline script's hash, never allows `'unsafe-inline'` scripts and denies framing; `X-XSS-Protection` is gone; `og:image` is an existing PNG; CI pins actions and the Vercel CLI and runs the Node major in `engines`.
+
+---
+
 ## [1.3.0] — 2026-09-28
 
 ### Added

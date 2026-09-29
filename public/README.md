@@ -8,7 +8,8 @@ by import.
 |---|---|
 | `favicon.svg` | Browser tab icon |
 | `aaindex_explorer_logo.png` | Logo used in the navbar and docs |
-| `og.svg` | Open Graph / social preview image referenced from `index.html` |
+| `og.svg` | Source artwork for the social preview image |
+| `og.png` | 1200×630 render of `og.svg`, referenced from `index.html` — social sites don't display SVG previews. Re-render it after editing the SVG |
 | `robots.txt` | Crawler rules; points at `sitemap.xml` |
 | `sitemap.xml` | **Generated** — do not edit by hand |
 

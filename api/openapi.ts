@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { setCorsHeaders, setCacheHeaders, methodNotAllowed } from './_helpers.js'
+import { setCorsHeaders, setCacheHeaders, methodNotAllowed, API_VERSION } from './_helpers.js'
 import { ENDPOINTS } from '../src/lib/apiSpec.js'
 
 /** Generated from the same ENDPOINTS array the API reference page renders, so
@@ -44,7 +44,7 @@ function buildSpec(origin: string) {
     openapi: '3.1.0',
     info: {
       title: 'AAIndex API',
-      version: '1.3.0',
+      version: API_VERSION,
       description: 'REST API for the AAIndex amino acid physicochemical property database.',
       license: { name: 'MIT' },
     },

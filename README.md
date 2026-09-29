@@ -30,7 +30,7 @@ The database is bundled from the [`aaindex`](https://github.com/amckenna41/aaind
 - Side-by-side comparator for up to 4 records, with a legend for the per-amino-acid highest/lowest highlighting
 - Radar chart fingerprint visualisation
 - **Sequence Encoder** — upload a FASTA or plain-text file and encode each sequence using any AAIndex1 index; invalid/non-AA sequences are flagged with specific rejection reasons, and the previewed sequence gets an amino-acid composition panel
-- Sliding window analysis (Kyte-Doolittle-style smoothed property profiles)
+- Sliding window analysis (Kyte-Doolittle-style smoothed property profiles) with an adjustable threshold line that shades and lists every region above it — Kyte–Doolittle ≥ 1.6 marks likely transmembrane segments
 - Multi-property heatmap (sequence × N indices feature engineering view)
 - **Hydrophobic moment** — helical wheel and Eisenberg μH profile for α-helix, 3₁₀-helix and β-strand periodicities
 - **Pairwise alignment** — global (Needleman–Wunsch) or local (Smith–Waterman) alignment with affine gaps against any AAIndex2 substitution matrix; distance matrices such as Grantham are handled
@@ -44,7 +44,7 @@ The database is bundled from the [`aaindex`](https://github.com/amckenna41/aaind
 - **pySAR descriptor export** — dataset CSV plus config JSON, ready for [pySAR](https://github.com/amckenna41/pySAR)
 - Coverage badges — indices with gaps for particular amino acids are flagged in the list before you open them
 - PubMed abstract fetch via NCBI
-- Citation helper — BibTeX, APA, and plain-text formats
+- Citation helper — BibTeX, RIS, APA 7 and plain-text formats, each copyable or downloadable
 - Category statistics — mean/min/max/stddev per amino acid across any category
 - Shareable analysis URLs — Explorer, Sequence Analysis and Encode all keep their state in the query string, so any view or analysis is a link
 - Favourites, CSV/JSON export, PNG/SVG chart export, dark mode
@@ -85,6 +85,8 @@ A read-only REST API is served from `/api`; see the in-app [API Reference](https
 
 List endpoints and `/api/window` also accept `?format=csv` or `?format=tsv`.
 
+The API Reference shows a ready-to-run curl, Python (`requests`) and R (`httr2`) example for every endpoint, and offers each full database as JSON or an AAIndex flat file.
+
 ## Sources
 
 - **AAIndex database** — Kawashima S. & Kanehisa M. (2000). AAindex: amino acid index database. *Nucleic Acids Research*, 28(1), 374. [doi:10.1093/nar/28.1.374](https://doi.org/10.1093/nar/28.1.374)
@@ -94,7 +96,7 @@ List endpoints and `/api/window` also accept `?format=csv` or `?format=tsv`.
 ## Documentation
 
 - **In-app guide** — [/guide](https://aaindex.vercel.app/guide) walks through every page, the export formats, shareable URLs, and API access.
-- **API reference** — [/api-reference](https://aaindex.vercel.app/api-reference) with a live "Try it" box, plus the [OpenAPI 3.1 spec](https://aaindex.vercel.app/api/openapi).
+- **API reference** — [/api-reference](https://aaindex.vercel.app/api-reference) with a live "Try it" box, curl/Python/R examples and full-database downloads, plus the [OpenAPI 3.1 spec](https://aaindex.vercel.app/api/openapi).
 - **Changelog** — [CHANGELOG.md](CHANGELOG.md).
 
 

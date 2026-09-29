@@ -237,6 +237,6 @@ describe('exportComparisonAsCSV — CSV quoting', () => {
     exportComparisonAsCSV(['=CMD'], { '=CMD': { G: 1.0 } })
     const blob = mockSaveAs.mock.calls[0][0] as Blob
     const text = await blobText(blob)
-    expect(text.split('\n')[0]).toContain('"=CMD"')
+    expect(text.split('\n')[0]).toContain(`"'=CMD"`)
   })
 })
