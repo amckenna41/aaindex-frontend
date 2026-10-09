@@ -34,27 +34,26 @@ export default function SearchBar({ resultCount, totalCount }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-2">
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
         <input
           type="text"
           value={localVal}
           onChange={handleChange}
           placeholder="Search accession, description, category…"
-          className="w-full pl-9 pr-9 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="w-full pr-16 py-2 bg-transparent border-0 border-b border-gray-300 dark:border-gray-700 !rounded-none text-lg placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:border-indigo-600 dark:focus:border-indigo-400 focus-visible:outline-none"
         />
         {localVal && (
           <button
             onClick={handleClear}
             aria-label="Clear search"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-0 top-1/2 -translate-y-1/2 btn-text"
           >
-            ✕
+            Clear
           </button>
         )}
       </div>
-      <p className="text-xs text-gray-500 dark:text-gray-400">
+      <p className="text-sm text-gray-500 dark:text-gray-400 tabular-nums">
         {localVal
           ? `${resultCount} of ${totalCount} results`
           : `${totalCount} records`}
@@ -62,4 +61,3 @@ export default function SearchBar({ resultCount, totalCount }: Props) {
     </div>
   )
 }
-

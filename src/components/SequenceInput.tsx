@@ -14,7 +14,7 @@ export default function SequenceInput({ seq, onChange, label = 'Protein sequence
 
   return (
     <div className="flex flex-col gap-1">
-      <label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      <label htmlFor={id} className="label">
         {label}
       </label>
       <textarea
@@ -23,7 +23,7 @@ export default function SequenceInput({ seq, onChange, label = 'Protein sequence
         onChange={(e) => onChange(e.target.value.replace(/\s/g, ''))}
         placeholder="e.g. ACDEFGHIKLMNPQRSTVWY"
         rows={3}
-        className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+        className="w-full px-2 py-1.5 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-mono focus:ring-2 focus:ring-indigo-500 resize-none"
       />
       <span className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
         <span>{upper.length} residues</span>

@@ -2,24 +2,24 @@ import { MAX_COMPARE } from '../store/useAAIndexStore'
 
 export default function HowToGuide() {
   return (
-    <div className="max-w-3xl mx-auto text-gray-800 dark:text-gray-200 print:text-black">
+    <div className="max-w-3xl text-gray-800 dark:text-gray-200 print:text-black">
 
       {/* ── Cover ─────────────────────────────────────────────────────────────── */}
-      <div className="mb-10 border-b border-gray-200 dark:border-gray-700 pb-8 print:border-gray-400">
+      <div className="mb-16 pb-12 border-b border-gray-200 dark:border-gray-800 print:border-gray-400">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-indigo-500 mb-2">User Guide</p>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white print:text-black">AAIndex Explorer</h1>
-            <p className="mt-2 text-lg text-gray-500 dark:text-gray-400 print:text-gray-600">
+            <p className="label mb-3">User Guide</p>
+            <h1 className="text-3xl sm:text-4xl font-medium tracking-tight text-ink dark:text-gray-100 print:text-black">AAIndex Explorer</h1>
+            <p className="mt-4 text-gray-500 dark:text-gray-400 print:text-gray-600">
               A complete guide to exploring, analysing, and visualising amino acid physicochemical properties.
             </p>
-            <p className="mt-4 text-xs text-gray-400">
+            <p className="mt-4 text-sm text-gray-400 dark:text-gray-500">
               Data source: AAIndex database — Kawashima &amp; Kanehisa, Nucleic Acids Research, 2000
             </p>
           </div>
           <button
             onClick={() => window.print()}
-            className="no-print shrink-0 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-lg transition-colors"
+            className="no-print shrink-0 btn-primary"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -30,9 +30,9 @@ export default function HowToGuide() {
       </div>
 
       {/* ── Table of Contents ─────────────────────────────────────────────────── */}
-      <div className="mb-10 bg-gray-50 dark:bg-gray-900 print:bg-white border border-gray-200 dark:border-gray-700 print:border-gray-300 rounded-xl p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-4">Contents</h2>
-        <ol className="space-y-1.5 text-sm">
+      <div className="mb-24">
+        <h2 className="label mb-6">Contents</h2>
+        <ol className="border-t border-gray-200 dark:border-gray-800">
           {[
             ['1', 'Overview', '#overview'],
             ['2', 'Explorer — Browse & Search Records', '#explorer'],
@@ -47,16 +47,16 @@ export default function HowToGuide() {
             ['11', 'API Access', '#api'],
             ['12', 'Citation', '#citation'],
           ].map(([num, title, href]) => (
-            <li key={href} className="flex gap-3">
-              <span className="text-indigo-500 font-mono font-semibold w-4 shrink-0">{num}</span>
-              <a href={href} className="text-indigo-600 dark:text-indigo-400 hover:underline">{title}</a>
+            <li key={href} className="flex gap-6 py-2.5 border-b border-gray-200 dark:border-gray-800">
+              <span className="text-gray-400 dark:text-gray-500 font-mono w-6 shrink-0 tabular-nums">{num}</span>
+              <a href={href} className="hover:text-indigo-600 dark:hover:text-indigo-400">{title}</a>
             </li>
           ))}
         </ol>
       </div>
 
       {/* ── Section 1: Overview ───────────────────────────────────────────────── */}
-      <section id="overview" className="guide-section mb-12">
+      <section id="overview" className="guide-section mb-24">
         <SectionHeader number="1" title="Overview" />
         <p className="mb-4 leading-relaxed">
           AAIndex Explorer is a browser-based interface for the AAIndex database — a curated collection of
@@ -80,7 +80,7 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 2: Explorer ───────────────────────────────────────────────── */}
-      <section id="explorer" className="guide-section mb-12">
+      <section id="explorer" className="guide-section mb-24">
         <SectionHeader number="2" title="Explorer — Browse & Search Records" />
         <p className="mb-6 leading-relaxed">
           The Explorer is the main entry point. It lists all records in the active database and provides
@@ -135,7 +135,7 @@ export default function HowToGuide() {
             'The detail page shows: the full description, reference, PMID, correlation coefficients with similar records, and a bar chart of values across all 20 amino acids.',
             'Click "PubMed" to open the source publication in a new tab.',
             'Use the "Similar records" section to discover correlated or anti-correlated properties.',
-            'An amber ⚠ n/20 badge on a record card means that index has no value for some amino acids — worth noticing before you build features from it.',
+            'A "⚠ n/20 amino acids" note on a record row means that index has no value for some amino acids — worth noticing before you build features from it.',
           ]} />
         </SubSection>
 
@@ -150,7 +150,7 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 3: Sequence Analysis ──────────────────────────────────────── */}
-      <section id="sequence" className="guide-section mb-12">
+      <section id="sequence" className="guide-section mb-24">
         <SectionHeader number="3" title="Sequence Analysis" />
         <p className="mb-6 leading-relaxed">
           The Sequence Analysis page encodes a single protein sequence against one or more AAIndex1 properties
@@ -247,7 +247,7 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 4: Encode ─────────────────────────────────────────────────── */}
-      <section id="encode" className="guide-section mb-12">
+      <section id="encode" className="guide-section mb-24">
         <SectionHeader number="4" title="Encode — Batch Sequence Encoding" />
         <p className="mb-6 leading-relaxed">
           The Encode page processes entire FASTA files or plain-text sequence lists and encodes all sequences
@@ -293,13 +293,13 @@ export default function HowToGuide() {
             '"↓ All encodings (long CSV)" — one row per residue per sequence. Columns: sequence_id, position, amino_acid, value.',
             '"↓ Summary stats CSV" — one row per sequence. Columns: sequence_id, length, valid_residues, mean, min, max.',
             '"↓ pySAR descriptor set" — a dataset CSV (sequence plus an empty activity column to fill in) and a config JSON naming the AAIndex indices, ready to hand to pySAR.',
-            '"🔗 Copy shareable link" — captures the selected index, and a single loaded sequence, in the URL.',
+            '"Copy shareable link" — captures the selected index, and a single loaded sequence, in the URL.',
           ]} />
         </SubSection>
       </section>
 
       {/* ── Section 5: Comparator ─────────────────────────────────────────────── */}
-      <section id="comparator" className="guide-section mb-12">
+      <section id="comparator" className="guide-section mb-24">
         <SectionHeader number="5" title="Comparator — Side-by-Side Comparison" />
         <p className="mb-6 leading-relaxed">
           The Comparator lets you place up to {MAX_COMPARE} AAIndex1 records side by side in a table and examine how
@@ -333,7 +333,7 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 6: Visualiser ─────────────────────────────────────────────── */}
-      <section id="visualiser" className="guide-section mb-12">
+      <section id="visualiser" className="guide-section mb-24">
         <SectionHeader number="6" title="Visualiser — Charts & Plots" />
         <p className="mb-6 leading-relaxed">
           The Visualiser provides interactive charts for a single record or a pair of records.
@@ -396,7 +396,7 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 7: Favourites ─────────────────────────────────────────────── */}
-      <section id="similarity" className="guide-section mb-12">
+      <section id="similarity" className="guide-section mb-24">
         <SectionHeader number="7" title="Property Space — Whole-Database Similarity" />
         <p className="mb-6 leading-relaxed">
           AAIndex1 ships correlation coefficients for some pairs of records, but not all of them. The
@@ -434,31 +434,31 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 8: Favourites ─────────────────────────────────────────────── */}
-      <section id="favourites" className="guide-section mb-12">
+      <section id="favourites" className="guide-section mb-24">
         <SectionHeader number="8" title="Favourites" />
         <p className="mb-4 leading-relaxed">
           Favourites are accessible across the entire application and persist between sessions.
         </p>
         <ul className="space-y-2 text-sm leading-relaxed">
-          <li className="flex gap-2"><span className="text-indigo-500 font-bold shrink-0">·</span><span><strong>Explorer:</strong> Star any record card. Use "Show favourites only" to filter to starred records.</span></li>
-          <li className="flex gap-2"><span className="text-indigo-500 font-bold shrink-0">·</span><span><strong>Record Detail:</strong> Star or unstar the current record from its detail page.</span></li>
-          <li className="flex gap-2"><span className="text-indigo-500 font-bold shrink-0">·</span><span><strong>Encode page:</strong> The Favourites panel in the left sidebar expands to show your starred records. Click any to instantly select it as the active encoding property.</span></li>
+          <li className="flex gap-2"><span className="text-gray-400 shrink-0">·</span><span><strong>Explorer:</strong> Star any record card. Use "Show favourites only" to filter to starred records.</span></li>
+          <li className="flex gap-2"><span className="text-gray-400 shrink-0">·</span><span><strong>Record Detail:</strong> Star or unstar the current record from its detail page.</span></li>
+          <li className="flex gap-2"><span className="text-gray-400 shrink-0">·</span><span><strong>Encode page:</strong> The Favourites panel in the left sidebar expands to show your starred records. Click any to instantly select it as the active encoding property.</span></li>
         </ul>
       </section>
 
       {/* ── Section 8: Exporting ──────────────────────────────────────────────── */}
-      <section id="exporting" className="guide-section mb-12">
+      <section id="exporting" className="guide-section mb-24">
         <SectionHeader number="9" title="Exporting Data" />
         <div className="overflow-x-auto">
           <table className="text-sm w-full border-collapse">
             <thead>
-              <tr className="border-b border-gray-300 dark:border-gray-600 print:border-gray-400">
-                <th className="text-left py-2 pr-6 font-semibold text-gray-600 dark:text-gray-400">Location</th>
-                <th className="text-left py-2 pr-6 font-semibold text-gray-600 dark:text-gray-400">Format</th>
-                <th className="text-left py-2 font-semibold text-gray-600 dark:text-gray-400">Contents</th>
+              <tr className="border-b border-gray-200 dark:border-gray-800 print:border-gray-400">
+                <th className="text-left py-2 pr-6 font-normal text-gray-400 dark:text-gray-500">Location</th>
+                <th className="text-left py-2 pr-6 font-normal text-gray-400 dark:text-gray-500">Format</th>
+                <th className="text-left py-2 font-normal text-gray-400 dark:text-gray-500">Contents</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-800 print:divide-gray-300">
               {[
                 ['Explorer / Record Detail', 'CSV', 'All 20 amino acid values for one record'],
                 ['Explorer / Record Detail', 'JSON', 'Full record metadata + values'],
@@ -481,7 +481,7 @@ export default function HowToGuide() {
               ].map(([loc, fmt, desc]) => (
                 <tr key={loc + fmt + desc}>
                   <td className="py-2 pr-6 text-gray-700 dark:text-gray-300 print:text-gray-700">{loc}</td>
-                  <td className="py-2 pr-6 font-mono text-indigo-600 dark:text-indigo-400">{fmt}</td>
+                  <td className="py-2 pr-6 font-mono">{fmt}</td>
                   <td className="py-2 text-gray-600 dark:text-gray-400 print:text-gray-600">{desc}</td>
                 </tr>
               ))}
@@ -491,7 +491,7 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 10: Sharing ───────────────────────────────────────────────── */}
-      <section id="sharing" className="guide-section mb-12">
+      <section id="sharing" className="guide-section mb-24">
         <SectionHeader number="10" title="Sharing & Reproducibility" />
         <p className="mb-6 leading-relaxed">
           Explorer, Sequence Analysis, Encode and Property Space all keep their state in the page URL. That
@@ -503,12 +503,12 @@ export default function HowToGuide() {
           <div className="overflow-x-auto">
             <table className="text-sm w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-300 dark:border-gray-600 print:border-gray-400">
-                  <th className="text-left py-2 pr-6 font-semibold text-gray-600 dark:text-gray-400">Page</th>
-                  <th className="text-left py-2 font-semibold text-gray-600 dark:text-gray-400">Query parameters</th>
+                <tr className="border-b border-gray-200 dark:border-gray-800 print:border-gray-400">
+                  <th className="text-left py-2 pr-6 font-normal text-gray-400 dark:text-gray-500">Page</th>
+                  <th className="text-left py-2 font-normal text-gray-400 dark:text-gray-500">Query parameters</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800 print:divide-gray-300">
                 {[
                   ['Explorer', 'db, q, cat, page, sort'],
                   ['Sequence Analysis', 'tab, seq, acc, w, thr, idx, angle, seqA, seqB, mat, mode, cmat'],
@@ -517,13 +517,13 @@ export default function HowToGuide() {
                 ].map(([page, params]) => (
                   <tr key={page}>
                     <td className="py-2 pr-6 text-gray-700 dark:text-gray-300 print:text-gray-700">{page}</td>
-                    <td className="py-2 font-mono text-indigo-600 dark:text-indigo-400 text-xs">{params}</td>
+                    <td className="py-2 font-mono text-xs">{params}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <Tip>Use the "🔗 Copy shareable link" button rather than copying the address bar — it guarantees the URL is current. Sequences longer than 2,000 residues are kept in the page instead of the URL, so share those as a FASTA file or a UniProt/PDB accession.</Tip>
+          <Tip>Use the "Copy shareable link" button rather than copying the address bar — it guarantees the URL is current. Sequences longer than 2,000 residues are kept in the page instead of the URL, so share those as a FASTA file or a UniProt/PDB accession.</Tip>
         </SubSection>
 
         <SubSection title="Embedding a record">
@@ -536,12 +536,12 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 11: API ───────────────────────────────────────────────────── */}
-      <section id="api" className="guide-section mb-12">
+      <section id="api" className="guide-section mb-24">
         <SectionHeader number="11" title="API Access" />
         <p className="mb-6 leading-relaxed">
           Everything in the app is backed by a public, read-only REST API. No key, no auth, CORS open to any
-          origin. The <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a> page
-          documents every endpoint with a live "Try it" box, and <a href="/api/openapi" className="text-indigo-600 dark:text-indigo-400 hover:underline">/api/openapi</a> serves
+          origin. The <a href="/api-reference" className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">API Reference</a> page
+          documents every endpoint with a live "Try it" box, and <a href="/api/openapi" className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">/api/openapi</a> serves
           the same information as a machine-readable OpenAPI 3.1 document.
         </p>
 
@@ -549,12 +549,12 @@ export default function HowToGuide() {
           <div className="overflow-x-auto">
             <table className="text-sm w-full border-collapse">
               <thead>
-                <tr className="border-b border-gray-300 dark:border-gray-600 print:border-gray-400">
-                  <th className="text-left py-2 pr-6 font-semibold text-gray-600 dark:text-gray-400">Endpoint</th>
-                  <th className="text-left py-2 font-semibold text-gray-600 dark:text-gray-400">Returns</th>
+                <tr className="border-b border-gray-200 dark:border-gray-800 print:border-gray-400">
+                  <th className="text-left py-2 pr-6 font-normal text-gray-400 dark:text-gray-500">Endpoint</th>
+                  <th className="text-left py-2 font-normal text-gray-400 dark:text-gray-500">Returns</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700 print:divide-gray-300">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-800 print:divide-gray-300">
                 {[
                   ['GET /api/search?q=hydrophobicity', 'Matches across all three databases, tagged by source'],
                   ['GET /api/aaindex1?category=hydrophobic', 'Filtered record list — add &format=csv for a table'],
@@ -564,7 +564,7 @@ export default function HowToGuide() {
                   ['POST /api/encode', 'One sequence encoded against up to 50 indices'],
                 ].map(([ep, ret]) => (
                   <tr key={ep}>
-                    <td className="py-2 pr-6 font-mono text-indigo-600 dark:text-indigo-400 text-xs">{ep}</td>
+                    <td className="py-2 pr-6 font-mono text-xs">{ep}</td>
                     <td className="py-2 text-gray-600 dark:text-gray-400 print:text-gray-600">{ret}</td>
                   </tr>
                 ))}
@@ -592,13 +592,13 @@ export default function HowToGuide() {
       </section>
 
       {/* ── Section 12: Citation ──────────────────────────────────────────────── */}
-      <section id="citation" className="guide-section mb-12">
+      <section id="citation" className="guide-section mb-24">
         <SectionHeader number="12" title="Citation" />
         <p className="mb-4 leading-relaxed text-sm">
           If you use AAIndex Explorer or data derived from the AAIndex database in your research, please cite
           the original AAIndex publication:
         </p>
-        <blockquote className="border-l-4 border-indigo-400 pl-4 py-2 bg-gray-50 dark:bg-gray-900 print:bg-white rounded-r-lg text-sm leading-relaxed mb-6">
+        <blockquote className="border-l border-gray-300 dark:border-gray-700 pl-6 py-1 leading-relaxed mb-6">
           <p>Kawashima, S. and Kanehisa, M.</p>
           <p className="italic mt-1">"AAindex: amino acid index database."</p>
           <p className="mt-1">Nucleic Acids Research, 28(1): 374, 2000.</p>
@@ -606,7 +606,7 @@ export default function HowToGuide() {
         </blockquote>
         <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
           The AAIndex database is maintained by the Kanehisa Laboratories and is freely available at
-          {' '}<span className="font-mono text-indigo-600 dark:text-indigo-400">https://www.genome.jp/aaindex/</span>.
+          {' '}<span className="font-mono">https://www.genome.jp/aaindex/</span>.
         </p>
 
         <SubSection title="Citing an individual record">
@@ -625,7 +625,7 @@ export default function HowToGuide() {
       <div className="no-print flex justify-center pb-4">
         <button
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-50 dark:hover:bg-indigo-950 rounded-lg transition-colors"
+          className="btn-text flex items-center gap-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
@@ -642,17 +642,17 @@ export default function HowToGuide() {
 
 function SectionHeader({ number, title }: { number: string; title: string }) {
   return (
-    <div className="mb-5 flex items-baseline gap-3 border-b border-gray-200 dark:border-gray-700 print:border-gray-400 pb-2">
-      <span className="text-3xl font-bold text-indigo-500 font-mono">{number}</span>
-      <h2 className="text-xl font-bold text-gray-900 dark:text-white print:text-black">{title}</h2>
+    <div className="mb-8 flex items-baseline gap-4">
+      <span className="text-sm text-gray-400 dark:text-gray-500 font-mono tabular-nums">{number}</span>
+      <h2 className="text-2xl font-medium tracking-tight text-ink dark:text-gray-100 print:text-black">{title}</h2>
     </div>
   )
 }
 
 function SubSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="mb-6">
-      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 print:text-black mb-3 uppercase tracking-wide">{title}</h3>
+    <div className="mb-10">
+      <h3 className="label print:text-black mb-4">{title}</h3>
       {children}
     </div>
   )
@@ -662,8 +662,8 @@ function Steps({ steps }: { steps: string[] }) {
   return (
     <ol className="space-y-2 mb-3">
       {steps.map((step, i) => (
-        <li key={i} className="flex gap-3 text-sm leading-relaxed">
-          <span className="shrink-0 w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-xs font-bold flex items-center justify-center print:bg-white print:border print:border-indigo-400 print:text-indigo-600">
+        <li key={i} className="flex gap-4 leading-7">
+          <span className="shrink-0 w-5 text-sm font-mono tabular-nums text-gray-400 dark:text-gray-500 pt-px print:text-gray-600">
             {i + 1}
           </span>
           <span className="text-gray-700 dark:text-gray-300 print:text-gray-700">{step}</span>
@@ -675,8 +675,8 @@ function Steps({ steps }: { steps: string[] }) {
 
 function Tip({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex gap-2 bg-amber-50 dark:bg-amber-950 print:bg-white border border-amber-200 dark:border-amber-800 print:border-amber-400 rounded-lg px-3 py-2 text-xs text-amber-800 dark:text-amber-300 print:text-amber-900 mt-2">
-      <span className="font-bold shrink-0">Tip:</span>
+    <div className="flex gap-3 text-sm text-gray-500 dark:text-gray-400 print:text-gray-700 mt-4">
+      <span className="shrink-0 label pt-0.5">Tip</span>
       <span>{children}</span>
     </div>
   )
@@ -685,7 +685,7 @@ function Tip({ children }: { children: React.ReactNode }) {
 function DefItem({ term, def }: { term: string; def: string }) {
   return (
     <li className="flex gap-3 text-sm">
-      <span className="font-semibold text-indigo-600 dark:text-indigo-400 shrink-0 w-24">{term}</span>
+      <span className="text-gray-400 dark:text-gray-500 shrink-0 w-24">{term}</span>
       <span className="text-gray-700 dark:text-gray-300 print:text-gray-700">{def}</span>
     </li>
   )

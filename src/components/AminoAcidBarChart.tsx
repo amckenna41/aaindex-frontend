@@ -11,13 +11,6 @@ interface Props {
   normalise?: boolean
 }
 
-function interpolate(t: number, a: string, b: string): string {
-  const hex = (s: string) => [parseInt(s.slice(1,3),16), parseInt(s.slice(3,5),16), parseInt(s.slice(5,7),16)]
-  const [ar,ag,ab] = hex(a)
-  const [br,bg,bb] = hex(b)
-  return `rgb(${Math.round(ar+(br-ar)*t)},${Math.round(ag+(bg-ag)*t)},${Math.round(ab+(bb-ab)*t)})`
-}
-
 export default function AminoAcidBarChart({ values, height = 280, normalise = false }: Props) {
   const displayValues: Record<string, number> = normalise
     ? zScoreNormalise(
@@ -35,30 +28,25 @@ export default function AminoAcidBarChart({ values, height = 280, normalise = fa
 
   const definedVals = data.filter((d) => d.value != null).map((d) => d.value as number)
   const min = definedVals.length ? definedVals.reduce((a, b) => (b < a ? b : a)) : 0
-  const max = definedVals.length ? definedVals.reduce((a, b) => (b > a ? b : a)) : 1
 
+  // Single series in accent; negative values step back to ink-40, missing to a hairline tint.
   const getColor = (v: number | null, missing: boolean) => {
-    if (missing || v == null) return '#d1d5db' // grey for missing
-    if (v >= 0) {
-      const t = max === 0 ? 0 : v / max
-      return interpolate(t, '#93c5fd', '#1d4ed8')
-    }
-    const t = min === 0 ? 0 : v / min
-    return interpolate(t, '#fca5a5', '#b91c1c')
+    if (missing || v == null) return '#D6D6D4'
+    return v >= 0 ? '#2F5BFF' : '#A3A3A2'
   }
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <BarChart data={data} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-        <XAxis dataKey="aa" tick={{ fontSize: 12 }} />
+        <XAxis dataKey="aa" tick={{ fontSize: 11 }} />
         <YAxis tick={{ fontSize: 11 }} width={55} />
-        {min < 0 && <ReferenceLine y={0} stroke="#9ca3af" />}
+        {min < 0 && <ReferenceLine y={0} stroke="#A3A3A2" />}
         <Tooltip
           content={({ active, payload }) => {
             if (!active || !payload?.length) return null
             const { aa, value, missing } = payload[0].payload as { aa: string; value: number | null; missing: boolean }
             return (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+              <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                 <div className="font-semibold">{AA_FULL_NAMES[aa] ?? aa} ({aa})</div>
                 <div>{missing ? 'No data (NA)' : value != null ? value.toFixed(4) : '—'}</div>
                 {normalise && !missing && <div className="text-gray-400">z-score</div>}
@@ -66,7 +54,7 @@ export default function AminoAcidBarChart({ values, height = 280, normalise = fa
             )
           }}
         />
-        <Bar dataKey="value" radius={[2, 2, 0, 0]}>
+        <Bar dataKey="value" radius={[1, 1, 0, 0]}>
           {data.map((entry, i) => (
             <Cell
               key={i}

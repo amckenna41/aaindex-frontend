@@ -50,57 +50,49 @@ export default function PubMedAbstract({ pmid }: Props) {
   if (!pmid) return null
 
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="font-semibold">PubMed Abstract</h2>
-        <button
-          onClick={() => setOpen((o) => !o)}
-          className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-        >
+    <section className="flex flex-col gap-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="label">PubMed Abstract</h2>
+        <button onClick={() => setOpen((o) => !o)} className="btn-text">
           {open ? 'Hide' : 'Load abstract'}
         </button>
       </div>
 
       {!open && (
-        <p className="text-xs text-gray-500 dark:text-gray-400">
-          PMID: {pmid} — click "Load abstract" to fetch from NCBI PubMed.
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          PMID: <span className="font-mono">{pmid}</span> — click "Load abstract" to fetch from NCBI PubMed.
         </p>
       )}
 
       {open && loading && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 animate-pulse">Fetching from NCBI…</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Fetching from NCBI…</p>
       )}
 
       {open && error && (
-        <p className="text-xs text-red-500">Failed to fetch abstract: {error}</p>
+        <p className="text-sm text-red-600 dark:text-red-400">Failed to fetch abstract: {error}</p>
       )}
 
       {open && data && !loading && (
-        <div className="mt-2 flex flex-col gap-2">
-          {data.title && (
-            <p className="text-sm font-semibold text-gray-800 dark:text-gray-200 leading-snug">
-              {data.title}
-            </p>
-          )}
+        <div className="flex flex-col gap-3">
+          {data.title && <p className="font-medium leading-snug">{data.title}</p>}
           {(data.authors || data.journal || data.year) && (
-            <p className="text-xs text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-400">
               {[data.authors, data.journal, data.year].filter(Boolean).join(' · ')}
             </p>
           )}
-          <pre className="text-xs text-gray-700 dark:text-gray-300 whitespace-pre-wrap font-sans leading-relaxed max-h-72 overflow-y-auto bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded p-3">
+          <pre className="whitespace-pre-wrap font-sans text-body max-h-96 overflow-y-auto text-gray-700 dark:text-gray-300">
             {data.abstract}
           </pre>
           <a
             href={`https://pubmed.ncbi.nlm.nih.gov/${pmid}/`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline self-start"
+            className="btn-text self-start"
           >
             View on PubMed ↗
           </a>
         </div>
       )}
-    </div>
+    </section>
   )
 }
-

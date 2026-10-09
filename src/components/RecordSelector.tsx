@@ -30,7 +30,7 @@ export default function RecordSelector({ accession, onChange, size = 8, db = DB1
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      <span className="label">
         {label}
       </span>
       <input
@@ -38,13 +38,13 @@ export default function RecordSelector({ accession, onChange, size = 8, db = DB1
         placeholder="Filter records…"
         value={filter}
         onChange={(e) => setFilter(e.target.value)}
-        className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full px-2 py-1.5 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
       />
       <select
         value={accession}
         onChange={(e) => onChange(e.target.value)}
         size={size}
-        className="w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="w-full rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
       >
         {filtered.map((a) => (
           <option key={a} value={a} title={db[a].description}>

@@ -29,21 +29,20 @@ export default function CitationHelper(props: CitationInput) {
   const download = () =>
     saveAs(new Blob([text + '\n'], { type: format.mime }), `${props.accession}_${format.id}.${format.ext}`)
 
-  const btn = 'text-xs px-3 py-1.5 rounded border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors'
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <h2 className="font-semibold">Cite this record</h2>
-        <div className="flex gap-1">
+    <section className="flex flex-col gap-4">
+      <div className="flex items-baseline justify-between flex-wrap gap-3">
+        <h2 className="label">Cite this record</h2>
+        <div className="flex items-baseline gap-4 text-sm">
           {FORMATS.map((f) => (
             <button
               key={f.id}
               onClick={() => setFormatId(f.id)}
               aria-pressed={formatId === f.id}
-              className={`text-xs px-2.5 py-1 rounded font-mono font-medium transition-colors ${
+              className={`underline-offset-[6px] ${
                 formatId === f.id
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                  ? 'text-indigo-600 dark:text-indigo-400 underline'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-ink dark:hover:text-gray-100'
               }`}
             >
               {f.label}
@@ -51,13 +50,13 @@ export default function CitationHelper(props: CitationInput) {
           ))}
         </div>
       </div>
-      <pre className="text-xs bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded p-3 whitespace-pre-wrap break-words font-mono leading-relaxed max-h-48 overflow-y-auto">
+      <pre className="text-[13px] bg-gray-50 dark:bg-gray-900 rounded-sm p-4 whitespace-pre-wrap break-words font-mono leading-relaxed max-h-48 overflow-y-auto">
         {text}
       </pre>
-      <div className="mt-2 flex gap-2">
-        <button onClick={copy} className={btn}>{copied ? '✓ Copied' : 'Copy to clipboard'}</button>
-        <button onClick={download} className={btn}>↓ .{format.ext}</button>
+      <div className="flex gap-6">
+        <button onClick={copy} className="btn-text">{copied ? '✓ Copied' : 'Copy to clipboard'}</button>
+        <button onClick={download} className="btn-text">↓ .{format.ext}</button>
       </div>
-    </div>
+    </section>
   )
 }

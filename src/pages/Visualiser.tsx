@@ -124,20 +124,25 @@ export default function Visualiser() {
   const isDB1Chart = chartType !== 'heatmap'
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col gap-12">
+      <header className="flex flex-col gap-3">
+        <p className="label">Visualiser</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Charts</h1>
+      </header>
       {/* Controls */}
-      <aside className="w-64 shrink-0 flex flex-col gap-4">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2 block">Chart type</span>
-          <div className="flex flex-col gap-1">
+          <span className="label mb-2 block">Chart type</span>
+          <div className="flex flex-wrap gap-x-2 gap-y-1">
             {(Object.keys(CHART_LABELS) as ChartType[]).map((t) => (
               <button
                 key={t}
                 onClick={() => switchChart(t)}
-                className={`px-3 py-1.5 rounded text-sm font-medium text-left transition-colors ${
+                aria-pressed={chartType === t}
+                className={`px-2 py-0.5 rounded-sm text-sm text-left ${
                   chartType === t
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                    ? 'bg-indigo-600 text-white dark:bg-indigo-400 dark:text-gray-950'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-ink dark:hover:text-gray-100'
                 }`}
               >
                 {CHART_LABELS[t]}
@@ -148,8 +153,8 @@ export default function Visualiser() {
 
         {chartType === 'heatmap' && (
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2 block">Database</span>
-            <div className="flex flex-col gap-1">
+            <span className="label mb-2 block">Database</span>
+            <div className="flex flex-wrap gap-x-2 gap-y-1">
               {(['aaindex2', 'aaindex3'] as DBName[]).map((d) => (
                 <button
                   key={d}
@@ -158,8 +163,9 @@ export default function Visualiser() {
                     const available = d === 'aaindex2' ? ALL_ACCS_2 : ALL_ACCS_3
                     if (available.length) setAcc1(available[0])
                   }}
-                  className={`px-3 py-1.5 rounded text-sm font-medium text-left ${
-                    db === d ? 'bg-indigo-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'
+                  aria-pressed={db === d}
+                  className={`px-2 py-0.5 rounded-sm text-sm text-left ${
+                    db === d ? 'bg-indigo-600 text-white dark:bg-indigo-400 dark:text-gray-950' : 'text-gray-500 dark:text-gray-400 hover:text-ink dark:hover:text-gray-100'
                   }`}
                 >
                   {d === 'aaindex2' ? 'AAIndex2' : 'AAIndex3'}
@@ -170,7 +176,7 @@ export default function Visualiser() {
         )}
 
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 block">
+          <span className="label mb-1 block">
             {chartType === 'scatter' ? 'X axis record' : chartType === 'radar' && showSecond ? 'Record 1' : 'Record'}
           </span>
           <input
@@ -178,13 +184,13 @@ export default function Visualiser() {
             placeholder="Filter records…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-2 py-1.5 mb-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2 py-1.5 mb-1 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
           />
           <select
             value={acc1}
             onChange={(e) => setAcc1(e.target.value)}
             size={8}
-            className="w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
           >
             {filteredAccs.map((a) => (
               <option key={a} value={a}>{a}</option>
@@ -200,18 +206,18 @@ export default function Visualiser() {
                 type="checkbox"
                 checked={showSecond}
                 onChange={(e) => setShowSecond(e.target.checked)}
-                className="accent-indigo-600"
+                className=""
               />
               Overlay second record
             </label>
             {showSecond && (
               <>
-                <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mt-2 mb-1 block">Record 2</span>
+                <span className="label mt-2 mb-1 block">Record 2</span>
                 <select
                   value={acc2}
                   onChange={(e) => setAcc2(e.target.value)}
                   size={6}
-                  className="w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
                 >
                   {ALL_ACCS_1.map((a) => (
                     <option key={a} value={a}>{a}</option>
@@ -225,12 +231,12 @@ export default function Visualiser() {
         {/* Scatter: always needs a second record */}
         {chartType === 'scatter' && (
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 block">Y axis record</span>
+            <span className="label mb-1 block">Y axis record</span>
             <select
               value={acc2}
               onChange={(e) => setAcc2(e.target.value)}
               size={8}
-              className="w-full rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
             >
               {ALL_ACCS_1.map((a) => (
                 <option key={a} value={a}>{a}</option>
@@ -243,18 +249,18 @@ export default function Visualiser() {
 
       {/* Chart area */}
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
           <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
             <div>
               {chartType === 'scatter' ? (
                 <>
-                  <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{acc1} × {acc2}</p>
+                  <p className="font-mono font-bold">{acc1} × {acc2}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">X: {DB1[acc1]?.description}</p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">Y: {DB1[acc2]?.description}</p>
                 </>
               ) : (
                 <>
-                  <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                  <p className="font-mono font-bold">
                     {chartType === 'heatmap' ? (db === 'aaindex2' ? acc1 : acc1) : acc1}
                   </p>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -271,13 +277,13 @@ export default function Visualiser() {
                   <ExportButton onClick={() => exportValuesAsCSV(acc1, rec1.values)} label="CSV" />
                   <button
                     onClick={downloadPNG}
-                    className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="btn-text"
                   >
                     ↓ PNG
                   </button>
                   <button
                     onClick={downloadSVG}
-                    className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="btn-text"
                   >
                     ↓ SVG
                   </button>
@@ -309,7 +315,7 @@ export default function Visualiser() {
             )}
             {chartType === 'heatmap' && (
               heatmapLoading
-                ? <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse py-16 text-center">Loading database…</p>
+                ? <p className="text-gray-400 dark:text-gray-500 py-24 text-center">Loading database…</p>
                 : <MatrixHeatmap
                     matrix={(db === 'aaindex2' ? DB2[acc1] : DB3[acc1])?.matrix ?? {}}
                   />

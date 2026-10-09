@@ -29,17 +29,17 @@ export default function PropertyScatter({ xValues, yValues, xAccession, yAccessi
   return (
     <ResponsiveContainer width="100%" height={420}>
       <ScatterChart margin={{ top: 16, right: 32, bottom: 16, left: 16 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
         <XAxis dataKey="x" type="number" tick={{ fontSize: 11 }} name={xAccession} domain={['auto', 'auto']} />
         <YAxis dataKey="y" type="number" tick={{ fontSize: 11 }} name={yAccession} width={55} domain={['auto', 'auto']} />
-        <ReferenceLine x={xMean} stroke="#d1d5db" strokeDasharray="4 2" />
-        <ReferenceLine y={yMean} stroke="#d1d5db" strokeDasharray="4 2" />
+        <ReferenceLine x={xMean} stroke="#D6D6D4" strokeDasharray="4 2" />
+        <ReferenceLine y={yMean} stroke="#D6D6D4" strokeDasharray="4 2" />
         <Tooltip
           content={({ active, payload }) => {
             if (!active || !payload?.length) return null
             const d = payload[0].payload as { aa: string; x: number; y: number }
             return (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+              <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                 <div className="font-semibold">{AA_FULL_NAMES[d.aa] ?? d.aa} ({d.aa})</div>
                 <div>{xAccession}: {d.x.toFixed(4)}</div>
                 <div>{yAccession}: {d.y.toFixed(4)}</div>
@@ -54,8 +54,8 @@ export default function PropertyScatter({ xValues, yValues, xAccession, yAccessi
             if (!payload) return <g />
             return (
               <g>
-                <circle cx={cx} cy={cy} r={14} fill="#6366f114" stroke="#6366f1" strokeWidth={1.5} />
-                <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700} fill="#4338ca" fontFamily="monospace">
+                <circle cx={cx} cy={cy} r={14} fill="#2F5BFF14" stroke="#2F5BFF" strokeWidth={1.5} />
+                <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700} fill="#2F5BFF" fontFamily="monospace">
                   {payload.aa}
                 </text>
               </g>

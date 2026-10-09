@@ -7,29 +7,14 @@ import { AAIndex1DB } from '../types'
 import { AA_ORDER_ALPHA } from '../lib/aminoAcids'
 import { pca2 } from '../lib/pca'
 import { pearsonR } from '../lib/seqUtils'
-import { categoryColour } from '../lib/categories'
 import ShareLink from '../components/ShareLink'
 
 import db1 from '../data/aaindex1.json'
 
 const DB1 = db1 as unknown as AAIndex1DB
 
-// Distinct enough to tell a dozen categories apart at scatter-point size.
-const CATEGORY_DOT: Record<string, string> = {
-  hydrophobic: '#2563eb',
-  charge:      '#dc2626',
-  sec_struct:  '#9333ea',
-  volume:      '#16a34a',
-  polar:       '#ca8a04',
-  composition: '#ea580c',
-  solvent:     '#0d9488',
-  geometry:    '#4f46e5',
-  mutability:  '#db2777',
-  flexibility: '#65a30d',
-  meta:        '#6b7280',
-  observable:  '#64748b',
-  other:       '#94a3b8',
-}
+// Quiet palette: points are ink-40; the pinned record carries the accent.
+const DOT = '#A3A3A2'
 
 interface Point {
   accession: string
@@ -122,24 +107,25 @@ export default function Similarity() {
   }
 
   return (
-    <div className="flex gap-6">
-      <aside className="w-64 shrink-0 flex flex-col gap-4">
-        <div>
-          <h1 className="font-semibold mb-1">Property Space</h1>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Every aaindex1 record projected onto the first two principal components of
-            its 20 amino-acid values. Indices that measure the same thing land together.
-          </p>
-        </div>
+    <div className="flex flex-col gap-12">
+      <header className="flex flex-col gap-3 max-w-2xl">
+        <p className="label">Similarity</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Property Space</h1>
+        <p className="text-gray-500 dark:text-gray-400">
+          Every aaindex1 record projected onto the first two principal components of
+          its 20 amino-acid values. Indices that measure the same thing land together.
+        </p>
+      </header>
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
 
         <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+          <span className="label">
             Category
           </span>
           <select
             value={categoryFilter}
             onChange={(e) => filterBy(e.target.value)}
-            className="px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="px-2 py-1.5 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-sm focus:ring-2 focus:ring-indigo-500"
           >
             <option value="">All categories ({points.length})</option>
             {categories.map((c) => (
@@ -156,7 +142,7 @@ export default function Similarity() {
 
         {selected && (
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+            <span className="label">
               Most correlated with {selected}
             </span>
             <ul className="flex flex-col gap-0.5 max-h-80 overflow-y-auto">
@@ -164,10 +150,10 @@ export default function Similarity() {
                 <li key={n.accession}>
                   <button
                     onClick={() => select(n.accession)}
-                    className="w-full flex items-center gap-2 text-left px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800"
+                    className="w-full flex items-baseline gap-4 text-left py-1.5 border-b border-gray-200 dark:border-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400"
                     title={DB1[n.accession].description}
                   >
-                    <span className={`shrink-0 font-mono text-xs ${n.r >= 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
+                    <span className={`shrink-0 font-mono text-xs ${n.r >= 0 ? '' : 'text-gray-400 dark:text-gray-500'}`}>
                       {n.r > 0 ? '+' : ''}{n.r.toFixed(2)}
                     </span>
                     <span className="font-mono text-xs truncate">{n.accession}</span>
@@ -177,7 +163,7 @@ export default function Similarity() {
             </ul>
             <button
               onClick={() => navigate(`/records/${selected}`)}
-              className="text-sm px-3 py-1.5 rounded bg-indigo-600 text-white hover:bg-indigo-700"
+              className="btn-primary self-start"
             >
               Open {selected}
             </button>
@@ -187,11 +173,11 @@ export default function Similarity() {
         <ShareLink />
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+      <div className="min-w-0 flex flex-col gap-12">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
           <ResponsiveContainer width="100%" height={520}>
             <ScatterChart margin={{ top: 8, right: 16, bottom: 32, left: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
               <XAxis
                 type="number"
                 dataKey="x"
@@ -212,11 +198,11 @@ export default function Similarity() {
                   if (!active || !payload?.length) return null
                   const p = payload[0].payload as Point
                   return (
-                    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow max-w-xs">
+                    <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs max-w-xs">
                       <div className="font-mono font-semibold">{p.accession}</div>
                       <div className="text-gray-500 dark:text-gray-400">{p.description}</div>
                       <div className="mt-1">
-                        <span className={`px-1.5 py-0.5 rounded ${categoryColour(p.category)}`}>{p.category}</span>
+                        <span className="text-gray-400">{p.category}</span>
                       </div>
                     </div>
                   )
@@ -230,9 +216,9 @@ export default function Similarity() {
                 {shown.map((p) => (
                   <Cell
                     key={p.accession}
-                    fill={CATEGORY_DOT[p.category] ?? CATEGORY_DOT.other}
-                    fillOpacity={selected && p.accession !== selected ? 0.45 : 0.85}
-                    stroke={p.accession === selected ? '#111827' : 'none'}
+                    fill={p.accession === selected ? '#2F5BFF' : DOT}
+                    fillOpacity={p.accession === selected ? 1 : 0.7}
+                    stroke={p.accession === selected ? 'currentColor' : 'none'}
                     strokeWidth={p.accession === selected ? 2 : 0}
                   />
                 ))}
@@ -240,19 +226,19 @@ export default function Similarity() {
             </ScatterChart>
           </ResponsiveContainer>
 
-          <div className="flex flex-wrap gap-2 mt-3">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-6">
             {categories.map((c) => (
               <button
                 key={c}
                 onClick={() => filterBy(categoryFilter === c ? '' : c)}
-                className={`flex items-center gap-1.5 text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                aria-pressed={categoryFilter === c}
+                className={`text-sm underline-offset-[6px] ${
                   categoryFilter === c
-                    ? 'border-gray-400 dark:border-gray-500'
-                    : 'border-transparent hover:border-gray-300 dark:hover:border-gray-700'
+                    ? 'text-indigo-600 dark:text-indigo-400 underline'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-ink dark:hover:text-gray-100'
                 }`}
               >
-                <span className="w-2.5 h-2.5 rounded-full" style={{ background: CATEGORY_DOT[c] ?? CATEGORY_DOT.other }} />
-                <span className="text-gray-600 dark:text-gray-400">{c}</span>
+                {c}
               </button>
             ))}
           </div>

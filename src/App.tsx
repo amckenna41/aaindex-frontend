@@ -17,7 +17,7 @@ const HowToGuide      = lazy(() => import('./pages/HowToGuide'))
 const APIReference    = lazy(() => import('./pages/APIReference'))
 
 const Loading = () => (
-  <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse py-16 text-center">Loading…</p>
+  <p className="text-gray-400 dark:text-gray-500 py-24 text-center">Loading…</p>
 )
 
 export default function App() {

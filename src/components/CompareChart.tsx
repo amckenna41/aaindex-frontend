@@ -4,7 +4,7 @@ import {
 import { AAIndex1Record } from '../types'
 import { AA_ORDER_ALPHA, AA_FULL_NAMES } from '../lib/aminoAcids'
 
-const PALETTE = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e']
+const PALETTE = ['#2F5BFF', 'currentColor', '#9A9A98', '#2F5BFF55']
 
 interface Props {
   accessions: string[]
@@ -29,7 +29,7 @@ export default function CompareChart({ accessions, records }: Props) {
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null
             return (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-3 py-2 text-xs shadow">
+              <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-3 py-2 text-xs">
                 <div className="font-semibold mb-1">{AA_FULL_NAMES[label as string] ?? label} ({label})</div>
                 {payload.map((p) => (
                   <div key={p.dataKey as string} className="flex items-center gap-2">

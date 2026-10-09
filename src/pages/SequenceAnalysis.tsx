@@ -35,9 +35,9 @@ function lerp(t: number, lo: string, hi: string): string {
 }
 
 function heatColor(t: number): string {
-  // t in [0,1]: blue → white → red
-  if (t < 0.5) return lerp(t * 2, '#3b82f6', '#ffffff')
-  return lerp((t - 0.5) * 2, '#ffffff', '#ef4444')
+  // t in [0,1]: ink-60 → white → signal blue
+  if (t < 0.5) return lerp(t * 2, '#6F6F6E', '#ffffff')
+  return lerp((t - 0.5) * 2, '#ffffff', '#2F5BFF')
 }
 
 // ── Tab: Sequence Encoder ──────────────────────────────────────────────────────
@@ -56,8 +56,8 @@ function EncoderTab() {
   const hasNeg = allVals.some((v) => v < 0)
 
   return (
-    <div className="flex gap-6">
-      <aside className="w-56 shrink-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-12">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <SequenceInput seq={seq} onChange={setSeq} />
         <SequenceFetch onLoad={(entries) => entries[0] && setSeq(entries[0].sequence)} />
         <RecordSelector accession={accession} onChange={setAccession} />
@@ -65,30 +65,30 @@ function EncoderTab() {
       </aside>
 
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
           <div className="flex items-start justify-between mb-4 gap-3 flex-wrap">
             <div>
-              <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{accession}</p>
+              <p className="font-mono font-bold">{accession}</p>
               <p className="text-sm text-gray-600 dark:text-gray-400">{DB1[accession]?.description}</p>
             </div>
             <button
               onClick={() => exportEncodingAsCSV(accession, seq, encoded)}
               disabled={!encoded.length}
-              className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
+              className="btn-text disabled:opacity-40"
             >
               ↓ CSV
             </button>
           </div>
 
           {!seq && (
-            <p className="text-gray-400 text-sm text-center py-12">Enter a protein sequence to encode it.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-center py-24">Enter a protein sequence to encode it.</p>
           )}
 
           {seq && (
             <div>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
                   <XAxis
                     dataKey="pos"
                     tick={{ fontSize: 10 }}
@@ -96,13 +96,13 @@ function EncoderTab() {
                     height={32}
                   />
                   <YAxis tick={{ fontSize: 11 }} width={55} />
-                  {hasNeg && <ReferenceLine y={0} stroke="#9ca3af" />}
+                  {hasNeg && <ReferenceLine y={0} stroke="#A3A3A2" />}
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null
                       const d = payload[0].payload as { pos: number; aa: string; value: number | null }
                       return (
-                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+                        <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                           <div className="font-semibold">Pos {d.pos}: {AA_FULL_NAMES[d.aa] ?? d.aa} ({d.aa})</div>
                           <div>{d.value != null ? d.value.toFixed(4) : 'No data'}</div>
                         </div>
@@ -112,8 +112,8 @@ function EncoderTab() {
                   <Line
                     type="monotone"
                     dataKey="value"
-                    stroke="#6366f1"
-                    dot={encoded.length <= 50 ? { r: 3, fill: '#6366f1' } : false}
+                    stroke="#2F5BFF"
+                    dot={encoded.length <= 50 ? { r: 3, fill: '#2F5BFF' } : false}
                     connectNulls={false}
                     strokeWidth={1.5}
                   />
@@ -129,7 +129,7 @@ function EncoderTab() {
                       className={`text-center text-xs font-mono shrink-0 w-6 py-0.5 rounded-sm ${
                         e.value == null
                           ? 'bg-gray-200 dark:bg-gray-700 text-gray-400'
-                          : 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
+                          : 'text-indigo-600 dark:text-indigo-400'
                       }`}
                       title={`Pos ${e.pos}: ${e.value?.toFixed(4) ?? 'missing'}`}
                     >
@@ -195,13 +195,13 @@ function WindowTab() {
   const hasNeg = allVals.some((v) => v < 0)
 
   return (
-    <div className="flex gap-6">
-      <aside className="w-56 shrink-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-12">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <SequenceInput seq={seq} onChange={setSeq} />
         <SequenceFetch onLoad={(entries) => entries[0] && setSeq(entries[0].sequence)} />
         <RecordSelector accession={accession} onChange={setAccessionAndThreshold} />
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 block">
+          <span className="label mb-1 block">
             Window size: {windowSize}
           </span>
           <input
@@ -211,19 +211,19 @@ function WindowTab() {
             step={2}
             value={windowSize}
             onChange={(e) => setWindowSize(Number(e.target.value))}
-            className="w-full accent-indigo-600"
+            className="w-full"
           />
           <div className="flex justify-between text-xs text-gray-400 mt-0.5">
             <span>3</span><span>25</span>
           </div>
         </div>
         <div>
-          <label className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
+          <label className="flex items-center gap-2 label mb-1">
             <input
               type="checkbox"
               checked={threshold !== null}
               onChange={(e) => setThrParam(e.target.checked ? 'auto' : 'off')}
-              className="accent-indigo-600"
+              className=""
             />
             Threshold line
           </label>
@@ -234,7 +234,7 @@ function WindowTab() {
               aria-label="Threshold value"
               value={threshold}
               onChange={(e) => setThrParam(e.target.value === '' ? 'auto' : e.target.value)}
-              className="w-full text-sm px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+              className="w-full text-sm px-2 py-1 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent"
             />
           )}
           {accession === KD && threshold !== null && (
@@ -246,7 +246,7 @@ function WindowTab() {
         <button
           onClick={() => exportEncodingAsCSV(accession, seq, windowed)}
           disabled={!windowed.length}
-          className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40"
+          className="btn-text disabled:opacity-40"
         >
           ↓ CSV
         </button>
@@ -254,21 +254,21 @@ function WindowTab() {
       </aside>
 
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
           <div className="mb-4">
-            <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{accession}</p>
+            <p className="font-mono font-bold">{accession}</p>
             <p className="text-sm text-gray-600 dark:text-gray-400">{DB1[accession]?.description}</p>
             <p className="text-xs text-gray-400 mt-1">Sliding window of {windowSize} residues (averaged)</p>
           </div>
 
           {!seq && (
-            <p className="text-gray-400 text-sm text-center py-12">Enter a protein sequence above.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-center py-24">Enter a protein sequence above.</p>
           )}
 
           {seq && (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
                 <XAxis
                   dataKey="pos"
                   tick={{ fontSize: 10 }}
@@ -276,17 +276,17 @@ function WindowTab() {
                   height={32}
                 />
                 <YAxis tick={{ fontSize: 11 }} width={55} />
-                {hasNeg && <ReferenceLine y={0} stroke="#9ca3af" strokeDasharray="4 2" />}
+                {hasNeg && <ReferenceLine y={0} stroke="#A3A3A2" strokeDasharray="4 2" />}
                 {regions.map((r) => (
-                  <ReferenceArea key={r.start} x1={r.start} x2={r.end} fill="#f59e0b" fillOpacity={0.15} />
+                  <ReferenceArea key={r.start} x1={r.start} x2={r.end} fill="#A3A3A2" fillOpacity={0.15} />
                 ))}
                 {threshold !== null && (
                   <ReferenceLine
                     y={threshold}
                     ifOverflow="extendDomain" // keep the cutoff visible even when no window reaches it
-                    stroke="#f59e0b"
+                    stroke="#A3A3A2"
                     strokeDasharray="6 3"
-                    label={{ value: `threshold ${threshold}`, position: 'insideTopRight', fontSize: 10, fill: '#d97706' }}
+                    label={{ value: `threshold ${threshold}`, position: 'insideTopRight', fontSize: 10, fill: '#6F6F6E' }}
                   />
                 )}
                 <Tooltip
@@ -294,7 +294,7 @@ function WindowTab() {
                     if (!active || !payload?.length) return null
                     const d = payload[0].payload as { pos: number; aa: string; value: number | null }
                     return (
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+                      <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                         <div className="font-semibold">Pos {d.pos}: {d.aa}</div>
                         <div>{d.value != null ? d.value.toFixed(4) : 'No data'}</div>
                       </div>
@@ -304,7 +304,7 @@ function WindowTab() {
                 <Line
                   type="monotone"
                   dataKey="value"
-                  stroke="#10b981"
+                  stroke="currentColor"
                   dot={false}
                   connectNulls={false}
                   strokeWidth={2}
@@ -315,7 +315,7 @@ function WindowTab() {
 
           {seq && threshold !== null && (
             <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">
+              <p className="label mb-2">
                 {regions.length
                   ? `${regions.length} region${regions.length === 1 ? '' : 's'} at or above ${threshold}`
                   : `No region reaches ${threshold}`}
@@ -395,11 +395,11 @@ function HeatmapTab() {
   const cellH = 28
 
   return (
-    <div className="flex gap-6">
-      <aside className="w-56 shrink-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-12">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <SequenceInput seq={seq} onChange={setSeq} />
         <div>
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1 block">
+          <span className="label mb-1 block">
             Indices ({selected.length} selected)
           </span>
           <input
@@ -407,19 +407,19 @@ function HeatmapTab() {
             placeholder="Filter…"
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full px-2 py-1.5 mb-1 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2 py-1.5 mb-1 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
           />
           <div className="border border-gray-200 dark:border-gray-700 rounded overflow-y-auto max-h-48">
             {filteredAccs.map((a) => (
               <label
                 key={a}
-                className="flex items-center gap-2 px-2 py-1 hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+                className="flex items-center gap-2 px-2 py-1 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer"
               >
                 <input
                   type="checkbox"
                   checked={selected.includes(a)}
                   onChange={() => toggle(a)}
-                  className="accent-indigo-600"
+                  className=""
                 />
                 <span className="text-xs font-mono truncate" title={DB1[a].description}>{a}</span>
               </label>
@@ -435,10 +435,10 @@ function HeatmapTab() {
       </aside>
 
       <div className="flex-1 min-w-0">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-semibold">Multi-property Heatmap</h2>
+              <h2 className="label">Multi-property Heatmap</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 Each row = one AAIndex1 property. Each column = one sequence position. Colour normalised per row.
               </p>
@@ -446,7 +446,7 @@ function HeatmapTab() {
           </div>
 
           {(!seq || !selected.length || !matrix) && (
-            <p className="text-gray-400 text-sm text-center py-12">
+            <p className="text-gray-400 dark:text-gray-500 text-center py-24">
               {!seq ? 'Enter a sequence.' : 'Select at least one index.'}
             </p>
           )}
@@ -488,7 +488,7 @@ function HeatmapTab() {
                           height: cellH,
                           backgroundColor: t != null ? heatColor(t) : undefined,
                           backgroundImage: t == null
-                            ? 'repeating-linear-gradient(45deg, #9ca3af 0, #9ca3af 1px, transparent 0, transparent 50%)'
+                            ? 'repeating-linear-gradient(45deg, #A3A3A2 0, #A3A3A2 1px, transparent 0, transparent 50%)'
                             : undefined,
                           backgroundSize: t == null ? '4px 4px' : undefined,
                         }}
@@ -504,7 +504,7 @@ function HeatmapTab() {
                 <span className="text-xs text-gray-500">Low</span>
                 <div
                   className="h-3 w-24 rounded"
-                  style={{ background: 'linear-gradient(to right, #3b82f6, #ffffff, #ef4444)' }}
+                  style={{ background: 'linear-gradient(to right, #6F6F6E, #ffffff, #2F5BFF)' }}
                 />
                 <span className="text-xs text-gray-500">High</span>
                 <span className="text-xs text-gray-400 ml-2">(per-row normalised)</span>
@@ -534,32 +534,40 @@ export default function SequenceAnalysis() {
   const setTab = (t: Tab) => setTabParam(t)
 
   return (
-    <div className="flex flex-col gap-4">
-      {/* Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 dark:border-gray-800 pb-0 overflow-x-auto">
-        {TABS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={`shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-              tab === t.id
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950'
-                : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
-            }`}
-          >
-            {t.label}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-col gap-12">
+      <header className="flex flex-col gap-3">
+        <p className="label">Sequence analysis</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Sequence</h1>
+      </header>
 
-      <p className="text-sm text-gray-500 dark:text-gray-400">
-        {TABS.find((t) => t.id === tab)?.desc}
-      </p>
+      {/* Tabs */}
+      <div className="flex flex-col gap-4">
+        <div className="flex gap-x-6 gap-y-2 border-b border-gray-200 dark:border-gray-800 overflow-x-auto">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              aria-pressed={tab === t.id}
+              onClick={() => setTab(t.id)}
+              className={`shrink-0 whitespace-nowrap pb-3 -mb-px text-sm border-b ${
+                tab === t.id
+                  ? 'border-indigo-600 text-ink dark:border-indigo-400 dark:text-gray-100'
+                  : 'border-transparent text-gray-500 hover:text-indigo-600 dark:text-gray-400 dark:hover:text-indigo-400'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <p className="text-sm text-gray-500 dark:text-gray-400">
+          {TABS.find((t) => t.id === tab)?.desc}
+        </p>
+      </div>
 
       {tab === 'encoder' && <EncoderTab />}
       {tab === 'window' && <WindowTab />}
       {tab === 'heatmap' && <HeatmapTab />}
-      <Suspense fallback={<p className="text-sm text-gray-400 animate-pulse py-16 text-center">Loading…</p>}>
+      <Suspense fallback={<p className="text-gray-400 dark:text-gray-500 py-24 text-center">Loading…</p>}>
         {tab === 'moment' && <MomentTab />}
         {tab === 'align' && <AlignTab />}
         {tab === 'contact' && <ContactTab />}

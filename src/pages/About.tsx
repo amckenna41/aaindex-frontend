@@ -29,16 +29,16 @@ function DownloadCard({ name }: { name: keyof typeof DBS }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
+    <div className="flex items-baseline justify-between gap-4 py-4">
       <div>
-        <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">{label}</span>
+        <span className="font-mono text-sm">{label}</span>
         <span className="text-gray-400 dark:text-gray-500 text-xs ml-2">({count} records)</span>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{desc} · flat-file format</p>
       </div>
       <button
         onClick={handleDownload}
         disabled={loading}
-        className="shrink-0 text-sm px-4 py-1.5 rounded border border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950 disabled:opacity-50 transition-colors"
+        className="btn-text shrink-0"
       >
         {loading ? 'Building…' : '↓ Download'}
       </button>
@@ -58,25 +58,21 @@ export default function About() {
   }, [])
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col gap-8 py-4">
-      <div>
-        <img
-          src="/aaindex_explorer_logo.png"
-          alt="AAIndex Explorer"
-          className="w-full max-w-sm mx-auto mb-6"
-        />
-        <h1 className="text-2xl font-bold mb-2">About AAIndex Explorer</h1>
+    <div className="max-w-2xl flex flex-col gap-16">
+      <header className="flex flex-col gap-4">
+        <p className="label">About</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">About AAIndex Explorer</h1>
         <p className="text-gray-600 dark:text-gray-400">
           An interactive browser for the AAIndex database — a collection of amino acid physicochemical properties
           and protein structure / function parameters.
         </p>
-      </div>
+      </header>
 
-      <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-4">
-        <h2 className="font-semibold text-lg">The AAIndex Database</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className="label">The AAIndex Database</h2>
         <div className="flex flex-col gap-3 text-sm text-gray-700 dark:text-gray-300">
           <div>
-            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">AAIndex1</span>
+            <span className="font-mono">AAIndex1</span>
             <span className="text-gray-400 dark:text-gray-500 ml-2">({DBS.aaindex1.count} records)</span>
             <p className="mt-1">
               A collection of published numerical indices representing physicochemical and biochemical properties of amino acids,
@@ -84,7 +80,7 @@ export default function About() {
             </p>
           </div>
           <div>
-            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">AAIndex2</span>
+            <span className="font-mono">AAIndex2</span>
             <span className="text-gray-400 dark:text-gray-500 ml-2">({DBS.aaindex2.count} records)</span>
             <p className="mt-1">
               Amino acid substitution matrices — 20×20 matrices capturing the likelihood of one amino acid being
@@ -92,7 +88,7 @@ export default function About() {
             </p>
           </div>
           <div>
-            <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">AAIndex3</span>
+            <span className="font-mono">AAIndex3</span>
             <span className="text-gray-400 dark:text-gray-500 ml-2">({DBS.aaindex3.count} records)</span>
             <p className="mt-1">
               Statistical amino acid pair contact potentials — matrices capturing the propensity of amino acid
@@ -101,21 +97,21 @@ export default function About() {
           </div>
         </div>
 
-        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
-          <h3 className="font-medium text-sm mb-1">Database version</h3>
+        <div className="pt-2">
+          <h3 className="text-sm text-gray-400 dark:text-gray-500 mb-1">Database version</h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             AAIndex version 9.2 (last updated February 2017). The aaindex Python package parses the flat-file
             distribution from{' '}
             <a href="https://www.genome.jp/aaindex/" target="_blank" rel="noopener noreferrer"
-              className="text-indigo-600 dark:text-indigo-400 hover:underline">genome.jp/aaindex</a>.
+              className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">genome.jp/aaindex</a>.
             Records that differ between v9.1 and v9.2 are noted in the individual record references field.
           </p>
         </div>
       </section>
 
-      <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-3">
-        <h2 className="font-semibold text-lg">What this app provides</h2>
-        <ul className="text-sm text-gray-700 dark:text-gray-300 flex flex-col gap-2 list-disc list-inside">
+      <section className="flex flex-col gap-3">
+        <h2 className="label">What this app provides</h2>
+        <ul className="text-sm text-gray-700 dark:text-gray-300 flex flex-col gap-2 list-disc pl-5 marker:text-gray-300 dark:marker:text-gray-700">
           <li>Browse, search, filter and sort all {TOTAL_RECORDS} records across all three databases</li>
           <li>Star/favourite records and filter to your personal set</li>
           <li>Shareable deep-linked URLs — Explorer, Sequence Analysis, Encode and Property Space all keep their state in the query string, so any analysis is a link</li>
@@ -146,16 +142,16 @@ export default function About() {
         </ul>
       </section>
 
-      <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-4">
-        <h2 className="font-semibold text-lg">Developer API</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className="label">Developer API</h2>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           A public, read-only REST API — no key, no auth, CORS open to any origin. See the{' '}
-          <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a>{' '}
+          <a href="/api-reference" className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">API Reference</a>{' '}
           for the full documentation with a live &quot;Try it&quot; box and curl, Python and R examples for every endpoint, or{' '}
-          <a href="/api/openapi" className="text-indigo-600 dark:text-indigo-400 hover:underline">/api/openapi</a>{' '}
+          <a href="/api/openapi" className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">/api/openapi</a>{' '}
           for the machine-readable OpenAPI 3.1 description.
         </p>
-        <div className="flex flex-col gap-3 text-xs font-mono">
+        <div className="flex flex-col border-t border-gray-200 dark:border-gray-800 text-[13px] font-mono">
           {[
             { method: 'GET',  path: '/api/search?q=hydrophobicity', desc: 'Cross-database full-text search, each hit tagged with its source database.' },
             { method: 'GET',  path: '/api/aaindex1?category=hydrophobic', desc: 'Filtered record list. Add &format=csv or &format=tsv for a delimited table.' },
@@ -165,38 +161,36 @@ export default function About() {
             { method: 'POST', path: '/api/encode', desc: 'Encode a sequence against up to 50 indices. Body: {"sequence": "ACDEF...", "accessions": ["KYTJ820101", "EISD840101"]}' },
             { method: 'GET',  path: '/api/pubmed/{pmid}', desc: 'Proxied, cached PubMed abstract.' },
           ].map(({ method, path, desc }) => (
-            <div key={path} className="bg-white dark:bg-gray-800 rounded p-3 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 mb-1">
-                <span className={`px-1.5 py-0.5 rounded text-xs font-bold ${method === 'POST' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300' : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'}`}>
-                  {method}
-                </span>
-                <span className="text-indigo-600 dark:text-indigo-400">{path}</span>
+            <div key={path} className="py-3 border-b border-gray-200 dark:border-gray-800">
+              <div className="flex items-baseline gap-3 mb-1">
+                <span className="w-10 shrink-0 text-gray-400 dark:text-gray-500">{method}</span>
+                <span className="break-all">{path}</span>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-xs font-sans">{desc}</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm font-sans pl-[3.25rem]">{desc}</p>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-4">
+      <section className="flex flex-col gap-4">
         <div>
-          <h2 className="font-semibold text-lg">Download Databases</h2>
+          <h2 className="label">Download Databases</h2>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             Download the full database files in the standard AAIndex flat-file format
-            (same as <a href="https://github.com/amckenna41/aaindex/tree/main/aaindex/data" target="_blank" rel="noopener noreferrer" className="text-indigo-600 dark:text-indigo-400 hover:underline">amckenna41/aaindex</a>).
+            (same as <a href="https://github.com/amckenna41/aaindex/tree/main/aaindex/data" target="_blank" rel="noopener noreferrer" className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">amckenna41/aaindex</a>).
             Each file is reconstructed from the bundled JSON data. The same data is available as JSON from the{' '}
-            <a href="/api-reference" className="text-indigo-600 dark:text-indigo-400 hover:underline">API Reference</a>.
+            <a href="/api-reference" className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">API Reference</a>.
           </p>
         </div>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col border-y border-gray-200 dark:border-gray-800 divide-y divide-gray-200 dark:divide-gray-800">
           <DownloadCard name="aaindex1" />
           <DownloadCard name="aaindex2" />
           <DownloadCard name="aaindex3" />
         </div>
       </section>
 
-      <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6 flex flex-col gap-3">
-        <h2 className="font-semibold text-lg">Links & Resources</h2>
+      <section className="flex flex-col gap-3">
+        <h2 className="label">Links & Resources</h2>
         <div className="flex flex-col gap-2 text-sm">
           {[
             { href: 'https://www.genome.jp/aaindex/', label: 'genome.jp/aaindex — Original AAIndex Database ↗' },
@@ -206,28 +200,28 @@ export default function About() {
             { href: 'https://doi.org/10.1093/nar/28.1.374', label: 'Reference: Kawashima & Kanehisa (2000), doi:10.1093/nar/28.1.374 ↗' },
           ].map(({ href, label }) => (
             <a key={href} href={href} target="_blank" rel="noopener noreferrer"
-              className="text-indigo-600 dark:text-indigo-400 hover:underline">
+              className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400">
               {label}
             </a>
           ))}
         </div>
       </section>
 
-      <section className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-        <h2 className="font-semibold text-lg mb-2">Author</h2>
+      <section>
+        <h2 className="label mb-4">Author</h2>
         <p className="text-sm text-gray-700 dark:text-gray-300">
           Built by{' '}
           <a href="https://github.com/amckenna41" target="_blank" rel="noopener noreferrer"
-            className="text-indigo-600 dark:text-indigo-400 hover:underline font-mono">
+            className="underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 font-mono">
             amckenna41 ↗
           </a>
           . The underlying data is provided by the{' '}
-          <code className="text-xs bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded">aaindex</code>{' '}
+          <code className="font-mono text-[13px]">aaindex</code>{' '}
           Python package, which parses and exposes the full AAIndex database.
         </p>
       </section>
 
-      <p className="text-center text-xs text-gray-400 dark:text-gray-500">
+      <p className="text-sm text-gray-400 dark:text-gray-500">
         AAIndex database last updated: {lastUpdated} · source{' '}
         <a href="https://www.genome.jp/aaindex/" target="_blank" rel="noopener noreferrer"
           className="hover:underline">genome.jp/aaindex</a>

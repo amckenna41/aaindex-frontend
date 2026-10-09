@@ -17,11 +17,8 @@ export default function ShareLink({ label = 'Copy shareable link' }: { label?: s
   }
 
   return (
-    <button
-      onClick={copy}
-      className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
-    >
-      {copied ? '✓ Link copied' : `🔗 ${label}`}
+    <button onClick={copy} className="btn-text text-left">
+      {copied ? '✓ Link copied' : label}
     </button>
   )
 }

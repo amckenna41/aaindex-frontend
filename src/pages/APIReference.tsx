@@ -17,11 +17,8 @@ const LOADERS = {
 type DBName = keyof typeof LOADERS
 
 function Badge({ type }: { type: string }) {
-  const colour = type === 'path'
-    ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300'
-    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-300'
   return (
-    <span className={`text-xs font-mono px-1.5 py-0.5 rounded ${colour}`}>{type}</span>
+    <span className="text-xs font-mono text-gray-400 dark:text-gray-500">{type}</span>
   )
 }
 
@@ -72,24 +69,24 @@ function TryIt({ path }: { path: string }) {
   }
 
   return (
-    <div className="mt-3 border-t border-gray-200 dark:border-gray-700 pt-3">
-      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">Try it</p>
+    <div className="flex flex-col gap-3">
+      <p className="label">Try it</p>
       <div className="flex gap-2">
         <input
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="flex-1 font-mono text-xs px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-w-0"
+          className="flex-1 font-mono text-[13px] px-3 py-2 border border-gray-200 dark:border-gray-800 bg-transparent focus:ring-2 focus:ring-indigo-500 min-w-0"
         />
         <button
           onClick={run}
           disabled={loading}
-          className="shrink-0 px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50"
+          className="btn-primary shrink-0"
         >
           {loading ? '...' : 'Send'}
         </button>
       </div>
       {result && (
-        <pre className="mt-2 text-xs bg-gray-900 text-green-400 rounded p-3 overflow-x-auto max-h-64 overflow-y-auto">
+        <pre className="text-[13px] font-mono bg-gray-50 dark:bg-gray-900 rounded-sm p-4 overflow-x-auto max-h-72 overflow-y-auto">
           {result}
         </pre>
       )}
@@ -114,27 +111,27 @@ function Snippets({ ep }: { ep: Endpoint }) {
 
   return (
     <div>
-      <div className="flex items-center gap-1 mb-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mr-2">Code</p>
+      <div className="flex items-baseline gap-4 mb-3">
+        <p className="label">Code</p>
         {SNIPPET_LANGS.map((l) => (
           <button
             key={l.id}
             onClick={() => setLang(l.id)}
             aria-pressed={lang === l.id}
-            className={`text-xs px-2 py-0.5 rounded ${
+            className={`text-sm underline-offset-[6px] ${
               lang === l.id
-                ? 'bg-indigo-600 text-white'
-                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800'
+                ? 'text-indigo-600 dark:text-indigo-400 underline'
+                : 'text-gray-500 dark:text-gray-400 hover:text-ink dark:hover:text-gray-100'
             }`}
           >
             {l.label}
           </button>
         ))}
-        <button onClick={copy} className="ml-auto text-xs text-indigo-600 dark:text-indigo-400 hover:underline">
+        <button onClick={copy} className="ml-auto btn-text">
           {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
-      <pre className="text-xs bg-gray-900 text-gray-100 rounded p-3 overflow-x-auto">{code}</pre>
+      <pre className="text-[13px] font-mono bg-gray-50 dark:bg-gray-900 rounded-sm p-4 overflow-x-auto">{code}</pre>
     </div>
   )
 }
@@ -156,11 +153,11 @@ function DatabaseDownload({ name, label }: { name: DBName; label: string }) {
     }
   }
 
-  const btn = 'text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40'
+  const btn = 'btn-text'
   return (
-    <div className="flex items-center justify-between gap-3 px-4 py-3">
-      <span className="font-mono text-sm font-semibold text-indigo-600 dark:text-indigo-400">{label}</span>
-      <div className="flex gap-2">
+    <div className="flex items-baseline justify-between gap-3 py-4">
+      <span className="font-mono text-sm">{label}</span>
+      <div className="flex gap-6">
         <button disabled={busy} onClick={() => download('json')} className={btn}>↓ JSON</button>
         <button disabled={busy} onClick={() => download('flat')} className={btn}>↓ AAIndex flat file</button>
       </div>
@@ -176,39 +173,36 @@ function EndpointCard({ ep }: { ep: Endpoint }) {
   )
 
   return (
-    <div className="border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+    <div className="border-b border-gray-200 dark:border-gray-800">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+        aria-expanded={open}
+        className="group w-full flex items-baseline gap-4 py-4 text-left"
       >
-        <span className={`shrink-0 text-xs font-bold px-2 py-0.5 rounded ${
-          ep.method === 'POST'
-            ? 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'
-            : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300'
-        }`}>
+        <span className="shrink-0 w-10 font-mono text-xs text-gray-400 dark:text-gray-500">
           {ep.method}
         </span>
-        <span className="font-mono text-sm text-gray-800 dark:text-gray-200 font-medium truncate">
+        <span className="font-mono text-sm truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
           {pathDisplay}
         </span>
-        <span className="ml-auto shrink-0 text-gray-400 text-xs">{open ? '▲' : '▼'}</span>
+        <span aria-hidden className="ml-auto shrink-0 text-gray-400 dark:text-gray-500 text-[10px]">{open ? '▲' : '▼'}</span>
       </button>
 
       {open && (
-        <div className="border-t border-gray-200 dark:border-gray-800 px-4 py-4 bg-white dark:bg-gray-950 flex flex-col gap-4">
-          <p className="text-sm text-gray-600 dark:text-gray-400">{ep.description}</p>
+        <div className="pb-10 pl-14 flex flex-col gap-8">
+          <p className="text-gray-600 dark:text-gray-400">{ep.description}</p>
 
           {ep.params && ep.params.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Parameters</p>
+              <p className="label mb-2">Parameters</p>
               <div className="flex flex-col gap-2">
                 {ep.params.map((p) => (
-                  <div key={p.name} className="flex items-start gap-3 text-sm">
-                    <code className="shrink-0 font-mono text-indigo-600 dark:text-indigo-400 text-xs bg-indigo-50 dark:bg-indigo-950 px-1.5 py-0.5 rounded">
+                  <div key={p.name} className="flex items-baseline gap-3 text-sm">
+                    <code className="shrink-0 font-mono text-[13px]">
                       {p.name}
                     </code>
                     <Badge type={p.in === 'path' ? 'path' : p.type} />
-                    <span className="text-gray-600 dark:text-gray-400 text-xs">{p.description}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{p.description}</span>
                   </div>
                 ))}
               </div>
@@ -216,8 +210,8 @@ function EndpointCard({ ep }: { ep: Endpoint }) {
           )}
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-2">Example response</p>
-            <pre className="text-xs bg-gray-900 text-green-400 rounded p-3 overflow-x-auto max-h-64 overflow-y-auto">
+            <p className="label mb-2">Example response</p>
+            <pre className="text-[13px] font-mono bg-gray-50 dark:bg-gray-900 rounded-sm p-4 overflow-x-auto max-h-72 overflow-y-auto">
               {ep.sampleResponse}
             </pre>
           </div>
@@ -236,40 +230,36 @@ export default function APIReference() {
     paths.map((path) => ENDPOINTS.find((e) => e.path === path)).filter((e): e is Endpoint => !!e)
 
   const Section = ({ title, blurb, eps }: { title: string; blurb?: string; eps: Endpoint[] }) => (
-    <section className="flex flex-col gap-2">
-      <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">{title}</h2>
-        {blurb && <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">{blurb}</p>}
+    <section className="flex flex-col">
+      <div className="flex flex-col gap-2 pb-4 border-b border-gray-200 dark:border-gray-800">
+        <h2 className="label">{title}</h2>
+        {blurb && <p className="text-sm text-gray-500 dark:text-gray-400">{blurb}</p>}
       </div>
       {eps.map((ep) => <EndpointCard key={`${ep.method} ${ep.path}`} ep={ep} />)}
     </section>
   )
 
   return (
-    <div className="max-w-3xl mx-auto flex flex-col gap-8">
+    <div className="flex flex-col gap-16">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">API Reference</h1>
-        <p className="text-gray-600 dark:text-gray-400">
+      <header className="flex flex-col gap-4">
+        <p className="label">Developers</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">API Reference</h1>
+        <p className="text-gray-600 dark:text-gray-400 max-w-2xl">
           REST API for the AAIndex database. Endpoints return JSON (list endpoints also speak
           <code className="font-mono mx-1">?format=csv</code> and <code className="font-mono">tsv</code>) and support CORS —
           suitable for programmatic access from any origin.
         </p>
-        <div className="mt-3 flex items-center gap-2 flex-wrap">
-          <span className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-mono">
-            Base URL: {BASE || 'https://your-domain.vercel.app'}
-          </span>
-          <span className="text-xs px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
-            No auth required
-          </span>
-          <a
-            href="/api/openapi"
-            className="text-xs px-2 py-1 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300 hover:underline"
-          >
+        <div className="flex items-baseline gap-x-3 gap-y-2 flex-wrap text-sm text-gray-500 dark:text-gray-400">
+          <span className="font-mono">Base URL: {BASE || 'https://your-domain.vercel.app'}</span>
+          <span aria-hidden className="text-gray-300 dark:text-gray-700">·</span>
+          <span>No auth required</span>
+          <span aria-hidden className="text-gray-300 dark:text-gray-700">·</span>
+          <a href="/api/openapi" className="btn-text">
             OpenAPI 3.1 spec ↗
           </a>
         </div>
-      </div>
+      </header>
 
       <Section title="Overview" eps={pick('/api', '/api/openapi')} />
 
@@ -309,15 +299,15 @@ export default function APIReference() {
         eps={pick('/api/aaindex-updated', '/api/pubmed/{pmid}')}
       />
 
-      <section className="flex flex-col gap-2">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Download the full database</h2>
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-0.5">
+      <section className="flex flex-col">
+        <div className="flex flex-col gap-2 pb-4">
+          <h2 className="label">Download the full database</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Every record with all its values, straight from the data this API serves — for offline work or bulk
             analysis without paging through the list endpoints.
           </p>
         </div>
-        <div className="border border-gray-200 dark:border-gray-800 rounded-lg divide-y divide-gray-200 dark:divide-gray-800">
+        <div className="border-y border-gray-200 dark:border-gray-800 divide-y divide-gray-200 dark:divide-gray-800">
           <DatabaseDownload name="aaindex1" label="AAIndex1" />
           <DatabaseDownload name="aaindex2" label="AAIndex2" />
           <DatabaseDownload name="aaindex3" label="AAIndex3" />
@@ -325,9 +315,9 @@ export default function APIReference() {
       </section>
 
       {/* Notes */}
-      <section className="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 text-sm text-indigo-800 dark:text-indigo-300 flex flex-col gap-2">
-        <p className="font-semibold">Notes</p>
-        <ul className="list-disc list-inside flex flex-col gap-1 text-xs">
+      <section className="flex flex-col gap-4 text-gray-600 dark:text-gray-400">
+        <h2 className="label">Notes</h2>
+        <ul className="list-disc pl-5 flex flex-col gap-2 marker:text-gray-300 dark:marker:text-gray-700">
           <li>All accession codes are case-insensitive (e.g. <code className="font-mono">kytj820101</code> and <code className="font-mono">KYTJ820101</code> are equivalent).</li>
           <li>Successful responses are cached for 24 hours at the edge. Errors are never cached.</li>
           <li>List endpoints accept <code className="font-mono">?format=csv</code> or <code className="font-mono">?format=tsv</code> as well as the default JSON.</li>

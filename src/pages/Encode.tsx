@@ -158,9 +158,9 @@ function CompositionPanel({ seq }: { seq: string }) {
   const comp = useMemo(() => composition(seq), [seq])
   const maxPct = Math.max(...Object.values(comp.percent)) || 1
   return (
-    <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+    <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
       <div className="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
-        <h2 className="font-semibold text-sm">Amino-acid composition</h2>
+        <h2 className="label">Amino-acid composition</h2>
         <p className="text-xs text-gray-500 dark:text-gray-400">
           {comp.total} standard residues
           {comp.other > 0 && ` · ${comp.other} non-standard excluded`}
@@ -171,12 +171,12 @@ function CompositionPanel({ seq }: { seq: string }) {
           <div
             key={aa}
             title={`${AA_FULL_NAMES[aa]}: ${comp.counts[aa]} (${comp.percent[aa].toFixed(1)}%)`}
-            className="flex flex-col items-center rounded bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 px-1 pt-1 pb-1.5"
+            className="flex flex-col items-center px-1 pt-1 pb-1.5"
           >
-            <span className="font-mono text-xs font-bold text-gray-700 dark:text-gray-300">{aa}</span>
+            <span className="font-mono text-xs text-gray-700 dark:text-gray-300">{aa}</span>
             <div className="w-full h-8 flex items-end mt-0.5">
               <div
-                className="w-full rounded-sm bg-indigo-400 dark:bg-indigo-500"
+                className="w-full rounded-sm bg-indigo-600 dark:bg-indigo-400"
                 style={{ height: `${(comp.percent[aa] / maxPct) * 100}%` }}
               />
             </div>
@@ -308,18 +308,22 @@ export default function Encode() {
   const hasNeg = previewEncoded.some((e) => (e.value ?? 0) < 0)
 
   return (
-    <div className="flex gap-6">
+    <div className="flex flex-col gap-12">
+      <header className="flex flex-col gap-3">
+        <p className="label">Batch encoding</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Encode</h1>
+      </header>
       {/* ── Sidebar ── */}
-      <aside className="w-60 shrink-0 flex flex-col gap-5">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
 
         {/* File upload */}
         <div className="flex flex-col gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Input file</span>
+          <span className="label">Input file</span>
           <div
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
             onClick={() => inputRef.current?.click()}
-            className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-4 text-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors"
+            className="border border-dashed border-gray-300 dark:border-gray-700 rounded-sm p-6 text-center cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-600 transition-colors"
           >
             <input
               ref={inputRef}
@@ -331,7 +335,7 @@ export default function Encode() {
             {fileName ? (
               <div className="flex items-start justify-between gap-1">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-indigo-600 dark:text-indigo-400 truncate">{fileName}</p>
+                  <p className="text-sm truncate">{fileName}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{sequences.length} sequences loaded</p>
                 </div>
                 <button
@@ -345,7 +349,7 @@ export default function Encode() {
                     if (inputRef.current) inputRef.current.value = ''
                   }}
                   title="Remove loaded sequence"
-                  className="shrink-0 flex items-center justify-center w-5 h-5 rounded bg-red-100 hover:bg-red-200 dark:bg-red-900/40 dark:hover:bg-red-800/60 text-red-500 dark:text-red-400 transition-colors"
+                  className="shrink-0 flex items-center justify-center w-5 h-5 rounded text-gray-400 hover:text-ink dark:hover:text-gray-100 transition-colors"
                 >
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -387,11 +391,11 @@ export default function Encode() {
         <div className="flex flex-col gap-1">
           <button
             onClick={() => setExamplesOpen((v) => !v)}
-            className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            className="flex items-center justify-between label hover:text-gray-700 dark:hover:text-gray-200"
           >
             <span>Examples</span>
             <svg
-              className={`w-3.5 h-3.5 transition-transform ${examplesOpen ? 'rotate-180' : ''}`}
+              className={`w-3.5 h-3.5 ${examplesOpen ? 'rotate-180' : ''}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -407,7 +411,7 @@ export default function Encode() {
                   <button
                     onClick={() => loadExample(ex.fasta, ex.label)}
                     aria-pressed={selected}
-                    className={`w-full text-left px-2 py-1.5 rounded hover:bg-indigo-50 dark:hover:bg-indigo-950 group border-l-2 ${selected ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-500' : 'border-transparent'}`}
+                    className={`w-full text-left px-2 py-1.5 rounded group border-l-2 ${selected ? 'border-indigo-600 dark:border-indigo-400' : 'border-transparent'}`}
                   >
                     <p className={`text-xs font-medium group-hover:text-indigo-700 dark:group-hover:text-indigo-300 ${selected ? 'text-indigo-700 dark:text-indigo-300' : 'text-gray-700 dark:text-gray-300'}`}>{ex.label}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500">{ex.description}</p>
@@ -425,11 +429,11 @@ export default function Encode() {
         <div className="flex flex-col gap-1">
           <button
             onClick={() => setFavsOpen((v) => !v)}
-            className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            className="flex items-center justify-between label hover:text-gray-700 dark:hover:text-gray-200"
           >
             <span>Favourites {favourites.length > 0 && `(${favourites.length})`}</span>
             <svg
-              className={`w-3.5 h-3.5 transition-transform ${favsOpen ? 'rotate-180' : ''}`}
+              className={`w-3.5 h-3.5 ${favsOpen ? 'rotate-180' : ''}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -443,7 +447,7 @@ export default function Encode() {
                     <li key={acc}>
                       <button
                         onClick={() => setAccession(acc)}
-                        className={`w-full text-left px-2 py-1 rounded text-xs font-mono truncate ${accession === acc ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300' : 'hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                        className={`w-full text-left px-2 py-1 rounded text-xs font-mono truncate ${accession === acc ? 'text-indigo-600 dark:text-indigo-400' : 'hover:text-indigo-600 dark:hover:text-indigo-400 text-gray-700 dark:text-gray-300'}`}
                         title={DB1[acc]?.description}
                       >
                         {acc}
@@ -457,22 +461,22 @@ export default function Encode() {
         {/* Export buttons */}
         {sequences.length > 0 && (
           <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Export</span>
+            <span className="label">Export</span>
             <button
               onClick={() => exportLongCSV(sequences, accession)}
-              className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+              className="btn-text text-left"
             >
               ↓ All encodings (long CSV)
             </button>
             <button
               onClick={() => exportSummaryCSV(sequences, accession)}
-              className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+              className="btn-text text-left"
             >
               ↓ Summary stats CSV
             </button>
             <button
               onClick={() => exportPySARDescriptors(sequences, [accession], DB1)}
-              className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+              className="btn-text text-left"
             >
               ↓ pySAR descriptor set
             </button>
@@ -487,11 +491,11 @@ export default function Encode() {
       </aside>
 
       {/* ── Main ── */}
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
+      <div className="min-w-0 flex flex-col gap-12">
 
         {/* Empty state */}
         {!sequences.length && (
-          <div className="flex-1 flex items-center justify-center min-h-64 text-center text-gray-400 text-sm bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl">
+          <div className="flex-1 flex items-center justify-center min-h-64 text-center text-gray-400 py-24">
             <div>
               <p className="text-lg mb-1">Upload a sequence file to encode</p>
               <p className="text-xs text-gray-400">FASTA format or plain text — one sequence per line</p>
@@ -501,17 +505,17 @@ export default function Encode() {
 
         {/* Preview chart */}
         {sequences.length > 0 && previewSeq && (
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+          <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
             <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
               <div>
-                <p className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400">{accession}</p>
+                <p className="font-mono text-sm">{accession}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{DB1[accession]?.description}</p>
               </div>
               {sequences.length > 1 && (
                 <select
                   value={preview ?? ''}
                   onChange={(e) => setPreview(e.target.value)}
-                  className="text-xs rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="text-xs rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent px-2 py-1 focus:ring-2 focus:ring-indigo-500"
                 >
                   {sequences.map((s) => (
                     <option key={s.id} value={s.id}>{s.id}</option>
@@ -522,12 +526,12 @@ export default function Encode() {
             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
               Preview: <span className="font-mono">{previewSeq.id}</span> · {previewSeq.seq.length} residues
             </p>
-            <p className="font-mono text-xs text-gray-700 dark:text-gray-300 break-all leading-relaxed max-h-16 overflow-y-auto mb-2 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded px-2 py-1">
+            <p className="font-mono text-xs text-gray-700 dark:text-gray-300 break-all leading-relaxed max-h-16 overflow-y-auto mb-2 bg-paper dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded px-2 py-1">
               {previewSeq.seq}
             </p>
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={previewEncoded} margin={{ top: 4, right: 8, bottom: 24, left: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
                 <XAxis
                   dataKey="pos"
                   tick={{ fontSize: 10 }}
@@ -535,20 +539,20 @@ export default function Encode() {
                   height={32}
                 />
                 <YAxis tick={{ fontSize: 11 }} width={50} />
-                {hasNeg && <CartesianGrid y={0} strokeDasharray="4 2" stroke="#9ca3af" />}
+                {hasNeg && <CartesianGrid y={0} strokeDasharray="4 2" stroke="#A3A3A2" />}
                 <Tooltip
                   content={({ active, payload }) => {
                     if (!active || !payload?.length) return null
                     const d = payload[0].payload as { pos: number; aa: string; value: number | null }
                     return (
-                      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+                      <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                         <div className="font-semibold">Pos {d.pos}: {AA_FULL_NAMES[d.aa] ?? d.aa} ({d.aa})</div>
                         <div>{d.value != null ? d.value.toFixed(4) : 'No data'}</div>
                       </div>
                     )
                   }}
                 />
-                <Line type="monotone" dataKey="value" stroke="#6366f1" dot={previewEncoded.length <= 60 ? { r: 2 } : false} connectNulls={false} strokeWidth={1.5} />
+                <Line type="monotone" dataKey="value" stroke="#2F5BFF" dot={previewEncoded.length <= 60 ? { r: 2 } : false} connectNulls={false} strokeWidth={1.5} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -558,30 +562,30 @@ export default function Encode() {
 
         {/* Sequence table */}
         {sequences.length > 0 && (
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-5">
+          <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-sm">
+              <h2 className="label">
                 {sequences.length} sequence{sequences.length !== 1 ? 's' : ''} loaded
               </h2>
             </div>
             <div className="overflow-x-auto max-h-72">
               <table className="text-xs w-full">
-                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900">
+                <thead className="sticky top-0 bg-paper dark:bg-gray-950">
                   <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-1.5 pr-4 font-medium text-gray-600 dark:text-gray-400">ID</th>
-                    <th className="text-right py-1.5 pr-4 font-medium text-gray-600 dark:text-gray-400">Length</th>
-                    <th className="text-left py-1.5 pr-4 font-medium text-gray-600 dark:text-gray-400">Sequence</th>
-                    <th className="text-left py-1.5 font-medium text-gray-600 dark:text-gray-400">Encoding ({accession})</th>
+                    <th className="text-left py-1.5 pr-4 font-normal text-gray-400 dark:text-gray-500">ID</th>
+                    <th className="text-right py-1.5 pr-4 font-normal text-gray-400 dark:text-gray-500">Length</th>
+                    <th className="text-left py-1.5 pr-4 font-normal text-gray-400 dark:text-gray-500">Sequence</th>
+                    <th className="text-left py-1.5 font-normal text-gray-400 dark:text-gray-500">Encoding ({accession})</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sequences.slice(0, visibleRows).map((s) => (
                     <tr
                       key={s.id}
-                      className={`border-b border-gray-100 dark:border-gray-800 cursor-pointer ${preview === s.id ? 'bg-indigo-50 dark:bg-indigo-950' : 'hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                      className={`border-b border-gray-200 dark:border-gray-800 cursor-pointer ${preview === s.id ? 'bg-gray-50 dark:bg-gray-900' : 'hover:text-indigo-600 dark:hover:text-indigo-400'}`}
                       onClick={() => setPreview(s.id)}
                     >
-                      <td className="py-1.5 pr-4 font-mono text-indigo-600 dark:text-indigo-400">{s.id}</td>
+                      <td className="py-1.5 pr-4 font-mono">{s.id}</td>
                       <td className="py-1.5 pr-4 text-right text-gray-500">{s.seq.length}</td>
                       <td className="py-1.5 pr-4 font-mono text-gray-700 dark:text-gray-300" title={s.seq}>
                         {s.seq.length > 40 ? s.seq.slice(0, 40) + '…' : s.seq}
@@ -595,7 +599,7 @@ export default function Encode() {
             {sequences.length > visibleRows && (
               <button
                 onClick={() => setVisibleRows((n) => n + TABLE_CHUNK)}
-                className="mt-2 text-xs px-2 py-1 rounded border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                className="mt-2 btn-text"
               >
                 Show {Math.min(TABLE_CHUNK, sequences.length - visibleRows)} more
                 ({visibleRows} of {sequences.length} shown)

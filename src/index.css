@@ -2,6 +2,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Quiet Index: typography and space carry the hierarchy. */
+@layer base {
+  html { background: #FAFAF9; color: #111111; -webkit-font-smoothing: antialiased; }
+  html.dark { background: #0E0E0E; color: #EDEDED; color-scheme: dark; }
+  body { font-size: 15px; line-height: 1.75rem; }
+  h1, h2, h3, h4 { font-weight: 500; letter-spacing: -0.01em; }
+  .font-mono, code, pre, kbd { font-variant-numeric: tabular-nums; }
+
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+  textarea, select {
+    border-radius: 2px;
+    box-shadow: none;
+  }
+  input[type='checkbox'], input[type='radio'], input[type='range'] { accent-color: #111111; }
+  .dark input[type='checkbox'], .dark input[type='radio'], .dark input[type='range'] { accent-color: #EDEDED; }
+
+  :focus { outline: none; }
+  :focus-visible { outline: 2px solid #2F5BFF; outline-offset: 2px; }
+  .dark :focus-visible { outline-color: #7D98FF; }
+
+  a, button, input, select, textarea, [role='button'] {
+    transition: color 150ms, background-color 150ms, border-color 150ms, opacity 150ms;
+  }
+  ::selection { background: #2F5BFF33; }
+}
+
+@layer utilities {
+  .label { @apply text-xs uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500 font-normal; }
+  .ink-60 { @apply text-gray-500 dark:text-gray-400; }
+  .hairline { @apply border-gray-200 dark:border-gray-800; }
+  .btn-primary { @apply inline-flex items-center gap-2 rounded-sm px-4 py-2 text-sm bg-ink text-white dark:bg-gray-100 dark:text-gray-950 hover:bg-indigo-600 dark:hover:bg-indigo-400 disabled:opacity-40; }
+  .btn-text { @apply text-sm text-gray-500 dark:text-gray-400 underline-offset-4 hover:underline hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-40 disabled:no-underline; }
+}
+
+/* Weight never exceeds medium (the wordmark opts out with font-[600]). */
+.font-bold, .font-semibold, .font-extrabold, th, b, strong { font-weight: 500; }
+
+/* Recharts: no grid, faint axes, 11px ticks, paper tooltips. */
+.recharts-cartesian-grid-horizontal line, .recharts-cartesian-grid-vertical line,
+.recharts-polar-grid-concentric-polygon, .recharts-polar-grid-angle line { stroke: #11111110; }
+.recharts-cartesian-grid-vertical line { stroke: transparent; }
+.recharts-cartesian-axis-line, .recharts-cartesian-axis-tick-line { stroke: #11111166; }
+.dark .recharts-cartesian-axis-line, .dark .recharts-cartesian-axis-tick-line { stroke: #EDEDED66; }
+.dark .recharts-cartesian-grid-horizontal line { stroke: #EDEDED12; }
+.recharts-cartesian-axis-tick text, .recharts-polar-angle-axis-tick text, .recharts-legend-item-text { font-size: 11px; fill: #11111199; }
+.dark .recharts-cartesian-axis-tick text, .dark .recharts-polar-angle-axis-tick text { fill: #EDEDED99; }
+.recharts-default-tooltip { background: #FAFAF9 !important; border: 1px solid #1111111a !important; border-radius: 2px; font-size: 12px; }
+.dark .recharts-default-tooltip { background: #0E0E0E !important; border-color: #EDEDED1a !important; color: #EDEDED; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+
 @media print {
   .no-print { display: none !important; }
   nav { display: none !important; }

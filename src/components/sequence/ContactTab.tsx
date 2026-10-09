@@ -53,17 +53,17 @@ export default function ContactTab() {
   }, [profile])
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      <aside className="md:w-56 shrink-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-12">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <SequenceInput seq={seq} onChange={setSeq} />
         <SequenceFetch onLoad={(entries) => entries[0] && setSeq(entries[0].sequence)} />
         <RecordSelector accession={mat} onChange={setMat} db={USABLE} label="AAIndex3 matrix" />
         <ShareLink />
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-          <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{mat}</p>
+      <div className="min-w-0 flex flex-col gap-12">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
+          <p className="font-mono">{mat}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{DB3[mat].description}</p>
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 mb-4">
             Sequence-only estimate: without a structure we don't know which residues touch, so the
@@ -75,20 +75,20 @@ export default function ContactTab() {
             <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">{cleaned.dropped} non-standard residues ignored.</p>
           )}
           {tooLong && <p className="text-sm text-red-500">Sequences are limited to {MAX_LENGTH} residues.</p>}
-          {!cleaned.seq && <p className="text-gray-400 text-sm text-center py-12">Enter a protein sequence.</p>}
+          {!cleaned.seq && <p className="text-gray-400 dark:text-gray-500 text-center py-24">Enter a protein sequence.</p>}
 
           {profile && (
             <>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-5">
-                <div className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-lg px-3 py-2">
+                <div className="border-b border-gray-200 dark:border-gray-800 py-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Mean pair value</p>
                   <p className="font-mono font-semibold">{profile.meanPair != null ? profile.meanPair.toFixed(4) : '—'}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-lg px-3 py-2">
+                <div className="border-b border-gray-200 dark:border-gray-800 py-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Residues</p>
                   <p className="font-mono font-semibold">{cleaned.seq.length}</p>
                 </div>
-                <div className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-lg px-3 py-2">
+                <div className="border-b border-gray-200 dark:border-gray-800 py-3">
                   <p className="text-xs text-gray-500 dark:text-gray-400">Pairs averaged</p>
                   <p className="font-mono font-semibold">{profile.pairsCounted.toLocaleString()}</p>
                 </div>
@@ -100,17 +100,17 @@ export default function ContactTab() {
               </p>
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
                   <XAxis dataKey="pos" tick={{ fontSize: 10 }} height={32}
                     label={{ value: 'Position', position: 'insideBottom', offset: -2, fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} width={60} />
-                  {profile.meanPair != null && <ReferenceLine y={profile.meanPair} stroke="#9ca3af" strokeDasharray="4 2" />}
+                  {profile.meanPair != null && <ReferenceLine y={profile.meanPair} stroke="#A3A3A2" strokeDasharray="4 2" />}
                   <Tooltip
                     content={({ active, payload }) => {
                       if (!active || !payload?.length) return null
                       const d = payload[0].payload as { pos: number; aa: string; value: number | null; smooth: number | null }
                       return (
-                        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+                        <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                           <div className="font-semibold">Pos {d.pos}: {AA_FULL_NAMES[d.aa] ?? d.aa}</div>
                           <div>Residue: {d.value?.toFixed(4) ?? '—'}</div>
                           <div>Window: {d.smooth?.toFixed(4) ?? '—'}</div>
@@ -118,8 +118,8 @@ export default function ContactTab() {
                       )
                     }}
                   />
-                  <Line type="stepAfter" dataKey="value" stroke="#a5b4fc" dot={false} strokeWidth={1} connectNulls={false} />
-                  <Line type="monotone" dataKey="smooth" stroke="#4f46e5" dot={false} strokeWidth={2} connectNulls={false} />
+                  <Line type="stepAfter" dataKey="value" stroke="#2F5BFF55" dot={false} strokeWidth={1} connectNulls={false} />
+                  <Line type="monotone" dataKey="smooth" stroke="#2F5BFF" dot={false} strokeWidth={2} connectNulls={false} />
                 </LineChart>
               </ResponsiveContainer>
 
@@ -129,7 +129,7 @@ export default function ContactTab() {
                   <span
                     key={t.aa}
                     title={`${AA_FULL_NAMES[t.aa]} × ${t.count}`}
-                    className="font-mono text-xs px-2 py-1 rounded bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800"
+                    className="font-mono text-xs px-2 py-1 rounded bg-paper dark:bg-gray-950 border border-gray-100 dark:border-gray-800"
                   >
                     <b>{t.aa}</b> {t.value.toFixed(3)}
                   </span>

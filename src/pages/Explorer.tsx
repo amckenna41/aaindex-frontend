@@ -170,39 +170,47 @@ export default function Explorer() {
     if (n >= 1 && n <= totalPages) { setPage(n); setJumpVal('') }
   }
 
-  return (
-    <div className="flex gap-6">
-      {/* Sidebar */}
-      <aside className="w-64 shrink-0 flex flex-col gap-4">
-        <DBSwitcher />
-        <SearchBar resultCount={filtered.length} totalCount={allAccessions.length} />
-        <div className="flex flex-col gap-1">
-          <label htmlFor="explorer-sort" className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-            Sort by
-          </label>
-          <select
-            id="explorer-sort"
-            value={activeDB !== 'aaindex1' && (sort === 'category' || sort === 'missing') ? 'relevance' : sort}
-            onChange={(e) => { setSort(e.target.value as SortId); setPage(1) }}
-            className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            {SORTS.filter((o) => !('db1Only' in o) || activeDB === 'aaindex1').map((o) => (
-              <option key={o.id} value={o.id}>{o.id === 'relevance' && searchQuery ? 'Best match' : o.label}</option>
-            ))}
-          </select>
-        </div>
-        {activeDB === 'aaindex1' && <FilterPanel categories={categories} />}
-      </aside>
+  const dot = <span aria-hidden className="text-gray-300 dark:text-gray-700">·</span>
 
-      {/* Main */}
-      <div className="flex-1 min-w-0">
+  return (
+    <div className="flex flex-col gap-12">
+      <header className="flex flex-col gap-3">
+        <p className="label">Amino acid index database</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Explorer</h1>
+      </header>
+
+      <div className="flex flex-col gap-6">
+        <SearchBar resultCount={filtered.length} totalCount={allAccessions.length} />
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-3">
+          <DBSwitcher />
+          {dot}
+          <div className="flex items-baseline gap-2">
+            <label htmlFor="explorer-sort" className="label">
+              Sort by
+            </label>
+            <select
+              id="explorer-sort"
+              value={activeDB !== 'aaindex1' && (sort === 'category' || sort === 'missing') ? 'relevance' : sort}
+              onChange={(e) => { setSort(e.target.value as SortId); setPage(1) }}
+              className="bg-transparent border-0 p-0 pr-6 text-sm text-ink dark:text-gray-100 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              {SORTS.filter((o) => !('db1Only' in o) || activeDB === 'aaindex1').map((o) => (
+                <option key={o.id} value={o.id}>{o.id === 'relevance' && searchQuery ? 'Best match' : o.label}</option>
+              ))}
+            </select>
+          </div>
+          {activeDB === 'aaindex1' && <>{dot}<FilterPanel categories={categories} /></>}
+        </div>
+      </div>
+
+      <div>
         {lazyLoading && (
-          <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse mb-4">Loading database…</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 py-24 text-center">Loading database…</p>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-6">
+        <div className="border-t border-gray-200 dark:border-gray-800">
           {pageAccessions.map((acc) => (
-            <div key={acc} className="h-full" onClickCapture={() => setBrowseList(filtered)}>
+            <div key={acc} onClickCapture={() => setBrowseList(filtered)}>
               <RecordCard
                 accession={acc}
                 record={(db as Record<string, AAIndex1DB[string]>)[acc]}
@@ -211,33 +219,35 @@ export default function Explorer() {
             </div>
           ))}
           {!lazyLoading && pageAccessions.length === 0 && (
-            <p className="col-span-2 text-gray-500 dark:text-gray-400 text-sm py-8 text-center">
-              No records found.
+            <p className="text-gray-400 dark:text-gray-500 py-24 text-center">
+              {showOnlyFavourites && favourites.length === 0 ? 'No favourites yet.' : 'No records found.'}
             </p>
           )}
         </div>
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center gap-3 text-sm">
-            <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              ← Prev
-            </button>
-            <span className="text-gray-600 dark:text-gray-400">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 disabled:opacity-40 hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              Next →
-            </button>
-            <div className="flex items-center gap-1 ml-2">
+          <div className="flex flex-wrap items-baseline justify-between gap-6 pt-10 text-sm">
+            <div className="flex items-baseline gap-6">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="btn-text"
+              >
+                ← Prev
+              </button>
+              <span className="text-gray-500 dark:text-gray-400 tabular-nums">
+                Page {page} of {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="btn-text"
+              >
+                Next →
+              </button>
+            </div>
+            <div className="flex items-baseline gap-3">
               <input
                 type="number"
                 min={1}
@@ -246,12 +256,9 @@ export default function Explorer() {
                 onChange={(e) => setJumpVal(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && jump()}
                 placeholder="Go to…"
-                className="w-20 px-2 py-1.5 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-20 px-2 py-1 border border-gray-200 dark:border-gray-800 bg-transparent text-sm tabular-nums focus:ring-2 focus:ring-indigo-500"
               />
-              <button
-                onClick={jump}
-                className="px-2 py-1.5 rounded border border-gray-300 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
+              <button onClick={jump} className="btn-text">
                 Go
               </button>
             </div>

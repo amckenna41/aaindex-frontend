@@ -22,11 +22,11 @@ const ANGLES = [
 ]
 const WHEEL_MAX = 18 // five turns of an α-helix; more residues overlap on the wheel
 
-const label = 'text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400'
+const label = 'label'
 
 function lerpColour(t: number): string {
-  // Low → blue, high → amber (hydrophobic end of most hydrophobicity scales).
-  const lo = [59, 130, 246], hi = [245, 158, 11]
+  // Low → ink-40, high → signal blue (hydrophobic end of most hydrophobicity scales).
+  const lo = [163, 163, 162], hi = [47, 91, 255]
   const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * t))
   return `rgb(${c.join(',')})`
 }
@@ -83,7 +83,7 @@ function HelicalWheel({ residues, values, angle, direction, moment }: {
         <g key={p.k}>
           <circle
             cx={p.x} cy={p.y} r={dot}
-            fill={p.v == null ? '#d1d5db' : lerpColour(hi > lo ? (p.v - lo) / (hi - lo) : 0.5)}
+            fill={p.v == null ? '#D6D6D4' : lerpColour(hi > lo ? (p.v - lo) / (hi - lo) : 0.5)}
             className="stroke-white dark:stroke-gray-900"
             strokeWidth={2}
           >
@@ -134,8 +134,8 @@ export default function MomentTab() {
   )
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      <aside className="md:w-56 shrink-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-12">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <SequenceInput seq={seq} onChange={(s) => { setSeq(s); setStart(1) }} />
         <SequenceFetch onLoad={(entries) => { if (entries[0]) { setSeq(entries[0].sequence); setStart(1) } }} />
         <RecordSelector accession={accession} onChange={setAccession} />
@@ -144,7 +144,7 @@ export default function MomentTab() {
           <select
             value={angle}
             onChange={(e) => setAngleParam(e.target.value)}
-            className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full px-2 py-1.5 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500"
           >
             {ANGLES.map((a) => <option key={a.deg} value={a.deg}>{a.label}</option>)}
           </select>
@@ -154,25 +154,25 @@ export default function MomentTab() {
           <input
             type="range" min={5} max={25} step={2} value={windowSize}
             onChange={(e) => setWindowParam(e.target.value)}
-            className="w-full accent-indigo-600"
+            className="w-full"
           />
         </label>
         <ShareLink />
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
+      <div className="min-w-0 flex flex-col gap-12">
         {!encoded.length && (
-          <p className="text-gray-400 text-sm text-center py-12 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl">
+          <p className="text-gray-400 dark:text-gray-500 text-center py-24">
             Enter a protein sequence.
           </p>
         )}
 
         {encoded.length > 0 && (
           <>
-            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
+            <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
               <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
                 <div>
-                  <h2 className="font-semibold">Helical wheel</h2>
+                  <h2 className="label">Helical wheel</h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400">
                     Residues {s0}–{s0 + segment.length - 1} · {angle}° per residue · arrow = moment direction
                   </p>
@@ -183,7 +183,7 @@ export default function MomentTab() {
                     <input
                       type="number" min={1} max={maxStart} value={s0}
                       onChange={(e) => setStart(Math.max(1, Math.min(maxStart, Number(e.target.value) || 1)))}
-                      className="w-20 px-2 py-1 rounded border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900"
+                      className="w-20 px-2 py-1 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent"
                     />
                   </label>
                 )}
@@ -217,22 +217,22 @@ export default function MomentTab() {
               </div>
             </div>
 
-            <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-              <h2 className="font-semibold">Moment profile</h2>
+            <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
+              <h2 className="label">Moment profile</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
                 μH and ⟨H⟩ over a sliding window of {windowSize}, plotted at the window centre.
                 {peak && <> Peak μH {peak.moment.toFixed(3)} at residue {peak.pos}.</>}
               </p>
               <ResponsiveContainer width="100%" height={260}>
                 <LineChart data={profile} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E3E3E1" />
                   <XAxis dataKey="pos" tick={{ fontSize: 10 }} height={32}
                     label={{ value: 'Window centre', position: 'insideBottom', offset: -2, fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} width={50} />
                   <Tooltip formatter={(v: number) => (v != null ? v.toFixed(3) : '—')} labelFormatter={(p) => `Residue ${p}`} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Line type="monotone" dataKey="moment" name="μH" stroke="#e11d48" dot={false} strokeWidth={2} connectNulls={false} />
-                  <Line type="monotone" dataKey="meanH" name="⟨H⟩" stroke="#6366f1" dot={false} strokeWidth={1.5} connectNulls={false} />
+                  <Line type="monotone" dataKey="moment" name="μH" stroke="#2F5BFF" dot={false} strokeWidth={2} connectNulls={false} />
+                  <Line type="monotone" dataKey="meanH" name="⟨H⟩" stroke="#2F5BFF" dot={false} strokeWidth={1.5} connectNulls={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 import { AA_ORDER_ALPHA, AA_FULL_NAMES } from '../lib/aminoAcids'
 
-const PALETTE = ['#6366f1', '#10b981']
+const PALETTE = ['#2F5BFF', 'currentColor']
 
 interface Props {
   records: Array<{ accession: string; values: Record<string, number> }>
@@ -33,7 +33,7 @@ export default function RadarChart({ records }: Props) {
         <PolarAngleAxis
           dataKey="aa"
           tick={({ x, y, payload }) => (
-            <text x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#6b7280">
+            <text x={x} y={y} textAnchor="middle" dominantBaseline="middle" fontSize={11} fill="#8A8A88">
               {payload.value as string}
             </text>
           )}
@@ -42,7 +42,7 @@ export default function RadarChart({ records }: Props) {
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null
             return (
-              <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs shadow">
+              <div className="bg-paper dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs">
                 <div className="font-semibold mb-1">{AA_FULL_NAMES[label as string] ?? label}</div>
                 {payload.map((p) => (
                   <div key={p.dataKey as string}>

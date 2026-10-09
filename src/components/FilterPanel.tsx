@@ -12,32 +12,14 @@ export default function FilterPanel({ categories }: Props) {
   const favourites = useAAIndexStore((s) => s.favourites)
 
   return (
-    <div className="flex flex-col gap-3">
-      <div>
-        <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-          <input
-            type="checkbox"
-            checked={showOnlyFavourites}
-            onChange={(e) => setShowOnlyFavourites(e.target.checked)}
-            className="accent-yellow-400"
-          />
-          <span className="text-yellow-500">★</span>
-          Favourites only
-          {favourites.length > 0 && (
-            <span className="text-xs text-gray-400">({favourites.length})</span>
-          )}
-        </label>
-      </div>
-
+    <>
       {categories.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-1">
-            Category
-          </span>
+        <label className="flex items-baseline gap-2">
+          <span className="label">Category</span>
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="bg-transparent border-0 p-0 pr-6 text-sm text-ink dark:text-gray-100 cursor-pointer hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             <option value="">All categories</option>
             {categories.map((cat) => (
@@ -46,8 +28,21 @@ export default function FilterPanel({ categories }: Props) {
               </option>
             ))}
           </select>
-        </div>
+        </label>
       )}
-    </div>
+      <span aria-hidden className="text-gray-300 dark:text-gray-700">·</span>
+      <label className="flex items-baseline gap-2 text-sm cursor-pointer select-none text-gray-500 dark:text-gray-400 hover:text-ink dark:hover:text-gray-100">
+        <input
+          type="checkbox"
+          checked={showOnlyFavourites}
+          onChange={(e) => setShowOnlyFavourites(e.target.checked)}
+          className="translate-y-px"
+        />
+        Favourites only
+        {favourites.length > 0 && (
+          <span className="tabular-nums text-gray-400 dark:text-gray-500">({favourites.length})</span>
+        )}
+      </label>
+    </>
   )
 }

@@ -40,7 +40,7 @@ export default function SequenceFetch({ onLoad }: Props) {
 
   return (
     <div className="flex flex-col gap-1">
-      <span className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+      <span className="label">
         Fetch by accession
       </span>
       <div className="flex gap-1">
@@ -50,12 +50,12 @@ export default function SequenceFetch({ onLoad }: Props) {
           onKeyDown={(e) => e.key === 'Enter' && fetchSeq()}
           placeholder="P01308 or 1CRN_A"
           aria-label="UniProt or PDB accession"
-          className="flex-1 min-w-0 px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="flex-1 min-w-0 px-2 py-1.5 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs font-mono focus:ring-2 focus:ring-indigo-500"
         />
         <button
           onClick={fetchSeq}
           disabled={loading || !id.trim()}
-          className="shrink-0 px-2.5 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-40"
+          className="btn-primary shrink-0"
         >
           {loading ? '…' : 'Fetch'}
         </button>

@@ -9,30 +9,12 @@ interface Props {
 const CELL = 22
 const LABEL = 20
 
+// Single-hue ramp: hairline ink tint → signal blue, min to max.
 function hexColor(min: number, max: number, value: number): string {
-  if (min >= 0) {
-    // single direction: white → red
-    const t = max === 0 ? 0 : value / max
-    const r = 214
-    const g = Math.round(214 - 150 * t)
-    const b = Math.round(214 - 164 * t)
-    return `rgb(${r},${g},${b})`
-  }
-  // diverging: blue → white → red
-  const absMax = Math.max(Math.abs(min), Math.abs(max))
-  if (absMax === 0) return '#f7f7f7'
-  const t = value / absMax
-  if (t >= 0) {
-    const r = Math.round(247 + (214 - 247) * t)
-    const g = Math.round(247 + (96 - 247) * t)
-    const b = Math.round(247 + (77 - 247) * t)
-    return `rgb(${r},${g},${b})`
-  }
-  const s = -t
-  const r = Math.round(247 + (33 - 247) * s)
-  const g = Math.round(247 + (102 - 247) * s)
-  const b = Math.round(247 + (172 - 247) * s)
-  return `rgb(${r},${g},${b})`
+  const t = max === min ? 0.5 : (value - min) / (max - min)
+  const lo = [227, 227, 225], hi = [47, 91, 255]
+  const c = lo.map((v, i) => Math.round(v + (hi[i] - v) * t))
+  return `rgb(${c.join(',')})`
 }
 
 const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
@@ -81,7 +63,7 @@ const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
             y={LABEL - 4}
             textAnchor="middle"
             fontSize={10}
-            fill={clicked?.col === col || hovered?.col === col ? '#6366f1' : '#6b7280'}
+            fill={clicked?.col === col || hovered?.col === col ? '#2F5BFF' : '#8A8A88'}
           >
             {col}
           </text>
@@ -95,7 +77,7 @@ const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
             y={LABEL + ri * CELL + CELL / 2 + 4}
             textAnchor="end"
             fontSize={10}
-            fill={clicked?.row === row || hovered?.row === row ? '#6366f1' : '#6b7280'}
+            fill={clicked?.row === row || hovered?.row === row ? '#2F5BFF' : '#8A8A88'}
           >
             {row}
           </text>
@@ -108,7 +90,7 @@ const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
             const isHighlightedRow = clicked?.row === row || hovered?.row === row
             const isHighlightedCol = clicked?.col === col || hovered?.col === col
             const isHovered = hovered?.row === row && hovered?.col === col
-            const fill = value != null ? hexColor(min, max, value) : '#e5e7eb'
+            const fill = value != null ? hexColor(min, max, value) : '#E3E3E1'
 
             return (
               <g key={`${row}-${col}`}>
@@ -118,7 +100,7 @@ const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
                   width={CELL}
                   height={CELL}
                   fill={fill}
-                  stroke={isHovered ? '#374151' : '#e5e7eb'}
+                  stroke={isHovered ? 'currentColor' : '#E3E3E1'}
                   strokeWidth={isHovered ? 1.5 : 0.5}
                   onClick={() => setClicked((c) => c?.row === row && c?.col === col ? null : { row, col })}
                   onMouseMove={(e) => handleMouseMove(e, row, col, value)}
@@ -129,7 +111,7 @@ const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
                     y={LABEL + ri * CELL}
                     width={CELL}
                     height={CELL}
-                    fill="#6366f1"
+                    fill="#2F5BFF"
                     opacity={0.12}
                     pointerEvents="none"
                   />
@@ -142,7 +124,7 @@ const MatrixHeatmap = memo(function MatrixHeatmap({ matrix, title }: Props) {
 
       {tooltip && (
         <div
-          className="fixed z-50 bg-gray-900 text-white text-xs px-2 py-1 rounded shadow pointer-events-none"
+          className="fixed z-50 bg-paper dark:bg-gray-950 border border-gray-200 dark:border-gray-800 font-mono tabular-nums text-xs px-2 py-1 rounded-sm pointer-events-none"
           style={{ left: tooltip.x + 12, top: tooltip.y - 28 }}
         >
           {tooltip.text}

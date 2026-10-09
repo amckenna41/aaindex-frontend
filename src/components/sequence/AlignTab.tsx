@@ -17,12 +17,12 @@ const USABLE: AAIndex2DB = Object.fromEntries(
 const DEFAULT_MATRIX = 'HENS920102' // BLOSUM62
 const LINE = 60
 
-const label = 'text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400'
-const input = 'w-full px-2 py-1.5 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500'
+const label = 'label'
+const input = 'w-full px-2 py-1.5 rounded-sm border border-gray-200 dark:border-gray-800 bg-transparent text-xs focus:ring-2 focus:ring-indigo-500'
 
 function Stat({ name, value }: { name: string; value: string }) {
   return (
-    <div className="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-lg px-3 py-2">
+    <div className="border-b border-gray-200 dark:border-gray-800 py-3">
       <p className="text-xs text-gray-500 dark:text-gray-400">{name}</p>
       <p className="font-mono font-semibold">{value}</p>
     </div>
@@ -71,8 +71,8 @@ export default function AlignTab() {
   const pct = (n: number) => (result?.length ? `${((100 * n) / result.length).toFixed(1)}%` : '—')
 
   return (
-    <div className="flex flex-col md:flex-row gap-6">
-      <aside className="md:w-56 shrink-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-12">
+      <aside className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-8 items-start">
         <SequenceInput seq={seqA} onChange={setSeqA} label="Sequence A" />
         <SequenceInput seq={seqB} onChange={setSeqB} label="Sequence B" />
         <RecordSelector accession={mat} onChange={setMat} db={USABLE} label="AAIndex2 matrix" />
@@ -80,7 +80,7 @@ export default function AlignTab() {
           <legend className={`${label} mb-1`}>Mode</legend>
           {(['global', 'local'] as const).map((m) => (
             <label key={m} className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="radio" name="align-mode" checked={mode === m} onChange={() => setMode(m)} className="accent-indigo-600" />
+              <input type="radio" name="align-mode" checked={mode === m} onChange={() => setMode(m)} className="" />
               {m === 'global' ? 'Global (Needleman–Wunsch)' : 'Local (Smith–Waterman)'}
             </label>
           ))}
@@ -96,15 +96,15 @@ export default function AlignTab() {
           </label>
         </div>
         <label className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-          <input type="checkbox" checked={negate} onChange={(e) => update({ negate: e.target.checked })} className="accent-indigo-600 mt-0.5" />
+          <input type="checkbox" checked={negate} onChange={(e) => update({ negate: e.target.checked })} className=" mt-0.5" />
           <span>Distance matrix (lower = more similar) — scored as mean − value before aligning</span>
         </label>
         <ShareLink />
       </aside>
 
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-          <p className="font-mono font-bold text-indigo-600 dark:text-indigo-400">{mat}</p>
+      <div className="min-w-0 flex flex-col gap-12">
+        <div className="border-t border-gray-200 dark:border-gray-800 pt-8">
+          <p className="font-mono">{mat}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{DB2[mat].description}</p>
 
           {(a.dropped > 0 || b.dropped > 0) && (
@@ -116,7 +116,7 @@ export default function AlignTab() {
             <p className="text-sm text-red-500">Each sequence is limited to {MAX_ALIGN_LENGTH} residues for in-browser alignment.</p>
           )}
           {!tooLong && (!a.seq || !b.seq) && (
-            <p className="text-gray-400 text-sm text-center py-12">Enter two sequences to align.</p>
+            <p className="text-gray-400 dark:text-gray-500 text-center py-24">Enter two sequences to align.</p>
           )}
 
           {result && (
@@ -128,7 +128,7 @@ export default function AlignTab() {
                 <Stat name="Similarity" value={`${result.similarity} (${pct(result.similarity)})`} />
                 <Stat name="Gaps" value={`${result.gaps} (${pct(result.gaps)})`} />
               </div>
-              <div className="overflow-x-auto bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-lg p-3">
+              <div className="overflow-x-auto bg-gray-50 dark:bg-gray-900 rounded-sm p-4">
                 <pre className="font-mono text-xs leading-5 text-gray-800 dark:text-gray-200" aria-label="Alignment">
                   {blocks.map((bl, i) => (
                     <span key={i}>

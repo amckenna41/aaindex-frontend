@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { useAAIndexStore } from '../store/useAAIndexStore'
 import { exportValuesAsCSV, exportRecordAsJSON, exportMatrixAsCSV } from '../lib/exportUtils'
 import AminoAcidBarChart from '../components/AminoAcidBarChart'
@@ -9,7 +9,6 @@ import SimilarRecords from '../components/SimilarRecords'
 import CitationHelper from '../components/CitationHelper'
 import PubMedAbstract from '../components/PubMedAbstract'
 import { AAIndex1DB, AAIndex1Record, AAIndex2Record, DBName } from '../types'
-import { categoryColour } from '../lib/categories'
 
 // Loaded on demand, one database at a time. Importing all three statically here
 // pulled every byte of source JSON into the entry chunk and made the Explorer's
@@ -53,7 +52,7 @@ async function locate(accession: string): Promise<Located | null> {
 
 function copyIframeSnippet(accession: string) {
   const url = `${window.location.origin}/records/${accession}`
-  const snippet = `<iframe src="${url}" width="800" height="600" frameborder="0" style="border:1px solid #e5e7eb;border-radius:12px"></iframe>`
+  const snippet = `<iframe src="${url}" width="800" height="600" frameborder="0" style="border:1px solid #E3E3E1;border-radius:12px"></iframe>`
   navigator.clipboard.writeText(snippet)
 }
 
@@ -90,7 +89,7 @@ export default function RecordDetail() {
   if (!accession) return <p>No accession specified.</p>
 
   if (located === undefined) {
-    return <p className="text-sm text-gray-400 dark:text-gray-500 animate-pulse py-16 text-center">Loading record…</p>
+    return <p className="text-gray-400 dark:text-gray-500 py-24 text-center">Loading record…</p>
   }
 
   const dbName = located?.dbName ?? null
@@ -99,9 +98,9 @@ export default function RecordDetail() {
 
   if (!dbName || !located) {
     return (
-      <div className="text-center py-16">
-        <p className="text-lg font-semibold mb-2">Record not found: {accession}</p>
-        <Link to="/explorer" className="text-indigo-600 dark:text-indigo-400 hover:underline">
+      <div className="text-center py-24 flex flex-col gap-4 items-center">
+        <p className="text-gray-400 dark:text-gray-500">Record not found: {accession}</p>
+        <Link to="/explorer" className="btn-text">
           ← Back to Explorer
         </Link>
       </div>
@@ -110,6 +109,7 @@ export default function RecordDetail() {
 
   const isSelected = selectedAccessions.includes(accession)
   const isFav = favourites.includes(accession)
+  const record = (rec1 ?? rec2)!
 
   const handleEmbed = () => {
     copyIframeSnippet(accession)
@@ -117,111 +117,91 @@ export default function RecordDetail() {
     setTimeout(() => setEmbedCopied(false), 2000)
   }
 
-  if (rec1) {
-    const corrEntries = Object.entries(rec1.correlation_coefficients ?? {})
-    return (
-      <div className="max-w-4xl mx-auto flex flex-col gap-6">
-        <Link to="/explorer" className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-          ← Explorer
-        </Link>
-
-        {/* Header */}
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-          <div className="flex items-start gap-3 flex-wrap mb-3">
-            <span className="font-mono font-bold text-2xl text-indigo-600 dark:text-indigo-400">{accession}</span>
-            {rec1.category && (
-              <span className={`text-sm px-3 py-1 rounded-full font-medium ${categoryColour(rec1.category)}`}>
-                {rec1.category}
-              </span>
-            )}
+  const header = (
+    <header className="flex flex-col gap-10">
+      <Link to="/explorer" className="btn-text self-start">← Explorer</Link>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-baseline gap-4">
+          <p className="font-mono text-sm text-gray-500 dark:text-gray-400">{accession}</p>
+          {rec1 && (
             <button
               onClick={() => toggleFavourite(accession)}
               aria-label={isFav ? 'Remove from favourites' : 'Add to favourites'}
-              className={`text-xl leading-none transition-colors ${isFav ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-300 dark:text-gray-600 dark:hover:text-yellow-400'}`}
+              className={isFav ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 hover:text-indigo-600 dark:text-gray-500 dark:hover:text-indigo-400'}
             >
-              ★
+              {isFav ? '★' : '☆'}
             </button>
-          </div>
-          <p className="text-gray-700 dark:text-gray-300 mb-3">{rec1.description}</p>
-          {rec1.pmid && (
+          )}
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight leading-tight">{record.description}</h1>
+      </div>
+      <dl className="grid grid-cols-1 sm:grid-cols-[10rem_1fr] gap-x-8 gap-y-3 border-t border-gray-200 dark:border-gray-800 pt-6">
+        <Meta label="Accession"><span className="font-mono">{accession}</span></Meta>
+        <Meta label="Database"><span className="font-mono">{dbName}</span></Meta>
+        {rec1?.category && <Meta label="Category">{rec1.category}</Meta>}
+        {record.pmid && (
+          <Meta label="PubMed">
             <a
-              href={`https://pubmed.ncbi.nlm.nih.gov/${rec1.pmid}`}
+              href={`https://pubmed.ncbi.nlm.nih.gov/${record.pmid}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+              className="font-mono underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400"
             >
-              PubMed: {rec1.pmid} ↗
+              PubMed: {record.pmid} ↗
             </a>
-          )}
-          {rec1.references && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{rec1.references}</p>
-          )}
-          {rec1.notes && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">{rec1.notes}</p>
-          )}
-        </div>
-
-        {/* PubMed abstract */}
-        {rec1.pmid && <PubMedAbstract pmid={rec1.pmid} />}
-
-        {/* Bar chart */}
-        <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <h2 className="font-semibold">Amino Acid Values</h2>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={normalise}
-                onChange={(e) => setNormalise(e.target.checked)}
-                className="accent-indigo-600"
-              />
-              z-score normalise
-            </label>
-          </div>
-          <AminoAcidBarChart values={rec1.values} accession={accession} height={300} normalise={normalise} />
-        </div>
-
-        {/* Similar records */}
-        {Object.keys(rec1.correlation_coefficients ?? {}).length > 0 && (
-          <SimilarRecords
-            accession={accession}
-            correlationCoefficients={rec1.correlation_coefficients}
-            db={located.db1 ?? {}}
-          />
+          </Meta>
         )}
+        {record.references && <Meta label="Reference">{record.references}</Meta>}
+        {rec1?.notes && <Meta label="Notes">{rec1.notes}</Meta>}
+      </dl>
+    </header>
+  )
 
-        {/* Correlation table */}
-        {corrEntries.length > 0 && (
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-            <h2 className="font-semibold mb-3">All Correlation Coefficients ({corrEntries.length})</h2>
-            <div className="overflow-x-auto max-h-64">
-              <table className="text-sm w-full">
-                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900">
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-2 pr-4 font-medium text-gray-600 dark:text-gray-400">Accession</th>
-                    <th className="text-right py-2 font-medium text-gray-600 dark:text-gray-400">r</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {corrEntries
-                    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
-                    .map(([acc, coef]) => (
-                    <tr key={acc} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
-                      <td className="py-2 pr-4">
-                        <Link to={`/records/${acc}`} className="font-mono text-indigo-600 dark:text-indigo-400 hover:underline">
-                          {acc}
-                        </Link>
-                      </td>
-                      <td className={`py-2 text-right font-mono ${coef > 0 ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
-                        {coef > 0 ? '+' : ''}{coef.toFixed(3)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
+  const browseNav = browseList.length > 0 && (
+    <nav aria-label="Browse records" className="flex items-baseline justify-between border-t border-gray-200 dark:border-gray-800 pt-6 text-sm">
+      <button
+        onClick={() => prevAcc && navigate(`/records/${prevAcc}`)}
+        disabled={!prevAcc}
+        className="btn-text disabled:cursor-not-allowed"
+      >
+        ← {prevAcc ? <span className="font-mono">{prevAcc}</span> : 'Previous'}
+      </button>
+      <span className="text-gray-400 dark:text-gray-500 tabular-nums">
+        {browseIdx + 1} / {browseList.length}
+      </span>
+      <button
+        onClick={() => nextAcc && navigate(`/records/${nextAcc}`)}
+        disabled={!nextAcc}
+        className="btn-text disabled:cursor-not-allowed"
+      >
+        {nextAcc ? <span className="font-mono">{nextAcc}</span> : 'Next'} →
+      </button>
+    </nav>
+  )
+
+  if (rec1) {
+    const corrEntries = Object.entries(rec1.correlation_coefficients ?? {})
+    return (
+      <article className="flex flex-col gap-16">
+        {header}
+
+        {/* Actions */}
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-3">
+          <button
+            onClick={() => {
+              if (isSelected) removeFromCompare(accession)
+              else { addToCompare(accession); navigate('/compare') }
+            }}
+            className={isSelected ? 'text-sm underline underline-offset-4 decoration-gray-300 dark:decoration-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 underline-offset-4' : 'btn-primary'}
+          >
+            {isSelected ? '✓ Added to Compare' : '+ Add to Compare'}
+          </button>
+          <ExportButton onClick={() => exportValuesAsCSV(accession, rec1.values)} label="Export values CSV" />
+          <ExportButton onClick={() => exportRecordAsJSON(accession, rec1)} label="Export record JSON" />
+          <button onClick={handleEmbed} className="btn-text">
+            {embedCopied ? '✓ Embed snippet copied' : '</> Get embed code'}
+          </button>
+        </div>
 
         {/* Citation */}
         {rec1.references && (
@@ -233,54 +213,69 @@ export default function RecordDetail() {
           />
         )}
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-3">
-          <button
-            onClick={() => {
-              if (isSelected) removeFromCompare(accession)
-              else { addToCompare(accession); navigate('/compare') }
-            }}
-            className={`text-sm px-4 py-2 rounded font-medium transition-colors ${
-              isSelected
-                ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700'
-            }`}
-          >
-            {isSelected ? '✓ Added to Compare' : '+ Add to Compare'}
-          </button>
-          <ExportButton onClick={() => exportValuesAsCSV(accession, rec1.values)} label="Export values CSV" />
-          <ExportButton onClick={() => exportRecordAsJSON(accession, rec1)} label="Export record JSON" />
-          <button
-            onClick={handleEmbed}
-            className="text-sm px-3 py-1.5 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
-          >
-            {embedCopied ? '✓ Embed snippet copied' : '</> Get embed code'}
-          </button>
-        </div>
+        {/* PubMed abstract */}
+        {rec1.pmid && <PubMedAbstract pmid={rec1.pmid} />}
 
-        {/* Browse navigation */}
-        {browseList.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
-            <button
-              onClick={() => prevAcc && navigate(`/records/${prevAcc}`)}
-              disabled={!prevAcc}
-              className="flex items-center gap-2 text-sm px-4 py-2 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              ← {prevAcc ? <span className="font-mono">{prevAcc}</span> : 'Previous'}
-            </button>
-            <span className="text-xs text-gray-400 dark:text-gray-500">
-              {browseIdx + 1} / {browseList.length}
-            </span>
-            <button
-              onClick={() => nextAcc && navigate(`/records/${nextAcc}`)}
-              disabled={!nextAcc}
-              className="flex items-center gap-2 text-sm px-4 py-2 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-            >
-              {nextAcc ? <span className="font-mono">{nextAcc}</span> : 'Next'} →
-            </button>
+        {/* Bar chart */}
+        <section className="flex flex-col gap-6">
+          <div className="flex items-baseline justify-between flex-wrap gap-3">
+            <h2 className="label">Amino Acid Values</h2>
+            <label className="flex items-baseline gap-2 text-sm text-gray-500 dark:text-gray-400 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={normalise}
+                onChange={(e) => setNormalise(e.target.checked)}
+              />
+              z-score normalise
+            </label>
           </div>
+          <AminoAcidBarChart values={rec1.values} accession={accession} height={300} normalise={normalise} />
+        </section>
+
+        {/* Correlation table */}
+        {corrEntries.length > 0 && (
+          <section className="flex flex-col gap-6">
+            <h2 className="label">All Correlation Coefficients ({corrEntries.length})</h2>
+            <div className="overflow-x-auto max-h-80">
+              <table className="text-sm w-full">
+                <thead className="sticky top-0 bg-paper dark:bg-gray-950">
+                  <tr className="border-b border-gray-200 dark:border-gray-800">
+                    <th className="text-left py-2 pr-4 font-normal text-gray-400 dark:text-gray-500">Accession</th>
+                    <th className="text-right py-2 font-normal text-gray-400 dark:text-gray-500">r</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {corrEntries
+                    .sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))
+                    .map(([acc, coef]) => (
+                    <tr key={acc} className="border-b border-gray-200 dark:border-gray-800">
+                      <td className="py-2 pr-4">
+                        <Link to={`/records/${acc}`} className="font-mono hover:text-indigo-600 dark:hover:text-indigo-400">
+                          {acc}
+                        </Link>
+                      </td>
+                      <td className={`py-2 text-right font-mono ${coef > 0 ? '' : 'text-gray-500 dark:text-gray-400'}`}>
+                        {coef > 0 ? '+' : ''}{coef.toFixed(3)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
-      </div>
+
+        {/* Similar records */}
+        {Object.keys(rec1.correlation_coefficients ?? {}).length > 0 && (
+          <SimilarRecords
+            accession={accession}
+            correlationCoefficients={rec1.correlation_coefficients}
+            db={located.db1 ?? {}}
+          />
+        )}
+
+        {browseNav}
+      </article>
     )
   }
 
@@ -288,69 +283,12 @@ export default function RecordDetail() {
   if (!rec2) return null
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col gap-6">
-      <Link to="/explorer" className="text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-        ← Explorer
-      </Link>
+    <article className="flex flex-col gap-16">
+      {header}
 
-      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-        <div className="flex items-start gap-3 flex-wrap mb-3">
-          <span className="font-mono font-bold text-2xl text-indigo-600 dark:text-indigo-400">{accession}</span>
-          <span className="text-sm px-2 py-0.5 rounded bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300">
-            {dbName.toUpperCase()}
-          </span>
-        </div>
-        <p className="text-gray-700 dark:text-gray-300 mb-3">{rec2.description}</p>
-        {rec2.pmid && (
-          <a
-            href={`https://pubmed.ncbi.nlm.nih.gov/${rec2.pmid}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-          >
-            PubMed: {rec2.pmid} ↗
-          </a>
-        )}
-        {rec2.references && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">{rec2.references}</p>
-        )}
+      <div className="flex flex-wrap gap-x-6 gap-y-3">
+        <ExportButton onClick={() => exportRecordAsJSON(accession, rec2)} label="Export record JSON" />
       </div>
-
-      {rec2.pmid && <PubMedAbstract pmid={rec2.pmid} />}
-
-      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Substitution Matrix</h2>
-          <ExportButton onClick={() => exportMatrixAsCSV(accession, rec2.matrix)} label="Export matrix CSV" />
-        </div>
-        <MatrixHeatmap matrix={rec2.matrix} />
-      </div>
-
-      <details className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-4">
-        <summary className="cursor-pointer font-medium text-sm">Raw matrix table</summary>
-        <div className="overflow-x-auto mt-4">
-          <table className="text-xs font-mono">
-            <thead>
-              <tr>
-                <th className="pr-2"></th>
-                {rec2.col_order.map((c) => (
-                  <th key={c} className="px-1 text-center text-gray-500">{c}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {Object.entries(rec2.matrix).map(([row, cols]) => (
-                <tr key={row}>
-                  <td className="pr-2 font-semibold text-gray-500">{row}</td>
-                  {rec2.col_order.map((c) => (
-                    <td key={c} className="px-1 text-center">{cols[c] ?? ''}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </details>
 
       {rec2.references && (
         <CitationHelper
@@ -361,32 +299,52 @@ export default function RecordDetail() {
         />
       )}
 
-      <div className="flex gap-3">
-        <ExportButton onClick={() => exportRecordAsJSON(accession, rec2)} label="Export record JSON" />
-      </div>
+      {rec2.pmid && <PubMedAbstract pmid={rec2.pmid} />}
 
-      {/* Browse navigation */}
-      {browseList.length > 0 && (
-        <div className="flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-4">
-          <button
-            onClick={() => prevAcc && navigate(`/records/${prevAcc}`)}
-            disabled={!prevAcc}
-            className="flex items-center gap-2 text-sm px-4 py-2 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            ← {prevAcc ? <span className="font-mono">{prevAcc}</span> : 'Previous'}
-          </button>
-          <span className="text-xs text-gray-400 dark:text-gray-500">
-            {browseIdx + 1} / {browseList.length}
-          </span>
-          <button
-            onClick={() => nextAcc && navigate(`/records/${nextAcc}`)}
-            disabled={!nextAcc}
-            className="flex items-center gap-2 text-sm px-4 py-2 rounded border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            {nextAcc ? <span className="font-mono">{nextAcc}</span> : 'Next'} →
-          </button>
+      <section className="flex flex-col gap-6">
+        <div className="flex items-baseline justify-between gap-3">
+          <h2 className="label">Substitution Matrix</h2>
+          <ExportButton onClick={() => exportMatrixAsCSV(accession, rec2.matrix)} label="Export matrix CSV" />
         </div>
-      )}
-    </div>
+        <MatrixHeatmap matrix={rec2.matrix} />
+      </section>
+
+      <details className="flex flex-col gap-4">
+        <summary className="label cursor-pointer hover:text-ink dark:hover:text-gray-100">Raw matrix table</summary>
+        <div className="overflow-x-auto mt-6">
+          <table className="text-xs font-mono">
+            <thead>
+              <tr>
+                <th className="pr-2"></th>
+                {rec2.col_order.map((c) => (
+                  <th key={c} className="px-1 text-center font-normal text-gray-400">{c}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(rec2.matrix).map(([row, cols]) => (
+                <tr key={row}>
+                  <td className="pr-2 text-gray-400">{row}</td>
+                  {rec2.col_order.map((c) => (
+                    <td key={c} className="px-1 text-center">{cols[c] ?? ''}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </details>
+
+      {browseNav}
+    </article>
+  )
+}
+
+function Meta({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <>
+      <dt className="text-sm text-gray-400 dark:text-gray-500 lowercase [font-variant-caps:small-caps] tracking-wide">{label}</dt>
+      <dd className="text-gray-700 dark:text-gray-300 mb-3 sm:mb-0">{children}</dd>
+    </>
   )
 }

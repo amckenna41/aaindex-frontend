@@ -12,7 +12,7 @@ import db1 from '../data/aaindex1.json'
 
 const DB1 = db1 as unknown as AAIndex1DB
 
-const PALETTE = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e']
+const PALETTE = ['#2F5BFF', 'currentColor', '#9A9A98', '#2F5BFF55']
 
 export default function Comparator() {
   const { selectedAccessions, removeFromCompare, clearCompare, normalise, setNormalise, addToCompare } = useAAIndexStore()
@@ -52,13 +52,10 @@ export default function Comparator() {
   // Show empty state only when there's genuinely nothing (not during URL hydration)
   if (selectedAccessions.length === 0 && !initialIds.current) {
     return (
-      <div className="text-center py-20">
-        <p className="text-xl font-semibold mb-2">No records selected</p>
-        <p className="text-gray-500 dark:text-gray-400 mb-6">Add records from the Explorer to compare them here.</p>
-        <Link
-          to="/explorer"
-          className="inline-block bg-indigo-600 text-white px-5 py-2 rounded-lg hover:bg-indigo-700"
-        >
+      <div className="text-center py-24 flex flex-col items-center gap-4">
+        <p className="text-gray-400 dark:text-gray-500">No records selected</p>
+        <p className="text-sm text-gray-400 dark:text-gray-500">Add records from the Explorer to compare them here.</p>
+        <Link to="/explorer" className="btn-primary mt-4">
           Go to Explorer →
         </Link>
       </div>
@@ -85,93 +82,86 @@ export default function Comparator() {
     Object.entries(records).map(([acc, r]) => [acc, r.values])
   )
 
+  const amber = 'text-gray-500 dark:text-gray-400'
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header chips */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <span className="font-semibold">Comparing:</span>
-        {selectedAccessions.map((acc, i) => (
-          <span
-            key={acc}
-            className="flex items-center gap-1 text-sm px-3 py-1 rounded-full font-mono"
-            style={{ backgroundColor: PALETTE[i % PALETTE.length] + '22', color: PALETTE[i % PALETTE.length] }}
-          >
-            {acc}
-            <button
-              onClick={() => removeFromCompare(acc)}
-              className="ml-1 hover:opacity-60"
-              aria-label={`Remove ${acc}`}
-            >
-              ✕
-            </button>
-          </span>
-        ))}
-        <button onClick={clearCompare} className="text-sm text-gray-500 hover:text-red-600 ml-2">
-          Clear all
-        </button>
-
-        <div className="ml-auto flex items-center gap-3">
-          <button
-            onClick={handleCopy}
-            className="text-sm px-3 py-1 rounded border border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-          >
-            {copied ? '✓ Copied' : '🔗 Share'}
+    <div className="flex flex-col gap-16">
+      <header className="flex flex-col gap-6">
+        <p className="label">Comparator</p>
+        <h1 className="text-3xl sm:text-4xl font-medium tracking-tight">Compare records</h1>
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-3 text-sm">
+          <label className="flex items-baseline gap-2 cursor-pointer text-gray-500 dark:text-gray-400">
+            <input
+              type="checkbox"
+              checked={normalise}
+              onChange={(e) => setNormalise(e.target.checked)}
+            />
+            z-score normalise
+          </label>
+          <button onClick={handleCopy} className="btn-text">
+            {copied ? '✓ Copied' : 'Share'}
           </button>
+          <button onClick={clearCompare} className="btn-text">
+            Clear all
+          </button>
+        </div>
+        {normalise && (
+          <p className={`text-sm ${amber}`}>
+            Values are z-score normalised per record. Raw values differ across records; normalisation centres each to mean=0, std=1 for fair visual comparison.
+          </p>
+        )}
+      </header>
 
-        {/* Normalisation toggle */}
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={normalise}
-            onChange={(e) => setNormalise(e.target.checked)}
-            className="accent-indigo-600"
-          />
-          z-score normalise
-        </label>
+      {/* Columns: one per record, hairline-divided, snap-scrolling on narrow screens */}
+      <div className="overflow-x-auto snap-x snap-mandatory -mx-6 px-6 sm:mx-0 sm:px-0">
+        <div className="grid grid-flow-col auto-cols-[minmax(14rem,1fr)] divide-x divide-gray-200 dark:divide-gray-800 border-y border-gray-200 dark:border-gray-800">
+          {selectedAccessions.map((acc, i) => (
+            <div key={acc} className="snap-start flex flex-col gap-3 py-6 px-6 first:pl-0">
+              <div className="flex items-baseline justify-between gap-3">
+                <span className="font-mono text-sm flex items-baseline gap-2">
+                  <span aria-hidden className="inline-block w-2 h-2" style={{ background: PALETTE[i % PALETTE.length] }} />
+                  <Link to={`/records/${acc}`} className="hover:text-indigo-600 dark:hover:text-indigo-400">{acc}</Link>
+                </span>
+                <button
+                  onClick={() => removeFromCompare(acc)}
+                  className="btn-text"
+                  aria-label={`Remove ${acc}`}
+                >
+                  Remove
+                </button>
+              </div>
+              <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-3">{DB1[acc]?.description}</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500">{DB1[acc]?.category}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {normalise && (
-        <p className="text-xs text-amber-600 dark:text-amber-400 -mt-2">
-          Values are z-score normalised per record. Raw values differ across records; normalisation centres each to mean=0, std=1 for fair visual comparison.
-        </p>
-      )}
-
       {/* Chart */}
-      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-        <h2 className="font-semibold mb-4">Grouped Bar Chart {normalise && <span className="text-xs font-normal text-amber-500">(z-score)</span>}</h2>
+      <section className="flex flex-col gap-6">
+        <h2 className="label">Grouped Bar Chart {normalise && <span>(z-score)</span>}</h2>
         <CompareChart accessions={selectedAccessions} records={displayRecords as AAIndex1DB} />
-      </div>
+      </section>
 
       {/* Values table */}
-      <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-xl p-6">
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-          <h2 className="font-semibold">Values Table {normalise && <span className="text-xs font-normal text-amber-500">(z-score)</span>}</h2>
+      <section className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-3">
+          <h2 className="label">Values Table {normalise && <span>(z-score)</span>}</h2>
           {selectedAccessions.length > 1 && (
-            <div className="flex flex-wrap items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-green-100 dark:bg-green-900 border border-green-300 dark:border-green-700" />
-                Highest value for that amino acid across indices
-              </span>
-              <span className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded bg-red-100 dark:bg-red-900 border border-red-300 dark:border-red-700" />
-                Lowest value for that amino acid across indices
-              </span>
-              {!normalise && <span className="text-amber-600 dark:text-amber-400">Raw scales differ; enable z-score to compare fairly</span>}
+            <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
+              <span><span className="text-indigo-600 dark:text-indigo-400">Blue</span> Highest value for that amino acid across indices</span>
+              <span><span className="text-gray-400 dark:text-gray-500 underline underline-offset-4">Underlined</span> Lowest value for that amino acid across indices</span>
+              {!normalise && <span className={amber}>Raw scales differ; enable z-score to compare fairly</span>}
             </div>
           )}
         </div>
         <div className="overflow-x-auto">
           <table className="text-sm w-full">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-gray-700">
-                <th className="text-left py-2 pr-4 font-medium text-gray-600 dark:text-gray-400">AA</th>
-                {selectedAccessions.map((acc, i) => (
-                  <th
-                    key={acc}
-                    className="text-right py-2 px-3 font-mono font-medium"
-                    style={{ color: PALETTE[i % PALETTE.length] }}
-                  >
+              <tr className="border-b border-gray-200 dark:border-gray-800">
+                <th className="text-left py-2 pr-4 font-normal text-gray-400 dark:text-gray-500">AA</th>
+                {selectedAccessions.map((acc) => (
+                  <th key={acc} className="text-right py-2 px-3 font-mono font-normal text-gray-500 dark:text-gray-400">
                     {acc}
                   </th>
                 ))}
@@ -185,16 +175,16 @@ export default function Comparator() {
                 const rowMax = defined.length ? Math.max(...defined) : null
 
                 return (
-                  <tr key={aa} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800">
-                    <td className="py-1.5 pr-4 font-mono font-semibold">{aa}</td>
+                  <tr key={aa} className="border-b border-gray-200 dark:border-gray-800">
+                    <td className="py-2 pr-4 font-mono">{aa}</td>
                     {vals.map((v, i) => (
                       <td
                         key={i}
-                        className={`py-1.5 px-3 text-right font-mono text-xs rounded ${
+                        className={`py-2 px-3 text-right font-mono ${
                           v === rowMax && defined.length > 1
-                            ? 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
+                            ? 'text-indigo-600 dark:text-indigo-400'
                             : v === rowMin && defined.length > 1
-                            ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+                            ? 'text-gray-400 dark:text-gray-500 underline underline-offset-4'
                             : ''
                         }`}
                       >
@@ -207,7 +197,7 @@ export default function Comparator() {
             </tbody>
           </table>
         </div>
-      </div>
+      </section>
 
       {/* Export */}
       <div>
